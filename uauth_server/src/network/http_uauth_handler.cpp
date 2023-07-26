@@ -542,37 +542,27 @@ response_t http_uauth_handler::handle_request(request_t &&request)
 {
     const std::string& target {request.target()};
     {//users
-        boost::regex re {"^/api/v1/u-auth/users/[\\s\\S]+$"};
-        boost::smatch match;
-        if(boost::regex_match(target,match,re)){
+        if(boost::starts_with(target,"/api/v1/u-auth/users")){
             return handle_users(std::move(request));
         }
     }
     {//authz-manage
-        boost::regex re {"^/api/v1/u-auth/authz/manage/[\\s\\S]+$"};
-        boost::smatch match;
-        if(boost::regex_match(target,match,re)){
+        if(boost::starts_with(target,"/api/v1/u-auth/authz/manage")){
             return handle_authz_manage(std::move(request));
         }
     }
     {//authz
-        boost::regex re {"/api/v1/u-auth/authz/[\\s\\S]+$"};
-        boost::smatch match;
-        if(boost::regex_match(target,match,re)){
+        if(boost::starts_with(target,"/api/v1/u-auth/authz")){
             return handle_authz(std::move(request));
         }
     }
     {//rps
-        boost::regex re {"^/api/v1/u-auth/roles-permissions/[\\s\\S]+$"};
-        boost::smatch match;
-        if(boost::regex_match(target,match,re)){
+        if(boost::starts_with(target,"/api/v1/u-auth/roles-permissions")){
             return handle_rps(std::move(request));
         }
     }
     {//certificates
-        boost::regex re {"^/api/v1/u-auth/certificates/[\\s\\S]+$"};
-        boost::smatch match;
-        if(boost::regex_match(target,match,re)){
+        if(boost::starts_with(target,"/api/v1/u-auth/certificates")){
             return handle_certificates_post(std::move(request));
         }
     }
