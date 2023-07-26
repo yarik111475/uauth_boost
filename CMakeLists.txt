@@ -76,6 +76,21 @@ if(UNIX AND NOT APPLE)
     set(PostgreSQL_LIB libpq.so.5.9)
 endif()
 
+#rpath
+# use, i.e. don't skip the full RPATH for the build tree
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+
+# when building, don't use the install RPATH already
+# (but later on when installing)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+
+set(CMAKE_INSTALL_RPATH ";../lib;../lib64;")
+message(${CMAKE_INSTALL_RPATH})
+
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 find_package(OpenSSL REQUIRED)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/uauth_server)
