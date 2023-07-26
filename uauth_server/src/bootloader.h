@@ -32,8 +32,8 @@ private:
     const std::string var_dir_ {app_dir_ + "/../var"};
 #endif
 #if BOOST_OS_LINUX
-    const std::string etc_dir_ {/etc"};
-    const std::string var_dir_ {/var"};
+    const std::string etc_dir_ {"/etc"};
+    const std::string var_dir_ {"/var"};
 #endif
     const std::string etc_uauth_dir_ {etc_dir_ + "/uauth"};
     const std::string var_uauth_dir_ {var_dir_ + "/uauth"};

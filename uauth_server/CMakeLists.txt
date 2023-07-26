@@ -32,7 +32,7 @@ target_link_libraries(${TARGET_NAME}
     ${Boost_LIBRARIES}
     ${WIN_LINKER_LIBS}
     ${LINUX_LINKER_LIBS}
-    ${PostgreSQL_LIBRARY_DIRS}/libpq.lib
+    ${PostgreSQL_LIBRARY_DIRS}/${PostgreSQL_LIB}
     spdlog
 )
 
