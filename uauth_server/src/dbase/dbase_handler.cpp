@@ -171,6 +171,60 @@ bool dbase_handler::is_user_exists(PGconn *conn_ptr, const std::string &user_uid
     return true;
 }
 
+int dbase_handler::urp_total_get(PGconn *conn_ptr)
+{
+    const std::string& command {"SELECT id FROM users_roles_permissions"};
+    PGresult* res_ptr=PQexec(conn_ptr,command.c_str());
+    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return -1;
+    }
+    const int& rows {PQntuples(res_ptr)};
+    if(!rows){
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return -1;
+    }
+    return rows;
+}
+
+int dbase_handler::rps_total_get(PGconn *conn_ptr)
+{
+    const std::string& command {"SELECT id FROM roles_permissions"};
+    PGresult* res_ptr=PQexec(conn_ptr,command.c_str());
+    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return -1;
+    }
+    const int& rows {PQntuples(res_ptr)};
+    if(!rows){
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return -1;
+    }
+    return rows;
+}
+
+int dbase_handler::users_total_get(PGconn *conn_ptr)
+{
+    const std::string& command {"SELECT id FROM users"};
+    PGresult* res_ptr=PQexec(conn_ptr,command.c_str());
+    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return -1;
+    }
+    const int& rows {PQntuples(res_ptr)};
+    if(!rows){
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return -1;
+    }
+    return rows;
+}
+
 //recursive get all low_level rp_uids by top_level rp_uid
 void dbase_handler::rp_uid_recursive_get(PGconn *conn_ptr, const std::string &rp_uid, std::vector<std::string>& rp_uids)
 {
@@ -278,7 +332,7 @@ bool dbase_handler::users_list_get(std::string &users, std::string &msg)
         return false;
     }
 
-    PGresult* res_ptr=PQexec(conn_ptr,"SELECT * FROM users");
+    PGresult* res_ptr=PQexec(conn_ptr,"SELECT * FROM users LIMIT 100 OFFSET 0");
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
@@ -305,13 +359,21 @@ bool dbase_handler::users_list_get(std::string &users, std::string &msg)
         users_.push_back(user_);
     }
     PQclear(res_ptr);
+    const int& total {users_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
-    users=boost::json::serialize(users_);
+    const boost::json::object out {
+        {"limit",100},
+        {"offset",0},
+        {"count",users_.size()},
+        {"total",total},
+        {"items",users_},
+    };
+    users=boost::json::serialize(out);
     return true;
 }
 
-//List Of Users with limit and/or offset
+//List Of Users with limit and/or offset and filter
 bool dbase_handler::users_list_get(std::string& users, const std::string& limit,
                                    const std::string& offset, const std::string &first_name,
                                    const std::string &last_name, const std::string &email,
@@ -324,15 +386,10 @@ bool dbase_handler::users_list_get(std::string& users, const std::string& limit,
     //add limit/offset
     std::string command {"SELECT * FROM users"};
     if(!limit.empty()){
-        command +=" LIMIT " + limit;
+        command += " LIMIT " + limit;
     }
     if(!offset.empty()){
-    command +=" OFFSET " + offset;
-    }
-    //add filter
-    if(!first_name.empty()){
-
-        command +=" WHERE ffirst_name=" + first_nname;
+        command +=" OFFSET " + offset;
     }
 
     PGresult* res_ptr=PQexec(conn_ptr,command.c_str());
@@ -362,9 +419,17 @@ bool dbase_handler::users_list_get(std::string& users, const std::string& limit,
         users_.push_back(user_);
     }
     PQclear(res_ptr);
+    const int& total {users_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
-    users=boost::json::serialize(users_);
+    const boost::json::object out {
+        {"limit",limit},
+        {"offset",offset},
+        {"count",users_.size()},
+        {"total",total},
+        {"items",users_},
+    };
+    users=boost::json::serialize(out);
     return true;
 }
 
@@ -461,16 +526,93 @@ bool dbase_handler::users_rps_get(const std::string &user_uid, std::string &rps,
             PQclear(res_ptr);
         }
     }
+    const int& total {rps_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
-    rps=boost::json::serialize(rps_);
+    const boost::json::object& out {
+        {"limit",100},
+        {"offset",0},
+        {"count",rps_.size()},
+        {"total",total},
+        {"items",rps_}
+    };
+    rps=boost::json::serialize(out);
     return true;
 }
 
+//Get User Assigned Roles And Permissions with limit and/or offset
 bool dbase_handler::users_rps_get(const std::string &user_uid, std::string &rps,
                                   const std::string &limit, const std::string &offset, std::string &msg)
 {
+    PGconn* conn_ptr {open_connection(msg)};
+    if(!conn_ptr){
+        return false;
+    }
 
+    const char* param_values[] {user_uid.c_str()};
+    PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT role_permission_id FROM users_roles_permissions WHERE user_id=$1",
+                                   1,NULL,param_values,NULL,NULL,0);
+
+    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        msg=std::string {PQresultErrorMessage(res_ptr)};
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return false;
+    }
+
+    boost::json::array rps_ {};
+    const int& rows {PQntuples(res_ptr)};
+    if(!rows){
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return false;
+    }
+    else{
+        std::vector<std::string> rp_ids {};
+        for(int r=0;r<rows;++r){
+            const std::string& rp_id {PQgetvalue(res_ptr,r,0)};
+            rp_ids.push_back(rp_id);
+        }
+        for(const std::string& rp_id: rp_ids){
+            std::string command {"SELECT * FROM roles_permissions WHERE id=$1"};
+            if(!limit.empty()){
+                command += " LIMIT " + limit;
+            }
+            if(!offset.empty()){
+                command += " OFFSET " + offset;
+            }
+            const char* param_values[] {rp_id.c_str()};
+            PGresult* res_ptr=PQexecParams(conn_ptr,command.c_str(),
+                                           1,NULL,param_values,NULL,NULL,0);
+
+            if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+                PQclear(res_ptr);
+                continue;
+            }
+            const int& columns {PQnfields(res_ptr)};
+            boost::json::object rp_ {};
+
+            for(int c=0;c < columns;++c){
+                const std::string& key {PQfname(res_ptr,c)};
+                const std::string& value {PQgetvalue(res_ptr,0,c)};
+                rp_.emplace(key,value);
+            }
+            rps_.push_back(rp_);
+            PQclear(res_ptr);
+        }
+    }
+    const int& total {rps_total_get(conn_ptr)};
+    PQfinish(conn_ptr);
+
+    const boost::json::object& out {
+        {"limit",limit},
+        {"offset",offset},
+        {"count",rps_.size()},
+        {"total",total},
+        {"items",rps_}
+    };
+    rps=boost::json::serialize(out);
+    return true;
 }
 
 //Update User
@@ -621,13 +763,24 @@ bool dbase_handler::rps_list_get(std::string &rps, std::string &msg)
         rps_.push_back(rp_);
     }
     PQclear(res_ptr);
+    const int& total {rps_total_get(conn_ptr)};
     PQfinish(conn_ptr);
-    rps=boost::json::serialize(rps_);
+
+    const boost::json::object& out {
+        {"limit",100},
+        {"offset",0},
+        {"count",rps_.size()},
+        {"total",total},
+        {"items",rps_}
+    };
+    rps=boost::json::serialize(out);
     return true;
 }
 
-//List Of Roles And Permissions with limit and/or offset
-bool dbase_handler::rps_list_get(std::string &rps, const std::string &limit, const std::string offset, std::string &msg)
+//List Of Roles And Permissions with limit and/or offset and filter
+bool dbase_handler::rps_list_get(std::string &rps, const std::string &limit,
+                                 const std::string offset,const std::string& name,
+                                 const std::string& type,const std::string& description,std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     if(!conn_ptr){
@@ -668,8 +821,17 @@ bool dbase_handler::rps_list_get(std::string &rps, const std::string &limit, con
         rps_.push_back(rp_);
     }
     PQclear(res_ptr);
+    const int& total {rps_total_get(conn_ptr)};
     PQfinish(conn_ptr);
-    rps=boost::json::serialize(rps_);
+
+    const boost::json::object& out {
+        {"limit",limit},
+        {"offset",offset},
+        {"count",rps_.size()},
+        {"total",total},
+        {"items",rps_}
+    };
+    rps=boost::json::serialize(out);
     return true;
 }
 
@@ -734,7 +896,17 @@ bool dbase_handler::rps_users_get(const std::string &rp_uid, std::string &users,
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
+        const int& total {urp_total_get(conn_ptr)};
         PQfinish(conn_ptr);
+
+        const boost::json::object& out {
+            {"limit",100},
+            {"offset",0},
+            {"count",users_.size()},
+            {"total",total},
+            {"items",users_}
+        };
+        users=boost::json::serialize(out);
         users=boost::json::serialize(users_);
         return true;
     }
@@ -767,9 +939,102 @@ bool dbase_handler::rps_users_get(const std::string &rp_uid, std::string &users,
             PQclear(res_ptr);
         }
     }
+    const int& total {urp_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
-    users=boost::json::serialize(users_);
+    const boost::json::object& out {
+        {"limit",100},
+        {"offset",0},
+        {"count",users_.size()},
+        {"total",total},
+        {"items",users_}
+    };
+    users=boost::json::serialize(out);
+    return true;
+}
+
+bool dbase_handler::rps_users_get(const std::string &rp_uid, std::string &users, const std::string &limit, const std::string &offset, std::string &msg)
+{
+    PGconn* conn_ptr {open_connection(msg)};
+    if(!conn_ptr){
+        return false;
+    }
+
+    std::string command {"SELECT user_id FROM users_roles_permissions WHERE role_permission_id=$1"};
+    if(!limit.empty()){
+        command +=" LIMIT " + limit;
+    }
+    if(!offset.empty()){
+        command +=" OFFSET " + offset;
+    }
+
+    const char* param_values[] {rp_uid.c_str()};
+    PGresult* res_ptr=PQexecParams(conn_ptr,command.c_str(),
+                                   1,NULL, param_values,NULL,NULL,0);
+    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        msg=std::string {PQresultErrorMessage(res_ptr)};
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return false;
+    }
+
+    boost::json::array users_ {};
+    const int& rows {PQntuples(res_ptr)};
+    if(!rows){
+        PQclear(res_ptr);
+        const int& total {urp_total_get(conn_ptr)};
+        PQfinish(conn_ptr);
+
+        const boost::json::object& out {
+            {"limit",limit},
+            {"offset",offset},
+            {"count",users_.size()},
+            {"total",total},
+            {"items",users_}
+        };
+        users=boost::json::serialize(out);
+        return true;
+    }
+    else{
+        std::vector<std::string> user_ids {};
+        for(int r=0;r<rows;++r){
+            const std::string& user_id {PQgetvalue(res_ptr,r,0)};
+            user_ids.push_back(user_id);
+        }
+
+        for(const std::string& user_id: user_ids){
+            const char* param_values[] {user_id.c_str()};
+            PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1",
+                                           1,NULL,param_values,NULL,NULL,0);
+
+            if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+                PQclear(res_ptr);
+                continue;
+            }
+
+            const int& columns {PQnfields(res_ptr)};
+            boost::json::object user_ {};
+
+            for(int c=0;c < columns;++c){
+                const std::string& key {PQfname(res_ptr,c)};
+                const std::string& value {PQgetvalue(res_ptr,0,c)};
+                user_.emplace(key,value);
+            }
+            users_.push_back(user_);
+            PQclear(res_ptr);
+        }
+    }
+    const int& total {urp_total_get(conn_ptr)};
+    PQfinish(conn_ptr);
+
+     const boost::json::object& out {
+        {"limit",limit},
+        {"offset",offset},
+        {"count",users_.size()},
+        {"total",total},
+        {"items",users_}
+    };
+    users=boost::json::serialize(out);
     return true;
 }
 

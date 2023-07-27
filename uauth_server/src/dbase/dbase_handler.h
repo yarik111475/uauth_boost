@@ -27,6 +27,10 @@ private:
     bool is_rp_exists(PGconn* conn_ptr,const std::string& rp_uid,std::string& msg);
     bool is_user_exists(PGconn* conn_ptr,const std::string& user_uid,std::string& msg);
 
+    int urp_total_get(PGconn* conn_ptr);
+    int rps_total_get(PGconn* conn_ptr);
+    int users_total_get(PGconn* conn_ptr);
+
     void rp_uid_recursive_get(PGconn* conn_ptr, const std::string& rp_uid, std::vector<std::string> &rp_uids);
     void rp_children_get(PGconn* conn_ptr,const std::string& rp_uid,boost::json::array& rp_objs);
     void rp_uids_by_rp_names_get(PGconn* conn_ptr,const std::vector<std::string>& rp_names,std::vector<std::string>& rp_uids);
@@ -45,7 +49,7 @@ public:
     bool users_info_get(const std::string& user_uid, std::string &user, std::string& msg);
     //Get User Assigned Roles And Permissions
     bool users_rps_get(const std::string& user_uid,std::string& rps,std::string& msg);
-    //Get User Assigned Roles And Permissions with limit and/or offset and filter
+    //Get User Assigned Roles And Permissions with limit and/or offset
     bool users_rps_get(const std::string& user_uid,std::string& rps,
                        const std::string& limit,const std::string& offset,std::string& msg);
     //Update User
@@ -57,12 +61,17 @@ public:
 
     //List Of Roles And Permissions
     bool rps_list_get(std::string& rps,std::string& msg);
-    //List Of Roles And Permissions with limit and/or offset
-    bool rps_list_get(std::string& rps,const std::string& limit,const std::string offset,std::string& msg);
+    //List Of Roles And Permissions with limit and/or offset and filter
+    bool rps_list_get(std::string& rps,const std::string& limit,
+                      const std::string offset,const std::string& name,
+                      const std::string& type,const std::string& description,std::string& msg);
     //Get Permission Or Role
     bool rps_info_get(const std::string& rp_uid,std::string& rp,std::string& msg);
     //Get Associated Users
     bool rps_users_get(const std::string& rp_uid,std::string& users,std::string& msg);
+    //Get Associated Users with limit and/or offset
+    bool rps_users_get(const std::string& rp_uid,std::string& users,const
+                       std::string& limit,const std::string& offset,std::string& msg);
     //Get Permission Or Role Detail
     bool rps_rp_detail_get(const std::string& rp_uid,std::string& rp,std::string& msg);
     //Create Permission Or Role

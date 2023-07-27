@@ -169,9 +169,13 @@ response_t http_uauth_handler::handle_users_get(request_t &&request)
             return fail(std::move(request),boost::beast::http::status::bad_request,msg);
         }
     }
-    {//list with limit and/or offset
+    {//list with limit and/or offset and filter
         std::string limit {};
         std::string offset {};
+        std::string first_name {};
+        std::string last_name {};
+        std::string email {};
+        std::string is_blocked {};
         boost::url url_ {target};
         auto query=url_.query();
         if(!query.empty()){
@@ -186,9 +190,26 @@ response_t http_uauth_handler::handle_users_get(request_t &&request)
                     auto it {view.find("offset")};
                     offset=std::string {it->value};
                 }
+                if(view.contains("first_name")){
+                    auto it {view.find("first_name")};
+                    first_name=std::string {it->value};
+                }
+                if(view.contains("last_name")){
+                    auto it {view.find("last_name")};
+                    last_name=std::string {it->value};
+                }
+                if(view.contains("email")){
+                    auto it {view.find("email")};
+                    email=std::string {it->value};
+                }
+                if(view.contains("is_blocked")){
+                    auto it {view.find("is_blocked")};
+                    is_blocked=std::string {it->value};
+                }
+
                 std::string msg {};
                 std::string users {};
-                const bool& ok {dbase_handler_ptr_->users_list_get(users,limit,offset,msg)};
+                const bool& ok {dbase_handler_ptr_->users_list_get(users,limit,offset,first_name,last_name,email,is_blocked,msg)};
                 if(ok){
                     return success(std::move(request),boost::beast::http::status::ok,users);
                 }
@@ -382,9 +403,46 @@ response_t http_uauth_handler::handle_rps_get(request_t &&request)
             return fail(std::move(request),boost::beast::http::status::bad_request,msg);
         }
     }
-    {//list with limit and/or offset
+    {//all users for rps by rps_uid with limit and/or offset
+        boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "/associated-users?" + regex_any_ + "$"};
+        boost::smatch match;
+        if(boost::regex_match(target,match,re)){
+            const std::string& rp_uid {match[1]};
+
+            std::string limit {};
+            std::string offset {};
+            boost::url url_ {target};
+            auto query=url_.query();
+            if(!query.empty()){
+                boost::urls::result<boost::urls::params_encoded_view> result=boost::urls::parse_query(query);
+                if(!result.has_error()){
+                    const boost::urls::params_encoded_view& view {result.value()};
+                    if(view.contains("limit")){
+                        auto it {view.find("limit")};
+                        limit=std::string {it->value};
+                    }
+                    if(view.contains("offset")){
+                        auto it {view.find("offset")};
+                        offset=std::string {it->value};
+                    }
+
+                    std::string msg {};
+                    std::string users {};
+                    const bool& ok {dbase_handler_ptr_->rps_users_get(rp_uid,users,limit,offset,msg)};
+                    if(ok){
+                        return success(std::move(request),boost::beast::http::status::ok,users);
+                    }
+                    return fail(std::move(request),boost::beast::http::status::bad_request,msg);
+                }
+            }
+        }
+    }
+    {//list with limit and/or offset and filter
         std::string limit {};
         std::string offset {};
+        std::string name {};
+        std::string type {};
+        std::string description {};
         boost::url url_ {target};
         auto query=url_.query();
         if(!query.empty()){
@@ -399,9 +457,22 @@ response_t http_uauth_handler::handle_rps_get(request_t &&request)
                     auto it {view.find("offset")};
                     offset=std::string {it->value};
                 }
+                if(view.contains("name")){
+                    auto it {view.find("name")};
+                    name=std::string {it->value};
+                }
+                if(view.contains("type")){
+                    auto it {view.find("type")};
+                    type=std::string {it->value};
+                }
+                if(view.contains("description")){
+                    auto it {view.find("description")};
+                    description=std::string {it->value};
+                }
+
                 std::string msg {};
                 std::string rps {};
-                const bool& ok {dbase_handler_ptr_->rps_list_get(rps,limit,offset,msg)};
+                const bool& ok {dbase_handler_ptr_->rps_list_get(rps,limit,offset,name,type,description,msg)};
                 if(ok){
                     return success(std::move(request),boost::beast::http::status::ok,rps);
                 }
