@@ -140,6 +140,7 @@ bool dbase_handler::is_rp_exists(PGconn *conn_ptr, const std::string &rp_uid, st
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
+        msg="role-permission not found";
         return false;
     }
 
@@ -162,6 +163,7 @@ bool dbase_handler::is_user_exists(PGconn *conn_ptr, const std::string &user_uid
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
+        msg="user not found";
         return false;
     }
 
@@ -906,6 +908,12 @@ bool dbase_handler::rps_child_put(const std::string &parent_uid, const std::stri
     if(!conn_ptr){
         return false;
     }
+    {//check
+        if(!is_rp_exists(conn_ptr,parent_uid,msg) || !is_rp_exists(conn_ptr,child_uid,msg)){
+            PQfinish(conn_ptr);
+            return false;
+        }
+    }
     {//create relationship
         const std::string& created_at {time_with_timezone()};
         const char* param_values[] {created_at.c_str(),parent_uid.c_str(),child_uid.c_str()};
@@ -964,6 +972,12 @@ bool dbase_handler::rps_child_delete(const std::string &parent_uid, const std::s
     PGconn* conn_ptr {open_connection(msg)};
     if(!conn_ptr){
         return false;
+    }
+    {//check
+        if(!is_rp_exists(conn_ptr,parent_uid,msg) || !is_rp_exists(conn_ptr,child_uid,msg)){
+            PQfinish(conn_ptr);
+            return false;
+        }
     }
     {//delete relationship
         const char* param_values[] {parent_uid.c_str(),child_uid.c_str()};
@@ -1086,6 +1100,12 @@ bool dbase_handler::authz_manage_post(const std::string &requested_user_uid, con
     if(!conn_ptr){
         return false;
     }
+    {//check
+        if(!is_user_exists(conn_ptr,requested_user_uid,msg) || !is_rp_exists(conn_ptr,requested_rp_uid,msg)){
+            PQfinish(conn_ptr);
+            return false;
+        }
+    }
     {//assign
         PGresult* res_ptr {NULL};
         const std::string& created_at {time_with_timezone()};
@@ -1141,6 +1161,12 @@ bool dbase_handler::authz_manage_delete(const std::string &requested_user_uid, c
     PGconn* conn_ptr {open_connection(msg)};
     if(!conn_ptr){
         return false;
+    }
+    {//check
+        if(!is_user_exists(conn_ptr,requested_user_uid,msg) || !is_rp_exists(conn_ptr,requested_rp_uid,msg)){
+            PQfinish(conn_ptr);
+            return false;
+        }
     }
     {//remove
         PGresult* res_ptr {NULL};
