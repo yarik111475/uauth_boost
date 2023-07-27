@@ -516,15 +516,18 @@ response_t http_uauth_handler::handle_certificates_post(request_t &&request)
 {
     const std::string& target {request.target()};
     {
-        boost::regex re {"^/api/v1/u-auth/certificates/user/" + regex_uid_ + "$"};
+        boost::regex re {"^/api/v1/u-auth/certificates/user/" + regex_uid_ + "?" + regex_any_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
+            const std::string& user_uid {match[1]};
+            const std::string& crt_password {match[2]};
         }
     }
     {
         boost::regex re {"^/api/v1/u-auth/certificates/agent/sign-csr$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
+            const std::string& csr_binary {request.body()};
         }
     }
     return fail(std::move(request),boost::beast::http::status::not_found,"not found");

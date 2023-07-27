@@ -6,17 +6,22 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(WIN_LINKER_LIBS
-)
+if(WIN32)
+    add_definitions(-DWIN32_LEAN_AND_MEAN)
+    add_definitions(-D_WIN32_WINNT=0x0601)
+endif()
 
-set(LINUX_LINKER_LIBS
+if(WIN32)
+    set(WIN_LINKER_LIBS
+    )
+endif()
+
+if(UNIX AND NOT APPLE)
+    set(LINUX_LINKER_LIBS
     -static-libgcc
     -static-libstdc++
     -pthread
-)
-
-if(WIN32)
-    add_definitions(-D_WIN32_WINNT=0x0601)
+    )
 endif()
 
 #boost
