@@ -37,12 +37,17 @@ public:
 
     //List Of Users
     bool users_list_get(std::string& users,std::string& msg);
-    //List Of Users with limit and/or offset
-    bool users_list_get(std::string& users,const std::string& limit,const std::string& offset,std::string& msg);
+    //List Of Users with limit and/or offset and filter
+    bool users_list_get(std::string& users,const std::string& limit,const std::string& offset,
+                        const std::string& first_name,const std::string& last_name,
+                        const std::string& email,const std::string& is_blocked,std::string& msg);
     //Get User Info
     bool users_info_get(const std::string& user_uid, std::string &user, std::string& msg);
     //Get User Assigned Roles And Permissions
     bool users_rps_get(const std::string& user_uid,std::string& rps,std::string& msg);
+    //Get User Assigned Roles And Permissions with limit and/or offset and filter
+    bool users_rps_get(const std::string& user_uid,std::string& rps,
+                       const std::string& limit,const std::string& offset,std::string& msg);
     //Update User
     bool users_info_put(const std::string& user_uid,const std::string& user,std::string& msg);
     //Create User

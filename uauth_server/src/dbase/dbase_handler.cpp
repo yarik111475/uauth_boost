@@ -312,12 +312,16 @@ bool dbase_handler::users_list_get(std::string &users, std::string &msg)
 }
 
 //List Of Users with limit and/or offset
-bool dbase_handler::users_list_get(std::string& users,const std::string& limit,const std::string& offset,std::string& msg)
+bool dbase_handler::users_list_get(std::string& users, const std::string& limit,
+                                   const std::string& offset, const std::string &first_name,
+                                   const std::string &last_name, const std::string &email,
+                                   const std::string &is_blocked, std::string& msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     if(!conn_ptr){
         return false;
     }
+    //add limit/offset
     std::string command {"SELECT * FROM users"};
     if(!limit.empty()){
         command +=" LIMIT " + limit;
@@ -325,6 +329,12 @@ bool dbase_handler::users_list_get(std::string& users,const std::string& limit,c
     if(!offset.empty()){
     command +=" OFFSET " + offset;
     }
+    //add filter
+    if(!first_name.empty()){
+
+        command +=" WHERE ffirst_name=" + first_nname;
+    }
+
     PGresult* res_ptr=PQexec(conn_ptr,command.c_str());
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -455,6 +465,12 @@ bool dbase_handler::users_rps_get(const std::string &user_uid, std::string &rps,
 
     rps=boost::json::serialize(rps_);
     return true;
+}
+
+bool dbase_handler::users_rps_get(const std::string &user_uid, std::string &rps,
+                                  const std::string &limit, const std::string &offset, std::string &msg)
+{
+
 }
 
 //Update User
