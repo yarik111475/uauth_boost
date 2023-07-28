@@ -20,20 +20,20 @@ bool app_settings::settings_init()
     params_.emplace("db_port","5436");
     params_.emplace("db_name","u-auth");
 
-    UA_DB_DSN_=std::getenv("UA_DB_DSN");
-    UA_DB_POOL_SIZE_MIN_=std::getenv("UA_DB_POOL_SIZE_MIN");
-    UA_DB_POOL_SIZE_MAX_=std::getenv("UA_DB_POOL_SIZE_MAX");
-    UA_LOG_LEVEL_=std::getenv("UA_LOG_LEVEL");
+    UA_DB_DSN_=std::getenv("UA_DB_DSN")==NULL ? "" :std::getenv("UA_DB_DSN");
+    UA_DB_POOL_SIZE_MIN_=std::getenv("UA_DB_POOL_SIZE_MIN")==NULL ? "" : std::getenv("UA_DB_POOL_SIZE_MIN");
+    UA_DB_POOL_SIZE_MAX_=std::getenv("UA_DB_POOL_SIZE_MAX")==NULL ? "" : std::getenv("UA_DB_POOL_SIZE_MAX");
+    UA_LOG_LEVEL_=std::getenv("UA_LOG_LEVEL")==NULL ? "" : std::getenv("UA_LOG_LEVEL");
 
-    UA_ORIGINS_=std::getenv("UA_ORIGINS");
-    UA_SSL_WEB_CRT_VALID_=std::getenv("UA_SSL_WEB_CRT_VALID");
-    UA_CA_CRT_PATH_=std::getenv("UA_CA_CRT_PATH");
-    UA_SIGNING_CA_CRT_PATH_=std::getenv("UA_SIGNING_CA_CRT_PATH");
-    UA_SIGNING_CA_KEY_PATH_=std::getenv("UA_SIGNING_CA_KEY_PATH");
-    UA_SIGNING_CA_KEY_PASS_=std::getenv("UA_SIGNING_CA_KEY_PASS");
+    UA_ORIGINS_=std::getenv("UA_ORIGINS")==NULL ? "" : std::getenv("UA_ORIGINS");
+    UA_SSL_WEB_CRT_VALID_=std::getenv("UA_SSL_WEB_CRT_VALID")==NULL ? "" : std::getenv("UA_SSL_WEB_CRT_VALID");
+    UA_CA_CRT_PATH_=std::getenv("UA_CA_CRT_PATH")==NULL ? "" : std::getenv("UA_CA_CRT_PATH");
+    UA_SIGNING_CA_CRT_PATH_=std::getenv("UA_SIGNING_CA_CRT_PATH")==NULL ? "" : std::getenv("UA_SIGNING_CA_CRT_PATH");
+    UA_SIGNING_CA_KEY_PATH_=std::getenv("UA_SIGNING_CA_KEY_PATH")==NULL ? "" : std::getenv("UA_SIGNING_CA_KEY_PATH");
+    UA_SIGNING_CA_KEY_PASS_=std::getenv("UA_SIGNING_CA_KEY_PASS")==NULL ? "" : std::getenv("UA_SIGNING_CA_KEY_PASS");
 
-    UA_SENTRY_DSN_=std::getenv("UA_SENTRY_DSN");
-    UA_SENTRY_TRACES_SAMPLE_RATE_=std::getenv("UA_SENTRY_TRACES_SAMPLE_RATE");
+    UA_SENTRY_DSN_=std::getenv("UA_SENTRY_DSN")==NULL ? "" : std::getenv("UA_SENTRY_DSN");
+    UA_SENTRY_TRACES_SAMPLE_RATE_=std::getenv("UA_SENTRY_TRACES_SAMPLE_RATE")==NULL ? "" : std::getenv("UA_SENTRY_TRACES_SAMPLE_RATE");
 
     params_.emplace("UA_DB_DSN",UA_DB_DSN_);
     params_.emplace("UA_DB_POOL_SIZE_MIN",UA_DB_POOL_SIZE_MIN_);
@@ -49,12 +49,11 @@ bool app_settings::settings_init()
 
     auto it {params_.begin()};
     while(it!=params_.end()){
-        if(it->value().is_null()){
-            if(logger_ptr_){
-                logger_ptr_->critical("{}, env variable {} has empty value!",
-                    BOOST_CURRENT_FUNCTION,std::string {it->key()});
+        if(it->value().is_string()){
+            const std::string& value {it->value().as_string().c_str()};
+            if(value.empty()){
+                return false;
             }
-            return false;
         }
         ++it;
     }
