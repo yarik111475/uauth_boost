@@ -1,4 +1,4 @@
-#include "http_uauth_handler.h"
+#include "http_handler.h"
 #include "dbase/dbase_handler.h"
 
 #include <algorithm>
@@ -8,7 +8,7 @@
 #include <boost/algorithm/string.hpp>
 #include "spdlog/spdlog.h"
 
-response_t http_uauth_handler::fail(request_t &&request,boost::beast::http::status code,const std::string &body)
+response_t http_handler::fail(request_t &&request,boost::beast::http::status code,const std::string &body)
 {
     body_ptr_.reset(new std::string{body});
     response_t response {code,request.version()};
@@ -21,7 +21,7 @@ response_t http_uauth_handler::fail(request_t &&request,boost::beast::http::stat
     return response;
 }
 
-response_t http_uauth_handler::success(request_t &&request,boost::beast::http::status code, const std::string &body)
+response_t http_handler::success(request_t &&request,boost::beast::http::status code, const std::string &body)
 {
     body_ptr_.reset(new std::string{body});
     response_t response {code,request.version()};
@@ -34,7 +34,7 @@ response_t http_uauth_handler::success(request_t &&request,boost::beast::http::s
     return response;
 }
 
-response_t http_uauth_handler::handle_users(request_t &&request)
+response_t http_handler::handle_users(request_t &&request)
 {
     //verb check
     if((request.method()!=boost::beast::http::verb::get) & (request.method()!=boost::beast::http::verb::put) &
@@ -61,7 +61,7 @@ response_t http_uauth_handler::handle_users(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::bad_request,"bad request");
 }
 
-response_t http_uauth_handler::handle_authz(request_t &&request)
+response_t http_handler::handle_authz(request_t &&request)
 {
     //verb check
     if(request.method()!=boost::beast::http::verb::get){
@@ -70,7 +70,7 @@ response_t http_uauth_handler::handle_authz(request_t &&request)
     return handle_authz_get(std::move(request));
 }
 
-response_t http_uauth_handler::handle_authz_manage(request_t &&request)
+response_t http_handler::handle_authz_manage(request_t &&request)
 {
     //verb check
     if((request.method()!=boost::beast::http::verb::post) & (request.method()!=boost::beast::http::verb::delete_)){
@@ -90,7 +90,7 @@ response_t http_uauth_handler::handle_authz_manage(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::not_found,"not found");
 }
 
-response_t http_uauth_handler::handle_rps(request_t &&request)
+response_t http_handler::handle_rps(request_t &&request)
 {
     //verb check
     if((request.method()!=boost::beast::http::verb::get) & (request.method()!=boost::beast::http::verb::put) &
@@ -117,7 +117,7 @@ response_t http_uauth_handler::handle_rps(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::bad_request,"bad request");
 }
 
-response_t http_uauth_handler::handle_certificates(request_t &&request)
+response_t http_handler::handle_certificates(request_t &&request)
 {
     if(request.method()==boost::beast::http::verb::post){
         return handle_certificates_post(std::move(request));
@@ -125,7 +125,7 @@ response_t http_uauth_handler::handle_certificates(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::bad_request,"bad request");
 }
 
-response_t http_uauth_handler::handle_users_get(request_t &&request)
+response_t http_handler::handle_users_get(request_t &&request)
 {
     const std::string& target {request.target()};
     {//list without pagination
@@ -220,7 +220,7 @@ response_t http_uauth_handler::handle_users_get(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::not_found,"not found");
 }
 
-response_t http_uauth_handler::handle_users_put(request_t &&request)
+response_t http_handler::handle_users_put(request_t &&request)
 {
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
@@ -251,7 +251,7 @@ response_t http_uauth_handler::handle_users_put(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::not_found,"not found");
 }
 
-response_t http_uauth_handler::handle_users_post(request_t &&request)
+response_t http_handler::handle_users_post(request_t &&request)
 {
     const std::string& body {request.body()};
     boost::system::error_code ec;
@@ -272,7 +272,7 @@ response_t http_uauth_handler::handle_users_post(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::not_found,msg);
 }
 
-response_t http_uauth_handler::handle_users_delete(request_t &&request)
+response_t http_handler::handle_users_delete(request_t &&request)
 {
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
@@ -289,7 +289,7 @@ response_t http_uauth_handler::handle_users_delete(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::not_found,msg);
 }
 
-response_t http_uauth_handler::handle_authz_get(request_t &&request)
+response_t http_handler::handle_authz_get(request_t &&request)
 {
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/authz/" + regex_uid_+ "/authorized-to/" + regex_any_ + "$"};
@@ -307,7 +307,7 @@ response_t http_uauth_handler::handle_authz_get(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::bad_request,"bad request");
 }
 
-response_t http_uauth_handler::handle_authz_manage_post(request_t &&request)
+response_t http_handler::handle_authz_manage_post(request_t &&request)
 {
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/authz/manage/" + regex_uid_ + "/assign/" + regex_uid_ + "$"};
@@ -326,7 +326,7 @@ response_t http_uauth_handler::handle_authz_manage_post(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::bad_request,"bad request");
 }
 
-response_t http_uauth_handler::handle_authz_manage_delete(request_t &&request)
+response_t http_handler::handle_authz_manage_delete(request_t &&request)
 {
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/authz/manage/" + regex_uid_ + "/revoke/" + regex_uid_ + "$"};
@@ -345,7 +345,7 @@ response_t http_uauth_handler::handle_authz_manage_delete(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::bad_request,"bad request");
 }
 
-response_t http_uauth_handler::handle_rps_get(request_t &&request)
+response_t http_handler::handle_rps_get(request_t &&request)
 {
     const std::string& target {request.target()};
     {//list without pagination
@@ -484,7 +484,7 @@ response_t http_uauth_handler::handle_rps_get(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::bad_request,"bad request");
 }
 
-response_t http_uauth_handler::handle_rps_put(request_t &&request)
+response_t http_handler::handle_rps_put(request_t &&request)
 {
     const std::string& target {request.target()};
     {//update role_permission
@@ -529,7 +529,7 @@ response_t http_uauth_handler::handle_rps_put(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::not_found,"not found");
 }
 
-response_t http_uauth_handler::handle_rps_post(request_t &&request)
+response_t http_handler::handle_rps_post(request_t &&request)
 {
     const std::string& body {request.body()};
     boost::system::error_code ec;
@@ -550,7 +550,7 @@ response_t http_uauth_handler::handle_rps_post(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::not_found,"not found");
 }
 
-response_t http_uauth_handler::handle_rps_delete(request_t &&request)
+response_t http_handler::handle_rps_delete(request_t &&request)
 {
     const std::string& target {request.target()};
     {//remove role_permission
@@ -583,7 +583,7 @@ response_t http_uauth_handler::handle_rps_delete(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::not_found,"not found");
 }
 
-response_t http_uauth_handler::handle_certificates_post(request_t &&request)
+response_t http_handler::handle_certificates_post(request_t &&request)
 {
     const std::string& target {request.target()};
     {
@@ -604,7 +604,7 @@ response_t http_uauth_handler::handle_certificates_post(request_t &&request)
     return fail(std::move(request),boost::beast::http::status::not_found,"not found");
 }
 
-http_uauth_handler::http_uauth_handler(const boost::json::object &params, std::shared_ptr<spdlog::logger> logger_ptr)
+http_handler::http_handler(const boost::json::object &params, std::shared_ptr<spdlog::logger> logger_ptr)
     :params_{params},logger_ptr_{logger_ptr}
 {
     {//init dbase_handler
@@ -612,7 +612,7 @@ http_uauth_handler::http_uauth_handler(const boost::json::object &params, std::s
     }
 }
 
-response_t http_uauth_handler::handle_request(request_t &&request)
+response_t http_handler::handle_request(request_t &&request)
 {
     const std::string& target {request.target()};
     {//users

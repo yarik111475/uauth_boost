@@ -12,7 +12,7 @@ namespace spdlog{
 }
 
 class app_settings;
-class http_uauth_server;
+class http_server;
 
 class bootloader
 {
@@ -41,7 +41,7 @@ private:
 
     std::shared_ptr<spdlog::logger> logger_ptr_ {nullptr};
     std::shared_ptr<app_settings> app_settings_ptr_ {nullptr};
-    std::shared_ptr<http_uauth_server> http_server_ptr_ {nullptr};
+    std::shared_ptr<http_server> http_server_ptr_ {nullptr};
 
     bool init_dirs();
     void init_spdlog();

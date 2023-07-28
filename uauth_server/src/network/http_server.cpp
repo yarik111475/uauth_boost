@@ -1,10 +1,10 @@
-#include "http_uauth_server.h"
-#include "http_uauth_session.h"
+#include "http_server.h"
+#include "http_session.h"
 #include "settings/app_settings.h"
 
 #include "spdlog/spdlog.h"
 
-void http_uauth_server::on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::socket socket)
+void http_server::on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::socket socket)
 {
     if(ec!=boost::beast::errc::operation_canceled){
         if(logger_ptr_){
@@ -33,19 +33,19 @@ void http_uauth_server::on_accept(boost::beast::error_code ec, boost::asio::ip::
                 {"db_port",db_port},
                 {"db_name",db_name}
             };
-            std::make_shared<http_uauth_session>(std::move(socket),params,logger_ptr_)->session_run();
+            std::make_shared<http_session>(std::move(socket),params,logger_ptr_)->session_run();
         }
         acceptor_.async_accept(boost::asio::make_strand(io_),
-            boost::beast::bind_front_handler(&http_uauth_server::on_accept,shared_from_this()));
+            boost::beast::bind_front_handler(&http_server::on_accept,shared_from_this()));
     }
 }
 
-http_uauth_server::http_uauth_server(boost::asio::io_context &io, const std::string &app_dir, std::shared_ptr<app_settings> app_settings_ptr, std::shared_ptr<spdlog::logger> logger_ptr)
+http_server::http_server(boost::asio::io_context &io, const std::string &app_dir, std::shared_ptr<app_settings> app_settings_ptr, std::shared_ptr<spdlog::logger> logger_ptr)
     :io_{io},acceptor_{io_},app_dir_{app_dir},app_settings_ptr_{app_settings_ptr},logger_ptr_{logger_ptr}
 {
 }
 
-bool http_uauth_server::server_listen()
+bool http_server::server_listen()
 {
     std::string host;
     std::string port;
@@ -105,11 +105,11 @@ bool http_uauth_server::server_listen()
     }
 
     acceptor_.async_accept(boost::asio::make_strand(io_),
-        boost::beast::bind_front_handler(&http_uauth_server::on_accept,shared_from_this()));
+        boost::beast::bind_front_handler(&http_server::on_accept,shared_from_this()));
     return true;
 }
 
-void http_uauth_server::server_stop()
+void http_server::server_stop()
 {
     boost::system::error_code ec;
     if(acceptor_.is_open()){

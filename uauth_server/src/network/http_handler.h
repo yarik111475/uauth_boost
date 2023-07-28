@@ -1,5 +1,5 @@
-#ifndef UAUTH_HANDLER_H
-#define UAUTH_HANDLER_H
+#ifndef HTTP_HANDLER_H
+#define HTTP_HANDLER_H
 
 #include <map>
 #include <string>
@@ -18,7 +18,7 @@ class dbase_handler;
 typedef boost::beast::http::request<boost::beast::http::string_body> request_t;
 typedef boost::beast::http::response<boost::beast::http::string_body> response_t;
 
-class http_uauth_handler
+class http_handler
 {
 private:
     const std::string regex_any_ {"([\\s\\S]+)"};
@@ -63,9 +63,9 @@ private:
     std::shared_ptr<spdlog::logger> logger_ptr_ {nullptr};
 
 public:
-    explicit http_uauth_handler(const boost::json::object& params,std::shared_ptr<spdlog::logger> logger_ptr);
-    ~http_uauth_handler()=default;
+    explicit http_handler(const boost::json::object& params,std::shared_ptr<spdlog::logger> logger_ptr);
+    ~http_handler()=default;
     response_t handle_request(request_t&& request);;
 };
 
-#endif // UAUTH_HANDLER_H
+#endif // HTTP_HANDLER_H

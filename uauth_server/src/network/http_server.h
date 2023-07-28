@@ -12,7 +12,7 @@ namespace spdlog{
 }
 class app_settings;
 
-class http_uauth_server:public std::enable_shared_from_this<http_uauth_server>
+class http_server:public std::enable_shared_from_this<http_server>
 {
 private:
     boost::asio::io_context& io_;
@@ -26,7 +26,7 @@ private:
     void on_accept(boost::beast::error_code ec,boost::asio::ip::tcp::socket socket);
 
 public:
-    explicit http_uauth_server(boost::asio::io_context& io,const std::string& app_dir,std::shared_ptr<app_settings> app_settings_ptr,std::shared_ptr<spdlog::logger> logger_ptr);
+    explicit http_server(boost::asio::io_context& io,const std::string& app_dir,std::shared_ptr<app_settings> app_settings_ptr,std::shared_ptr<spdlog::logger> logger_ptr);
     bool server_listen();
     void server_stop();
 };

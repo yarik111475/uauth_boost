@@ -1,6 +1,6 @@
 #include "bootloader.h"
 #include <settings/app_settings.h>
-#include "network/http_uauth_server.h"
+#include "network/http_server.h"
 
 #include <vector>
 #include <iostream>
@@ -86,7 +86,7 @@ void bootloader::init_spdlog()
 
 bool bootloader::start_listent()
 {
-    http_server_ptr_.reset(new http_uauth_server{io_,app_dir_,app_settings_ptr_,logger_ptr_});
+    http_server_ptr_.reset(new http_server{io_,app_dir_,app_settings_ptr_,logger_ptr_});
     if(!http_server_ptr_->server_listen()){
         http_server_ptr_.reset();
         return false;
