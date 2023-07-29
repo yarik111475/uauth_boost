@@ -8,15 +8,15 @@
 #include <boost/json.hpp>
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/beast/http/message_generator.hpp>
+#include "dbase/dbase_handler.h"
 
 namespace spdlog{
     class logger;
 }
 
-class dbase_handler;
-
-typedef boost::beast::http::request<boost::beast::http::string_body> request_t;
-typedef boost::beast::http::response<boost::beast::http::string_body> response_t;
+using namespace boost::beast;
 
 class http_handler
 {
@@ -26,37 +26,37 @@ private:
     boost::json::object params_ {};
 
     //error handlers
-    response_t fail(request_t&& request,boost::beast::http::status code,const std::string& body);
-    response_t success(request_t&& request, boost::beast::http::status code, const std::string& body);
+    http::response<http::string_body> fail(http::request<http::string_body>&& request,http::status code,const std::string& body);
+    http::response<http::string_body> success(http::request<http::string_body>&& request, http::status code, const std::string& body);
 
     //rote handlers
-    response_t handle_users(request_t&& request);
-    response_t handle_authz(request_t&& request);
-    response_t handle_authz_manage(request_t&& request);
-    response_t handle_rps(request_t&& request);
-    response_t handle_certificates(request_t&& request);
+    http::response<http::string_body> handle_users(http::request<http::string_body>&& request);
+    http::response<http::string_body> handle_authz(http::request<http::string_body>&& request);
+    http::response<http::string_body> handle_authz_manage(http::request<http::string_body>&& request);
+    http::response<http::string_body> handle_rps(http::request<http::string_body>&& request);
+    http::response<http::string_body> handle_certificates(http::request<http::string_body>&& request);
 
     //users verb handlers
-    response_t handle_users_get(request_t&& request);
-    response_t handle_users_put(request_t&& request);
-    response_t handle_users_post(request_t&& request);
-    response_t handle_users_delete(request_t&& request);
+    http::response<http::string_body> handle_users_get(http::request<http::string_body>&& request);
+    http::response<http::string_body> handle_users_put(http::request<http::string_body>&& request);
+    http::response<http::string_body> handle_users_post(http::request<http::string_body>&& request);
+    http::response<http::string_body> handle_users_delete(http::request<http::string_body>&& request);
 
     //authz verb handlers
-    response_t handle_authz_get(request_t&& request);
+    http::response<http::string_body> handle_authz_get(http::request<http::string_body>&& request);
 
     //authz-manage verb handlers
-    response_t handle_authz_manage_post(request_t&& request);
-    response_t handle_authz_manage_delete(request_t&& request);
+    http::response<http::string_body> handle_authz_manage_post(http::request<http::string_body>&& request);
+    http::response<http::string_body> handle_authz_manage_delete(http::request<http::string_body>&& request);
 
     //rps varb handlers
-    response_t handle_rps_get(request_t&& request);
-    response_t handle_rps_put(request_t&& request);
-    response_t handle_rps_post(request_t&& request);
-    response_t handle_rps_delete(request_t&& request);
+    http::response<http::string_body> handle_rps_get(http::request<http::string_body>&& request);
+    http::response<http::string_body> handle_rps_put(http::request<http::string_body>&& request);
+    http::response<http::string_body> handle_rps_post(http::request<http::string_body>&& request);
+    http::response<http::string_body> handle_rps_delete(http::request<http::string_body>&& request);
 
     //certificate verb handler
-    response_t handle_certificates_post(request_t&& request);
+    http::response<http::string_body> handle_certificates_post(http::request<http::string_body>&& request);
 
     std::shared_ptr<std::string> body_ptr_ {nullptr};
     std::shared_ptr<dbase_handler> dbase_handler_ptr_ {nullptr};
@@ -65,7 +65,43 @@ private:
 public:
     explicit http_handler(const boost::json::object& params,std::shared_ptr<spdlog::logger> logger_ptr);
     ~http_handler()=default;
-    response_t handle_request(request_t&& request);;
+
+    template <class Body, class Allocator>
+    http::message_generator handle_request(http::request<Body, http::basic_fields<Allocator>>&& request){
+        std::string msg {};
+        const bool& db_ok {dbase_handler_ptr_->init_database(msg)};
+        if(!db_ok){
+            return fail(std::move(request),boost::beast::http::status::internal_server_error,msg);
+        }
+
+        const std::string& target {request.target()};
+        {//users
+            if(boost::starts_with(target,"/api/v1/u-auth/users")){
+                return handle_users(std::move(request));
+            }
+        }
+        {//authz-manage
+            if(boost::starts_with(target,"/api/v1/u-auth/authz/manage")){
+                return handle_authz_manage(std::move(request));
+            }
+        }
+        {//authz
+            if(boost::starts_with(target,"/api/v1/u-auth/authz")){
+                return handle_authz(std::move(request));
+            }
+        }
+        {//rps
+            if(boost::starts_with(target,"/api/v1/u-auth/roles-permissions")){
+                return handle_rps(std::move(request));
+            }
+        }
+        {//certificates
+            if(boost::starts_with(target,"/api/v1/u-auth/certificates")){
+                return handle_certificates_post(std::move(request));
+            }
+        }
+        return fail(std::move(request),boost::beast::http::status::not_found,"not found");
+    }
 };
 
 #endif // HTTP_HANDLER_H
