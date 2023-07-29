@@ -23,6 +23,7 @@ private:
     std::string time_with_timezone();
     PGconn* open_connection(std::string& msg);
     bool init_tables(PGconn* conn_ptr, std::string &msg);
+    bool init_default_rps(PGconn* conn_ptr, std::string &msg);
 
     bool is_rp_exists(PGconn* conn_ptr,const std::string& rp_uid,std::string& msg);
     bool is_user_exists(PGconn* conn_ptr,const std::string& user_uid,std::string& msg);
@@ -38,6 +39,7 @@ private:
 public:
     explicit dbase_handler(const boost::json::object& params,std::shared_ptr<spdlog::logger> logger_ptr);
     ~dbase_handler()=default;
+    bool init_database(std::string& msg);
 
     //List Of Users
     bool users_list_get(std::string& users,std::string& msg);

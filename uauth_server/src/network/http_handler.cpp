@@ -614,6 +614,12 @@ http_handler::http_handler(const boost::json::object &params, std::shared_ptr<sp
 
 response_t http_handler::handle_request(request_t &&request)
 {
+    std::string msg {};
+    const bool& db_ok {dbase_handler_ptr_->init_database(msg)};
+    if(!db_ok){
+        return fail(std::move(request),boost::beast::http::status::internal_server_error,msg);
+    }
+
     const std::string& target {request.target()};
     {//users
         if(boost::starts_with(target,"/api/v1/u-auth/users")){
