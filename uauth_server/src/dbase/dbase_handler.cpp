@@ -110,7 +110,6 @@ bool dbase_handler::init_tables(PGconn *conn_ptr,std::string& msg)
         if(PQresultStatus(res_ptr) != PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
-            PQfinish(conn_ptr);
             return false;
         }
     }
@@ -122,7 +121,6 @@ bool dbase_handler::init_tables(PGconn *conn_ptr,std::string& msg)
         if(PQresultStatus(res_ptr) != PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
-            PQfinish(conn_ptr);
             return false;
         }
 
@@ -130,7 +128,6 @@ bool dbase_handler::init_tables(PGconn *conn_ptr,std::string& msg)
     {//init default rps
         const bool default_rps_ok {init_default_rps(conn_ptr,msg)};
         if(!default_rps_ok){
-            PQfinish(conn_ptr);
             return false;
         }
     }
@@ -141,7 +138,6 @@ bool dbase_handler::init_tables(PGconn *conn_ptr,std::string& msg)
         if(PQresultStatus(res_ptr) != PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
-            PQfinish(conn_ptr);
             return false;
         }
     }
@@ -152,7 +148,6 @@ bool dbase_handler::init_tables(PGconn *conn_ptr,std::string& msg)
         if(PQresultStatus(res_ptr) != PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
-            PQfinish(conn_ptr);
             return false;
         }
     }
