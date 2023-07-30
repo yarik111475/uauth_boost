@@ -84,7 +84,7 @@ void bootloader::init_spdlog()
     }
 }
 
-bool bootloader::start_listent()
+bool bootloader::start_listen()
 {
     http_server_ptr_.reset(new http_server{io_,app_dir_,app_settings_ptr_,logger_ptr_});
     if(!http_server_ptr_->server_listen()){
@@ -105,7 +105,7 @@ void bootloader::on_wait(const boost::system::error_code &ec)
     if(ec!=boost::asio::error::operation_aborted){
         {
             boost::system::error_code ec;
-            const bool& listen_ok {start_listent()};
+            const bool& listen_ok {start_listen()};
             if(listen_ok){
                 timer_.cancel(ec);
                 if(logger_ptr_){

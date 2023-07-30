@@ -1503,9 +1503,9 @@ bool dbase_handler::authz_check_get(const std::string &user_uid, const std::stri
     //empty rp_uid list for next use
     std::vector<std::string> rp_uids {};
     {//check 'rp_ident'
-        const boost::regex& regex {"^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"};
+        boost::regex re {"^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"};
         boost::smatch match;
-        if(!boost::regex_match(rp_ident,match,regex)){//not valid uuid, use as std::string
+        if(!boost::regex_match(rp_ident,match,re)){//not valid uuid, use as std::string
             //split by white_space and remove empty strings
             std::vector<std::string> rp_names {};
             boost::split(rp_names,rp_ident,boost::is_any_of("%20"),boost::token_compress_on);

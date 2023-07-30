@@ -45,7 +45,7 @@ private:
 
     bool init_dirs();
     void init_spdlog();
-    bool start_listent();
+    bool start_listen();
     bool init_appsettings();
     void on_wait(const boost::system::error_code& ec);
 

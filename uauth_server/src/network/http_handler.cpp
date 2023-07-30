@@ -129,7 +129,7 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
 {
     const std::string& target {request.target()};
     {//list without pagination
-        const boost::regex& re {"^/api/v1/u-auth/users$"};
+        boost::regex re {"^/api/v1/u-auth/users$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             std::string msg {};
@@ -142,7 +142,7 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
         }
     }
     {//user by user_uid
-        const boost::regex& re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
+        boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             const std::string& user_uid {match[1]};
@@ -156,7 +156,7 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
         }
     }
     {//user's roles_permissions
-        const boost::regex& re {"^/api/v1/u-auth/users/" + regex_uid_ + "/roles-permissions$"};
+        boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "/roles-permissions$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             const std::string& user_uid {match[1]};
