@@ -136,9 +136,9 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
             std::string users {};
             const bool& ok {dbase_handler_ptr_->users_list_get(users,msg)};
             if(ok){
-                return success(std::move(request),boost::beast::http::status::ok,users);
+                return success(std::move(request),http::status::ok,users);
             }
-            return fail(std::move(request),boost::beast::http::status::bad_request,msg);
+            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//user by user_uid
@@ -150,9 +150,9 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
             std::string user {};
             const bool& ok {dbase_handler_ptr_->users_info_get(user_uid,user,msg)};
             if(ok){
-                return success(std::move(request),boost::beast::http::status::ok,user);
+                return success(std::move(request),http::status::ok,user);
             }
-            return fail(std::move(request),boost::beast::http::status::bad_request,msg);
+            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//user's roles_permissions
@@ -164,9 +164,9 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
             std::string rps {};
             const bool& ok {dbase_handler_ptr_->users_rps_get(user_uid,rps,msg)};
             if(ok){
-                return success(std::move(request),boost::beast::http::status::ok,rps);
+                return success(std::move(request),http::status::ok,rps);
             }
-            return fail(std::move(request),boost::beast::http::status::bad_request,msg);
+            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//list with limit and/or offset and filter
@@ -211,13 +211,13 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
                 std::string users {};
                 const bool& ok {dbase_handler_ptr_->users_list_get(users,limit,offset,first_name,last_name,email,is_blocked,msg)};
                 if(ok){
-                    return success(std::move(request),boost::beast::http::status::ok,users);
+                    return success(std::move(request),http::status::ok,users);
                 }
-                return fail(std::move(request),boost::beast::http::status::bad_request,msg);
+                return fail(std::move(request),http::status::bad_request,msg);
             }
         }
     }
-    return fail(std::move(request),boost::beast::http::status::not_found,"not found");
+    return fail(std::move(request),http::status::not_found,"not found");
 }
 
 http::response<http::string_body> http_handler::handle_users_put(http::request<http::string_body> &&request)
@@ -232,23 +232,23 @@ http::response<http::string_body> http_handler::handle_users_put(http::request<h
         boost::system::error_code ec;
         const boost::json::value v {boost::json::parse(body,ec)};
         if(ec || !v.is_object()){
-            return fail(std::move(request),boost::beast::http::status::bad_request,"not valid user");
+            return fail(std::move(request),http::status::bad_request,"not valid user");
         }
         const boost::json::object& user {v.as_object()};
-        if(!user.contains("first_name") ||!user.contains("last_name")||
-                !user.contains("email") || !user.contains("is_blocked")){
-            return fail(std::move(request),boost::beast::http::status::bad_request,"not valid user");
+        if(!user.contains("first_name") ||!user.contains("last_name")|| !user.contains("email") || !user.contains("is_blocked") ||
+           !user.contains("phone_number") || !user.contains("position") || !user.contains("gender") || !user.contains("location_id") || !user.contains("ou_id")){
+            return fail(std::move(request),http::status::bad_request,"not valid user");
         }
 
         std::string msg;
         const bool& ok {dbase_handler_ptr_->users_info_put(user_uid,body,msg)};
         if(ok){
-            return success(std::move(request),boost::beast::http::status::ok,msg);
+            return success(std::move(request),http::status::ok,msg);
         }
-        return fail(std::move(request),boost::beast::http::status::bad_request,"bad request");
+        return fail(std::move(request),http::status::bad_request,"bad request");
     }
 
-    return fail(std::move(request),boost::beast::http::status::not_found,"not found");
+    return fail(std::move(request),http::status::not_found,"not found");
 }
 
 http::response<http::string_body> http_handler::handle_users_post(http::request<http::string_body> &&request)
@@ -257,19 +257,20 @@ http::response<http::string_body> http_handler::handle_users_post(http::request<
     boost::system::error_code ec;
     const boost::json::value v {boost::json::parse(body,ec)};
     if(ec || !v.is_object()){
-        return fail(std::move(request),boost::beast::http::status::bad_request,"not valid user");
+        return fail(std::move(request),http::status::bad_request,"not valid user");
     }
     const boost::json::object& user {v.as_object()};
-    if(!user.contains("first_name") ||!user.contains("last_name") ||!user.contains("email")){
-        return fail(std::move(request),boost::beast::http::status::bad_request,"not valid user");
+    if(!user.contains("first_name") ||!user.contains("last_name")|| !user.contains("email") || !user.contains("phone_number") ||
+        !user.contains("position") || !user.contains("gender") || !user.contains("location_id") || !user.contains("ou_id")){
+        return fail(std::move(request),http::status::bad_request,"not valid user");
     }
 
     std::string msg;
     const bool& ok {dbase_handler_ptr_->users_info_post(body,msg)};
     if(ok){
-        return success(std::move(request),boost::beast::http::status::ok,"user created");
+        return success(std::move(request),http::status::ok,"user created");
     }
-    return fail(std::move(request),boost::beast::http::status::not_found,msg);
+    return fail(std::move(request),http::status::not_found,msg);
 }
 
 http::response<http::string_body> http_handler::handle_users_delete(http::request<http::string_body> &&request)
@@ -278,15 +279,15 @@ http::response<http::string_body> http_handler::handle_users_delete(http::reques
     boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
     boost::smatch match;
     if(!boost::regex_match(target,match,re)){
-        return fail(std::move(request),boost::beast::http::status::bad_request,"bad request");
+        return fail(std::move(request),http::status::bad_request,"bad request");
     }
     const std::string& user_uid {match[1]};
     std::string msg;
     const bool& ok {dbase_handler_ptr_->users_info_delete(user_uid,msg)};
     if(ok){
-        return success(std::move(request),boost::beast::http::status::no_content,msg);
+        return success(std::move(request),http::status::no_content,msg);
     }
-    return fail(std::move(request),boost::beast::http::status::not_found,msg);
+    return fail(std::move(request),http::status::not_found,msg);
 }
 
 http::response<http::string_body> http_handler::handle_authz_get(http::request<http::string_body> &&request)
@@ -300,11 +301,11 @@ http::response<http::string_body> http_handler::handle_authz_get(http::request<h
         std::string msg {};
         const bool& ok {dbase_handler_ptr_->authz_check_get(user_uid,rp_ident,msg)};
         if(ok){
-            return success(std::move(request),boost::beast::http::status::ok,std::to_string(true));
+            return success(std::move(request),http::status::ok,std::to_string(true));
         }
-        return fail(std::move(request),boost::beast::http::status::not_found,msg);
+        return fail(std::move(request),http::status::not_found,msg);
     }
-    return fail(std::move(request),boost::beast::http::status::bad_request,"bad request");
+    return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
 http::response<http::string_body> http_handler::handle_authz_manage_post(http::request<http::string_body> &&request)
@@ -319,11 +320,11 @@ http::response<http::string_body> http_handler::handle_authz_manage_post(http::r
 
         const bool& ok {dbase_handler_ptr_->authz_manage_post(requested_user_id,requested_rp_id,msg)};
         if(ok){
-            return success(std::move(request),boost::beast::http::status::ok,msg);
+            return success(std::move(request),http::status::ok,msg);
         }
-        return fail(std::move(request),boost::beast::http::status::not_found,msg);
+        return fail(std::move(request),http::status::not_found,msg);
     }
-    return fail(std::move(request),boost::beast::http::status::bad_request,"bad request");
+    return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
 http::response<http::string_body> http_handler::handle_authz_manage_delete(http::request<http::string_body> &&request)
@@ -338,11 +339,11 @@ http::response<http::string_body> http_handler::handle_authz_manage_delete(http:
 
         const bool& ok {dbase_handler_ptr_->authz_manage_delete(requested_user_id,requested_rp_id,msg)};
         if(ok){
-            return success(std::move(request),boost::beast::http::status::ok,msg);
+            return success(std::move(request),http::status::ok,msg);
         }
-        return fail(std::move(request),boost::beast::http::status::not_found,msg);
+        return fail(std::move(request),http::status::not_found,msg);
     }
-    return fail(std::move(request),boost::beast::http::status::bad_request,"bad request");
+    return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
 http::response<http::string_body> http_handler::handle_rps_get(http::request<http::string_body> &&request)
@@ -356,9 +357,9 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
             std::string rps {};
             const bool& ok {dbase_handler_ptr_->rps_list_get(rps,msg)};
             if(ok){
-                return success(std::move(request),boost::beast::http::status::ok,rps);
+                return success(std::move(request),http::status::ok,rps);
             }
-            return fail(std::move(request),boost::beast::http::status::bad_request,msg);
+            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//rps by rp_uid
@@ -370,9 +371,9 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
             std::string rp {};
             const bool& ok {dbase_handler_ptr_->rps_info_get(rp_uid,rp,msg)};
             if(ok){
-                return success(std::move(request),boost::beast::http::status::ok,rp);
+                return success(std::move(request),http::status::ok,rp);
             }
-            return fail(std::move(request),boost::beast::http::status::bad_request,msg);
+            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//rps details (all fist_low_level children)
@@ -384,9 +385,9 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
             std::string rp_detail {};
             const bool& ok {dbase_handler_ptr_->rps_rp_detail_get(rp_uid,rp_detail,msg)};
             if(ok){
-                return success(std::move(request),boost::beast::http::status::ok,rp_detail);
+                return success(std::move(request),http::status::ok,rp_detail);
             }
-            return fail(std::move(request),boost::beast::http::status::bad_request,msg);
+            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//all users for rps by rps_uid
@@ -398,9 +399,9 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
             std::string users {};
             const bool& ok {dbase_handler_ptr_->rps_users_get(rp_uid,users,msg)};
             if(ok){
-                return success(std::move(request),boost::beast::http::status::ok,users);
+                return success(std::move(request),http::status::ok,users);
             }
-            return fail(std::move(request),boost::beast::http::status::bad_request,msg);
+            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//all users for rps by rps_uid with limit and/or offset
@@ -430,9 +431,9 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
                     std::string users {};
                     const bool& ok {dbase_handler_ptr_->rps_users_get(rp_uid,users,limit,offset,msg)};
                     if(ok){
-                        return success(std::move(request),boost::beast::http::status::ok,users);
+                        return success(std::move(request),http::status::ok,users);
                     }
-                    return fail(std::move(request),boost::beast::http::status::bad_request,msg);
+                    return fail(std::move(request),http::status::bad_request,msg);
                 }
             }
         }
@@ -474,14 +475,14 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
                 std::string rps {};
                 const bool& ok {dbase_handler_ptr_->rps_list_get(rps,limit,offset,name,type,description,msg)};
                 if(ok){
-                    return success(std::move(request),boost::beast::http::status::ok,rps);
+                    return success(std::move(request),http::status::ok,rps);
                 }
-                return fail(std::move(request),boost::beast::http::status::bad_request,msg);
+                return fail(std::move(request),http::status::bad_request,msg);
             }
         }
     }
 
-    return fail(std::move(request),boost::beast::http::status::bad_request,"bad request");
+    return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
 http::response<http::string_body> http_handler::handle_rps_put(http::request<http::string_body> &&request)
@@ -497,19 +498,19 @@ http::response<http::string_body> http_handler::handle_rps_put(http::request<htt
             boost::system::error_code ec;
             const boost::json::value v {boost::json::parse(body,ec)};
             if(ec || !v.is_object()){
-                return fail(std::move(request),boost::beast::http::status::bad_request,"not valid role-permission");
+                return fail(std::move(request),http::status::bad_request,"not valid role-permission");
             }
             const boost::json::object& rp {v.as_object()};
             if(!rp.contains("name") ||!rp.contains("type")|| !rp.contains("description")){
-                return fail(std::move(request),boost::beast::http::status::bad_request,"not valid role-permission");
+                return fail(std::move(request),http::status::bad_request,"not valid role-permission");
             }
 
             std::string msg;
             const bool& ok {dbase_handler_ptr_->rps_info_put(rp_uid,body,msg)};
             if(ok){
-                return success(std::move(request),boost::beast::http::status::ok,msg);
+                return success(std::move(request),http::status::ok,msg);
             }
-            return fail(std::move(request),boost::beast::http::status::not_found,msg);
+            return fail(std::move(request),http::status::not_found,msg);
         }
     }
     {//add role_permission relationship
@@ -521,12 +522,12 @@ http::response<http::string_body> http_handler::handle_rps_put(http::request<htt
             std::string msg;
             const bool& ok {dbase_handler_ptr_->rps_child_put(parent_uid,child_uid,msg)};
             if(ok){
-                return success(std::move(request),boost::beast::http::status::ok,msg);
+                return success(std::move(request),http::status::ok,msg);
             }
-            return fail(std::move(request),boost::beast::http::status::not_found,msg);
+            return fail(std::move(request),http::status::not_found,msg);
         }
     }
-    return fail(std::move(request),boost::beast::http::status::not_found,"not found");
+    return fail(std::move(request),http::status::not_found,"not found");
 }
 
 http::response<http::string_body> http_handler::handle_rps_post(http::request<http::string_body> &&request)
@@ -535,19 +536,19 @@ http::response<http::string_body> http_handler::handle_rps_post(http::request<ht
     boost::system::error_code ec;
     const boost::json::value v {boost::json::parse(body,ec)};
     if(ec || !v.is_object()){
-        return fail(std::move(request),boost::beast::http::status::not_found,"not valid role-permission");
+        return fail(std::move(request),http::status::not_found,"not valid role-permission");
     }
     const boost::json::object& user {v.as_object()};
     if(!user.contains("name")|| !user.contains("type") || !user.contains("description")){
-        return fail(std::move(request),boost::beast::http::status::not_found,"not valid role-permission");
+        return fail(std::move(request),http::status::not_found,"not valid role-permission");
     }
 
     std::string msg;
     const bool& ok {dbase_handler_ptr_->rps_info_post(body,msg)};
     if(ok){
-        return success(std::move(request),boost::beast::http::status::ok,msg);
+        return success(std::move(request),http::status::ok,msg);
     }
-    return fail(std::move(request),boost::beast::http::status::not_found,"not found");
+    return fail(std::move(request),http::status::not_found,"not found");
 }
 
 http::response<http::string_body> http_handler::handle_rps_delete(http::request<http::string_body> &&request)
@@ -561,9 +562,9 @@ http::response<http::string_body> http_handler::handle_rps_delete(http::request<
             std::string msg;
             const bool& ok {dbase_handler_ptr_->rps_info_delete(rp_uid,msg)};
             if(ok){
-                return success(std::move(request),boost::beast::http::status::no_content,msg);
+                return success(std::move(request),http::status::no_content,msg);
             }
-            return fail(std::move(request),boost::beast::http::status::not_found,msg);
+            return fail(std::move(request),http::status::not_found,msg);
         }
     }
     {//remove role_permission relationship
@@ -575,12 +576,12 @@ http::response<http::string_body> http_handler::handle_rps_delete(http::request<
             std::string msg;
             const bool& ok {dbase_handler_ptr_->rps_child_delete(parent_uid,child_uid,msg)};
             if(ok){
-                return success(std::move(request),boost::beast::http::status::ok,msg);
+                return success(std::move(request),http::status::ok,msg);
             }
-            return fail(std::move(request),boost::beast::http::status::not_found,msg);
+            return fail(std::move(request),http::status::not_found,msg);
         }
     }
-    return fail(std::move(request),boost::beast::http::status::not_found,"not found");
+    return fail(std::move(request),http::status::not_found,"not found");
 }
 
 http::response<http::string_body> http_handler::handle_certificates_post(http::request<http::string_body> &&request)
@@ -601,7 +602,7 @@ http::response<http::string_body> http_handler::handle_certificates_post(http::r
             const std::string& csr_binary {request.body()};
         }
     }
-    return fail(std::move(request),boost::beast::http::status::not_found,"not found");
+    return fail(std::move(request),http::status::not_found,"not found");
 }
 
 http_handler::http_handler(const boost::json::object &params, std::shared_ptr<spdlog::logger> logger_ptr)

@@ -789,13 +789,20 @@ bool dbase_handler::users_info_put(const std::string &user_uid, const std::strin
     const std::string& last_name {user_obj.at("last_name").as_string().c_str()};
     const std::string& email {user_obj.at("email").as_string().c_str()};
     const std::string& is_blocked {std::to_string(user_obj.at("is_blocked").as_bool())};
+    const std::string& phone_number {user_obj.at("phone_number").as_string().c_str()};
+    const std::string& position {user_obj.at("position").as_string().c_str()};
+    const std::string& gender {user_obj.at("gender").as_string().c_str()};
+    const std::string& location_id {user_obj.at("location_id").as_string().c_str()};
+    const std::string& ou_id {user_obj.at("ou_id").as_string().c_str()};
 
     const std::string& updated_at {time_with_timezone()};
 
     {//update user
-        const char* param_values[] {first_name.c_str(),last_name.c_str(),email.c_str(),is_blocked.c_str(),updated_at.c_str(),user_uid.c_str()};
-        PGresult* res_ptr=PQexecParams(conn_ptr,"UPDATE users SET first_name=$1,last_name=$2,email=$3,is_blocked=$4,updated_at=$5 WHERE id=$6",
-                                       6,NULL,param_values,NULL,NULL,0);
+        const char* param_values[] {first_name.c_str(),last_name.c_str(),email.c_str(),is_blocked.c_str(),updated_at.c_str(),
+            phone_number.c_str(),position.c_str(),gender.c_str(),location_id.c_str(),ou_id.c_str(),user_uid.c_str()};
+        PGresult* res_ptr=PQexecParams(conn_ptr,"UPDATE users SET first_name=$1,last_name=$2,email=$3,is_blocked=$4,updated_at=$5,"
+                                                "phone_numder=$6,position=$7,gender=$8,location_id=8,ou_id=$10 WHERE id=$11",
+                                                 11,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
@@ -849,6 +856,11 @@ bool dbase_handler::users_info_post(const std::string &user, std::string &msg)
     const std::string& first_name {user_obj.at("first_name").as_string().c_str()};
     const std::string& last_name {user_obj.at("last_name").as_string().c_str()};
     const std::string& email {user_obj.at("email").as_string().c_str()};
+    const std::string& phone_number {user_obj.at("phone_number").as_string().c_str()};
+    const std::string& position {user_obj.at("position").as_string().c_str()};
+    const std::string& gender {user_obj.at("gender").as_string().c_str()};
+    const std::string& location_id {user_obj.at("location_id").as_string().c_str()};
+    const std::string& ou_id {user_obj.at("ou_id").as_string().c_str()};
 
     const boost::uuids::uuid& uuid_ {boost::uuids::random_generator()()};
     const std::string& uuid {boost::uuids::to_string(uuid_)};
@@ -858,9 +870,11 @@ bool dbase_handler::users_info_post(const std::string &user, std::string &msg)
 
     const std::string& is_blocked {std::to_string(false)};
 
-    const char* param_values[] {uuid.c_str(),first_name.c_str(),last_name.c_str(),email.c_str(),created_at.c_str(),updated_at.c_str(),is_blocked.c_str()};
-    PGresult* res_ptr=PQexecParams(conn_ptr,"INSERT INTO users (id,first_name,last_name,email,created_at,updated_at,is_blocked) VALUES($1,$2,$3,$4,$5,$6,$7)",
-                                   7,NULL,param_values,NULL,NULL,0);
+    const char* param_values[] {uuid.c_str(),first_name.c_str(),last_name.c_str(),email.c_str(),created_at.c_str(),updated_at.c_str(),is_blocked.c_str(),
+                                phone_number.c_str(),position.c_str(),gender.c_str(),location_id.c_str(),ou_id.c_str()};
+    PGresult* res_ptr=PQexecParams(conn_ptr,"INSERT INTO users (id,first_name,last_name,email,created_at,updated_at,is_blocked,phone_number,position,gender,location_id,ou_id)"
+                                            " VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
+                                            12,NULL,param_values,NULL,NULL,0);
     if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
