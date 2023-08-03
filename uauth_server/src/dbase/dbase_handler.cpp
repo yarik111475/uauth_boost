@@ -614,6 +614,7 @@ bool dbase_handler::users_info_get(const std::string &user_uid, std::string &use
 
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
+        msg="user not found";
         PQclear(res_ptr);
         PQfinish(conn_ptr);
         return false;

@@ -18,6 +18,11 @@ void http_server::on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::s
         const std::string& UA_DB_USER {app_settings_ptr_->value_get("UA_DB_USER")};
         const std::string& UA_DB_PASS {app_settings_ptr_->value_get("UA_DB_PASS")};
 
+        const std::string& UA_CA_CRT_PATH {app_settings_ptr_->value_get("UA_CA_CRT_PATH")};
+        const std::string& UA_SIGNING_CA_CRT_PATH {app_settings_ptr_->value_get("UA_SIGNING_CA_CRT_PATH")};
+        const std::string& UA_SIGNING_CA_KEY_PATH {app_settings_ptr_->value_get("UA_SIGNING_CA_KEY_PATH")};
+        const std::string& UA_SIGNING_CA_KEY_PASS {app_settings_ptr_->value_get("UA_SIGNING_CA_KEY_PASS")};
+
         if(UA_DB.empty() || UA_DB_HOST.empty() || UA_DB_PORT.empty() || UA_DB_USER.empty() || UA_DB_PASS.empty()){
             if(logger_ptr_){
                logger_ptr_->critical("{}, db params not defined in app_settings!",
@@ -30,7 +35,12 @@ void http_server::on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::s
                 {"UA_DB_HOST",UA_DB_HOST},
                 {"UA_DB_PORT",UA_DB_PORT},
                 {"UA_DB_USER",UA_DB_USER},
-                {"UA_DB_PASS",UA_DB_PASS}
+                {"UA_DB_PASS",UA_DB_PASS},
+
+                {"UA_CA_CRT_PATH",UA_CA_CRT_PATH},
+                {"UA_SIGNING_CA_CRT_PATH",UA_SIGNING_CA_CRT_PATH},
+                {"UA_SIGNING_CA_KEY_PATH",UA_SIGNING_CA_KEY_PATH},
+                {"UA_SIGNING_CA_KEY_PASS",UA_SIGNING_CA_KEY_PASS}
             };
             std::make_shared<http_session>(std::move(socket),params,logger_ptr_)->session_run();
         }
