@@ -1,6 +1,7 @@
 #include "dbase_handler.h"
 
 #include <vector>
+#include <algorithm>
 #include <boost/json.hpp>
 #include <boost/regex.hpp>
 #include <boost/format.hpp>
@@ -9,6 +10,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/algorithm.hpp>
 
 //get date_time with timezone as std::string
 std::string dbase_handler::time_with_timezone()
@@ -482,6 +484,34 @@ bool dbase_handler::init_database(std::string &msg)
         return false;
     }
     PQfinish(conn_ptr);
+    return true;
+}
+
+//Check if user exists
+bool dbase_handler::is_user_exists(const std::string &user_uid,std::string& msg)
+{
+    PGconn* conn_ptr {open_connection(msg)};
+    if(!conn_ptr){
+        return false;
+    }
+    const char* param_values[] {user_uid.c_str()};
+    PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1",
+        1,NULL,param_values,NULL,NULL,0);
+
+    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        msg=std::string {PQresultErrorMessage(res_ptr)};
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return false;
+    }
+
+    const int& rows {PQntuples(res_ptr)};
+    if(!rows){
+        msg=user_uid;
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return false;
+    }
     return true;
 }
 
@@ -1494,11 +1524,12 @@ bool dbase_handler::authz_check_get(const std::string &user_uid, const std::stri
     if(!conn_ptr){
         return false;
     }
-    PGresult* res_ptr {NULL};
-    {//check 'user_uid'
-        const char* param_values[] {user_uid.c_str(),"false"};
-        res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1 AND is_blocked=$2",
-                             2,NULL,param_values,NULL,NULL,0);
+    std::vector<std::string> rp_uids {};
+    {//get top_level rp_uid
+        PGresult* res_ptr {NULL};
+        const char* param_values[] {user_uid.c_str()};
+        res_ptr=PQexecParams(conn_ptr,"SELECT role_permission_id FROM users_roles_permissions WHERE user_id=$1",
+                                       1,NULL,param_values,NULL,NULL,0);
 
         if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -1506,46 +1537,101 @@ bool dbase_handler::authz_check_get(const std::string &user_uid, const std::stri
             PQfinish(conn_ptr);
             return false;
         }
+
         const int& rows {PQntuples(res_ptr)};
         if(!rows){
+            msg=user_uid;
+            PQclear(res_ptr);
+            PQfinish(conn_ptr);
+            return false;
+        }
+        for(int r=0;r<rows;++r){
+            const std::string& rp_uid {PQgetvalue(res_ptr,r,0)};
+            rp_uids.push_back(rp_uid);
+        }
+        PQclear(res_ptr);
+    }
+    {//get all low_level rp_uids for top_level rp_uid
+        PGresult* res_ptr {NULL};
+        const std::string& command {"WITH RECURSIVE rp_list AS ("
+                                    "SELECT child_id, parent_id "
+                                    "FROM roles_permissions_relationship "
+                                    "WHERE parent_id IN ($1) "
+                                    "UNION "
+                                    "SELECT rpr.child_id, rpr.parent_id "
+                                    "FROM roles_permissions_relationship rpr "
+                                    "JOIN rp_list on rp_list.child_id = rpr.parent_id"
+                                    ") SELECT DISTINCT child_id FROM rp_list"};
+
+        std::vector<const char*> param_values {};
+        param_values.resize(rp_uids.size());
+        std::transform(rp_uids.begin(),rp_uids.end(),param_values.begin(),[](const std::string& item){
+            return item.c_str();
+        });
+        res_ptr=PQexecParams(conn_ptr,command.c_str(),
+                             1,NULL,param_values.data(),NULL,NULL,0);
+        if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             PQfinish(conn_ptr);
             return false;
         }
+        const int& rows {PQntuples(res_ptr)};
+        if(rows){
+            for(int r=0;r<rows;++r){
+                const std::string& rp_uid {PQgetvalue(res_ptr,r,0)};
+                rp_uids.push_back(rp_uid.c_str());
+            }
+        }
         PQclear(res_ptr);
     }
-    //empty rp_uid list for next use
-    std::vector<std::string> rp_uids {};
+
     {//check 'rp_ident'
         boost::regex re {"^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"};
         boost::smatch match;
-        if(!boost::regex_match(rp_ident,match,re)){//not valid uuid, use as std::string
+        if(!boost::regex_match(rp_ident,match,re)){
             //split by white_space and remove empty strings
             std::vector<std::string> rp_names {};
             boost::split(rp_names,rp_ident,boost::is_any_of("%20"),boost::token_compress_on);
 
-            //get all rp_uids for rp_names
-            rp_uids_by_rp_names_get(conn_ptr,rp_names,rp_uids);
-
-            //get all low_level rp_uids for all top_level rp_uid in rp_uids
-            std::vector<std::string> rp_uids_sub {};
-            for(std::string& rp_uid: rp_uids){
-                rp_uid_recursive_get(conn_ptr,rp_uid,rp_uids_sub);
+            PGresult* res_ptr {NULL};
+            std::vector<std::string> rp_uids_names {};
+            for(const std::string& rp_name: rp_names){
+                const char* param_values[] {rp_name.c_str()};
+                res_ptr=PQexecParams(conn_ptr,"SELECT id FROM roles_permissions WHERE name=$1",
+                                     1,NULL,param_values,NULL,NULL,0);
+                if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+                    msg=std::string {PQresultErrorMessage(res_ptr)};
+                    PQclear(res_ptr);
+                    PQfinish(conn_ptr);
+                    return false;
+                }
+                const int& rows {PQntuples(res_ptr)};
+                if(!rows){
+                    PQclear(res_ptr);
+                    PQfinish(conn_ptr);
+                    return false;
+                }
+                for(int r=0;r<rows;++r){
+                    const std::string& rp_uid_name {PQgetvalue(res_ptr,r,0)};
+                    rp_uids_names.push_back(rp_uid_name.c_str());
+                }
             }
-            std::copy(rp_uids_sub.begin(),rp_uids_sub.end(),std::back_inserter(rp_uids));
+            const bool contains_all {std::all_of(rp_uids_names.begin(),rp_uids_names.end(),[&](const std::string& rp_uid){
+                const auto& it {std::find(rp_uids.begin(),rp_uids.end(),rp_uid)};
+                return (it!=rp_uids.end());
+            })};
+            PQfinish(conn_ptr);
+            return contains_all;
         }
-        else{//valid uuid, use as 'rp_uuid'
-            //get all low_level rp_uid for top_level rp_ident
-            rp_uid_recursive_get(conn_ptr,rp_ident,rp_uids);
-            rp_uids.push_back(rp_ident);
+        else{
+            auto it {std::find(rp_uids.begin(),rp_uids.end(),rp_ident)};
+            if(it!=rp_uids.end()){
+                PQfinish(conn_ptr);
+                return true;
+            }
         }
     }
-    if(rp_uids.empty()){
-        PQfinish(conn_ptr);
-        return false;
-    }
-
     PQfinish(conn_ptr);
     return false;
 }

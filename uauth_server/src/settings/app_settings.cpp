@@ -15,7 +15,7 @@ bool app_settings::settings_init()
     const std::string& UA_PORT="8030";
 
     //db params
-    const std::string& UA_DB="uauth";
+    const std::string& UA_DB="u-auth";
         //std::getenv("UA_DB")==NULL ? "" :std::getenv("UA_DB");
     const std::string& UA_DB_HOST="dev3.u-system.tech";
         //std::getenv("UA_DB_HOST")==NULL ? "" :std::getenv("UA_DB_HOST");

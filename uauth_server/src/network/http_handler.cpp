@@ -300,11 +300,16 @@ http::response<http::string_body> http_handler::handle_authz_get(http::request<h
         const std::string& user_uid {match[1]};
         const std::string& rp_ident {match[2]};
         std::string msg {};
-        const bool& ok {dbase_handler_ptr_->authz_check_get(user_uid,rp_ident,msg)};
-        if(ok){
-            return success(std::move(request),http::status::ok,std::to_string(true));
+        {//check if user exists
+            const bool& ok {dbase_handler_ptr_->is_user_exists(user_uid,msg)};
+            if(!ok){
+                return fail(std::move(request),http::status::not_found,msg);
+            }
         }
-        return fail(std::move(request),http::status::not_found,msg);
+        {//check roles_permissions
+            const bool& ok {dbase_handler_ptr_->authz_check_get(user_uid,rp_ident,msg)};
+            return success(std::move(request),http::status::ok,std::to_string(ok));
+        }
     }
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
