@@ -12,6 +12,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/algorithm.hpp>
 
+bool dbase_handler::is_initiated_ {false};
+
 //get date_time with timezone as std::string
 std::string dbase_handler::time_with_timezone()
 {
@@ -457,33 +459,19 @@ dbase_handler::dbase_handler(const boost::json::object &params, std::shared_ptr<
 
 bool dbase_handler::init_database(std::string &msg)
 {
+    if(dbase_handler::is_initiated_){
+        return true;
+    }
     PGconn* conn_ptr {open_connection(msg)};
     if(!conn_ptr){
         return false;
     }
-    /*
-    {//create database
-        const std::string& UA_DB {params_.at("UA_DB").as_string().c_str()};
-        const std::string& UA_DB_USER {params_.at("UA_DB_USER").as_string().c_str()};
-
-        PGresult* res_ptr {NULL};
-        const char* param_values[]{UA_DB.c_str(),UA_DB_USER.c_str()};
-        res_ptr=PQexecParams(conn_ptr,"CREATE DATABASE $1 OWNER '$2'",
-                             2,NULL,param_values,NULL,NULL,0);
-        if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
-            msg=std::string {PQresultErrorMessage(res_ptr)};
-            PQclear(res_ptr);
-            PQfinish(conn_ptr);
-            return false;
-        }
-        PQclear(res_ptr);
-    }
-    */
     if(!init_tables(conn_ptr,msg)){
         PQfinish(conn_ptr);
         return false;
     }
     PQfinish(conn_ptr);
+    dbase_handler::is_initiated_=true;
     return true;
 }
 

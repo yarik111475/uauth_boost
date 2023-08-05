@@ -82,33 +82,33 @@ public:
             requester_id=it->value();
         }
 
-        {//check database
+        {//check and init database
             const bool& db_ok {dbase_handler_ptr_->init_database(msg)};
             if(!db_ok){
                 return fail(std::move(request),boost::beast::http::status::internal_server_error,msg);
             }
         }
-        {//users
+        {//handle users
             if(boost::starts_with(target,"/api/v1/u-auth/users")){
                 return handle_users(std::move(request),requester_id);
             }
         }
-        {//authz-manage
+        {//handle authz-manage
             if(boost::starts_with(target,"/api/v1/u-auth/authz/manage")){
                 return handle_authz_manage(std::move(request),requester_id);
             }
         }
-        {//authz
+        {//handle authz
             if(boost::starts_with(target,"/api/v1/u-auth/authz")){
                 return handle_authz(std::move(request),requester_id);
             }
         }
-        {//rps
+        {//handle rps
             if(boost::starts_with(target,"/api/v1/u-auth/roles-permissions")){
                 return handle_rps(std::move(request),requester_id);
             }
         }
-        {//certificates
+        {//handle certificates
             if(boost::starts_with(target,"/api/v1/u-auth/certificates")){
                 return handle_certificates_post(std::move(request),requester_id);
             }

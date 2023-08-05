@@ -19,6 +19,8 @@ private:
     boost::asio::io_context io_;
     boost::json::object params_ {};
     std::shared_ptr<spdlog::logger> logger_ptr_ {nullptr};
+    static bool is_initiated_;
+
 
     std::string time_with_timezone();
     PGconn* open_connection(std::string& msg);
@@ -38,6 +40,7 @@ private:
 public:
     explicit dbase_handler(const boost::json::object& params,std::shared_ptr<spdlog::logger> logger_ptr);
     ~dbase_handler()=default;
+    static bool init_database(const std::string& msg);
     bool init_database(std::string& msg);
     //Check if user exists
     bool is_user_exists(const std::string& user_uid, std::string &msg);
