@@ -35,25 +35,28 @@ http::response<http::string_body> http_handler::success(http::request<http::stri
     return response;
 }
 
-http::response<http::string_body> http_handler::handle_users(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_users(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     //verb check
     if((request.method()!=http::verb::get) & (request.method()!=http::verb::put) &
        (request.method()!=http::verb::post) & (request.method()!=http::verb::delete_)){
         return fail(std::move(request),http::status::not_found,"not found");
     }
+
+
+
     switch(request.method()){
     case http::verb::get:
-        return handle_users_get(std::move(request));
+        return handle_users_get(std::move(request),requester_id);
         break;
     case http::verb::put:
-        return handle_users_put(std::move(request));
+        return handle_users_put(std::move(request),requester_id);
         break;
     case http::verb::post:
-        return handle_users_post(std::move(request));
+        return handle_users_post(std::move(request),requester_id);
         break;
     case http::verb::delete_:
-        return handle_users_delete(std::move(request));
+        return handle_users_delete(std::move(request),requester_id);
         break;
     default:
         return fail(std::move(request),http::status::not_found,"not found");
@@ -62,16 +65,16 @@ http::response<http::string_body> http_handler::handle_users(http::request<http:
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
-http::response<http::string_body> http_handler::handle_authz(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_authz(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     //verb check
     if(request.method()!=http::verb::get){
         return fail(std::move(request),http::status::bad_request,"bad request");
     }
-    return handle_authz_get(std::move(request));
+    return handle_authz_get(std::move(request),requester_id);
 }
 
-http::response<http::string_body> http_handler::handle_authz_manage(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_authz_manage(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     //verb check
     if((request.method()!=http::verb::post) & (request.method()!=http::verb::delete_)){
@@ -79,10 +82,10 @@ http::response<http::string_body> http_handler::handle_authz_manage(http::reques
     }
     switch(request.method()){
     case http::verb::post:
-        return handle_authz_manage_post(std::move(request));
+        return handle_authz_manage_post(std::move(request),requester_id);
         break;
     case http::verb::delete_:
-        return handle_authz_manage_delete(std::move(request));
+        return handle_authz_manage_delete(std::move(request),requester_id);
         break;
     default:
         return fail(std::move(request),http::status::not_found,"not found");
@@ -91,7 +94,7 @@ http::response<http::string_body> http_handler::handle_authz_manage(http::reques
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
-http::response<http::string_body> http_handler::handle_rps(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_rps(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     //verb check
     if((request.method()!=http::verb::get) & (request.method()!=http::verb::put) &
@@ -100,16 +103,16 @@ http::response<http::string_body> http_handler::handle_rps(http::request<http::s
     }
     switch(request.method()){
     case http::verb::get:
-        return handle_rps_get(std::move(request));
+        return handle_rps_get(std::move(request),requester_id);
         break;
     case http::verb::put:
-        return handle_rps_put(std::move(request));
+        return handle_rps_put(std::move(request),requester_id);
         break;
     case http::verb::post:
-        return handle_rps_post(std::move(request));
+        return handle_rps_post(std::move(request),requester_id);
         break;
     case http::verb::delete_:
-        return handle_rps_delete(std::move(request));
+        return handle_rps_delete(std::move(request),requester_id);
         break;
     default:
         return fail(std::move(request),http::status::not_found,"not found");
@@ -118,18 +121,27 @@ http::response<http::string_body> http_handler::handle_rps(http::request<http::s
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
-http::response<http::string_body> http_handler::handle_certificates(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_certificates(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     if(request.method()==http::verb::post){
-        return handle_certificates_post(std::move(request));
+        return handle_certificates_post(std::move(request),requester_id);
     }
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
-http::response<http::string_body> http_handler::handle_users_get(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_users_get(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
-    {//list without pagination
+    {//users list
+        {//check if authorized
+            std::string msg {};
+            const std::string& rp_name {"users:read"};
+            const std::string& rp_id {""};
+            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_id,msg)};
+            if(!allowed){
+                return fail(std::move(request),http::status::unauthorized,"unauthorized");
+            }
+        }
         boost::regex re {"^/api/v1/u-auth/users$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
@@ -143,6 +155,15 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
         }
     }
     {//user by user_uid
+        {//check if authorized
+            std::string msg {};
+            const std::string& rp_name {"users:read"};
+            const std::string& rp_id {""};
+            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_id,msg)};
+            if(!allowed){
+                return fail(std::move(request),http::status::unauthorized,"unauthorized");
+            }
+        }
         boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
@@ -157,6 +178,15 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
         }
     }
     {//user's roles_permissions
+        {//check if authorized
+            std::string msg {};
+            const std::string& rp_name {"roles_permissions:read"};
+            const std::string& rp_id {""};
+            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_id,msg)};
+            if(!allowed){
+                return fail(std::move(request),http::status::unauthorized,"unauthorized");
+            }
+        }
         boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "/roles-permissions$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
@@ -171,6 +201,15 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
         }
     }
     {//list with limit and/or offset and filter
+        {//check if authorized
+            std::string msg {};
+            const std::string& rp_name {"users:read"};
+            const std::string& rp_id {""};
+            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_id,msg)};
+            if(!allowed){
+                return fail(std::move(request),http::status::unauthorized,"unauthorized");
+            }
+        }
         std::string limit {};
         std::string offset {};
         std::string first_name {};
@@ -221,8 +260,17 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
-http::response<http::string_body> http_handler::handle_users_put(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_users_put(http::request<http::string_body> &&request, const std::string &requester_id)
 {
+    {//check if authorized
+        std::string msg {};
+        const std::string& rp_name {"users:update"};
+        const std::string& rp_id {""};
+        const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_id,msg)};
+        if(!allowed){
+            return fail(std::move(request),http::status::unauthorized,"unauthorized");
+        }
+    }
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
     boost::smatch match;
@@ -252,8 +300,17 @@ http::response<http::string_body> http_handler::handle_users_put(http::request<h
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
-http::response<http::string_body> http_handler::handle_users_post(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_users_post(http::request<http::string_body> &&request, const std::string &requester_id)
 {
+    {//check if authorized
+        std::string msg {};
+        const std::string& rp_name {"users:create"};
+        const std::string& rp_id {""};
+        const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_id,msg)};
+        if(!allowed){
+            return fail(std::move(request),http::status::unauthorized,"unauthorized");
+        }
+    }
     const std::string& body {request.body()};
     boost::system::error_code ec;
     const boost::json::value v {boost::json::parse(body,ec)};
@@ -274,8 +331,17 @@ http::response<http::string_body> http_handler::handle_users_post(http::request<
     return fail(std::move(request),http::status::not_found,msg);
 }
 
-http::response<http::string_body> http_handler::handle_users_delete(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_users_delete(http::request<http::string_body> &&request, const std::string &requester_id)
 {
+    {//check if authorized
+        std::string msg {};
+        const std::string& rp_name {"users:delete"};
+        const std::string& rp_id {""};
+        const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_id,msg)};
+        if(!allowed){
+            return fail(std::move(request),http::status::unauthorized,"unauthorized");
+        }
+    }
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
     boost::smatch match;
@@ -291,7 +357,7 @@ http::response<http::string_body> http_handler::handle_users_delete(http::reques
     return fail(std::move(request),http::status::not_found,msg);
 }
 
-http::response<http::string_body> http_handler::handle_authz_get(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_authz_get(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/authz/" + regex_uid_+ "/authorized-to/" + regex_any_ + "$"};
@@ -314,7 +380,7 @@ http::response<http::string_body> http_handler::handle_authz_get(http::request<h
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
-http::response<http::string_body> http_handler::handle_authz_manage_post(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_authz_manage_post(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/authz/manage/" + regex_uid_ + "/assign/" + regex_uid_ + "$"};
@@ -333,7 +399,7 @@ http::response<http::string_body> http_handler::handle_authz_manage_post(http::r
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
-http::response<http::string_body> http_handler::handle_authz_manage_delete(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_authz_manage_delete(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/authz/manage/" + regex_uid_ + "/revoke/" + regex_uid_ + "$"};
@@ -352,7 +418,7 @@ http::response<http::string_body> http_handler::handle_authz_manage_delete(http:
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
-http::response<http::string_body> http_handler::handle_rps_get(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_rps_get(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     {//list without pagination
@@ -491,7 +557,7 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
-http::response<http::string_body> http_handler::handle_rps_put(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_rps_put(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     {//update role_permission
@@ -536,7 +602,7 @@ http::response<http::string_body> http_handler::handle_rps_put(http::request<htt
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
-http::response<http::string_body> http_handler::handle_rps_post(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_rps_post(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& body {request.body()};
     boost::system::error_code ec;
@@ -557,7 +623,7 @@ http::response<http::string_body> http_handler::handle_rps_post(http::request<ht
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
-http::response<http::string_body> http_handler::handle_rps_delete(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_rps_delete(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     {//remove role_permission
@@ -590,7 +656,7 @@ http::response<http::string_body> http_handler::handle_rps_delete(http::request<
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
-http::response<http::string_body> http_handler::handle_certificates_post(http::request<http::string_body> &&request)
+http::response<http::string_body> http_handler::handle_certificates_post(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     {//handle user certificate
