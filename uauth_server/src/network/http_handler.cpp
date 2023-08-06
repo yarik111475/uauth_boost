@@ -130,79 +130,72 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
 {
     const std::string& target {request.target()};
     {//users list
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"users:read"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
         boost::regex re {"^/api/v1/u-auth/users$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             std::string msg {};
             std::string users {};
-            const bool& ok {dbase_handler_ptr_->users_list_get(users,msg)};
-            if(ok){
+            const status& status_ {dbase_handler_ptr_->users_list_get(users,requester_id,msg)};
+            switch(status_){
+            case status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case status::success:
                 return success(std::move(request),http::status::ok,users);
+            case status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
             }
-            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//user by user_uid
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"users:read"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
         boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             const std::string& user_uid {match[1]};
             std::string msg {};
             std::string user {};
-            const bool& ok {dbase_handler_ptr_->users_info_get(user_uid,user,msg)};
-            if(ok){
+            const status& status_ {dbase_handler_ptr_->users_info_get(user_uid,user,requester_id,msg)};
+            switch(status_){
+            case status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case status::success:
                 return success(std::move(request),http::status::ok,user);
+            case status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
             }
-            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//user's roles_permissions
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"roles_permissions:read"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
+
         boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "/roles-permissions$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             const std::string& user_uid {match[1]};
             std::string msg {};
             std::string rps {};
-            const bool& ok {dbase_handler_ptr_->users_rps_get(user_uid,rps,msg)};
-            if(ok){
+            const status& status_ {dbase_handler_ptr_->users_rps_get(user_uid,rps,requester_id,msg)};
+            switch(status_){
+            case status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case status::success:
                 return success(std::move(request),http::status::ok,rps);
+            case status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
             }
-            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//list with limit and/or offset and filter
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"users:read"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
         std::string limit {};
         std::string offset {};
         std::string first_name {};
@@ -242,11 +235,19 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
 
                 std::string msg {};
                 std::string users {};
-                const bool& ok {dbase_handler_ptr_->users_list_get(users,limit,offset,first_name,last_name,email,is_blocked,msg)};
-                if(ok){
+                const status& status_ {dbase_handler_ptr_->users_list_get(users,limit,offset,first_name,last_name,email,is_blocked,requester_id,msg)};
+                switch(status_){
+                case status::fail:
+                    return fail(std::move(request),http::status::bad_request,msg);
+                case status::success:
                     return success(std::move(request),http::status::ok,users);
+                case status::not_found:
+                    return fail(std::move(request),http::status::not_found,msg);
+                case status::unauthorized:
+                    return fail(std::move(request),http::status::unauthorized,msg);
+                default:
+                    return fail(std::move(request),http::status::bad_request,msg);
                 }
-                return fail(std::move(request),http::status::bad_request,msg);
             }
         }
     }
@@ -255,14 +256,6 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
 
 http::response<http::string_body> http_handler::handle_users_put(http::request<http::string_body> &&request, const std::string &requester_id)
 {
-    {//check if authorized
-        std::string msg {};
-        const std::string& rp_name {"users:update"};
-        const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-        if(!allowed){
-            return fail(std::move(request),http::status::unauthorized,"unauthorized");
-        }
-    }
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
     boost::smatch match;
@@ -282,26 +275,25 @@ http::response<http::string_body> http_handler::handle_users_put(http::request<h
         }
 
         std::string msg;
-        const bool& ok {dbase_handler_ptr_->users_info_put(user_uid,body,msg)};
-        if(ok){
+        const status& status_ {dbase_handler_ptr_->users_info_put(user_uid,body,requester_id,msg)};
+        switch(status_){
+        case status::fail:
+            return fail(std::move(request),http::status::bad_request,msg);
+        case status::success:
             return success(std::move(request),http::status::ok,msg);
+        case status::not_found:
+            return fail(std::move(request),http::status::not_found,msg);
+        case status::unauthorized:
+            return fail(std::move(request),http::status::unauthorized,msg);
+        default:
+            return fail(std::move(request),http::status::bad_request,msg);
         }
-        return fail(std::move(request),http::status::bad_request,"bad request");
     }
-
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
 http::response<http::string_body> http_handler::handle_users_post(http::request<http::string_body> &&request, const std::string &requester_id)
 {
-    {//check if authorized
-        std::string msg {};
-        const std::string& rp_name {"users:create"};
-        const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-        if(!allowed){
-            return fail(std::move(request),http::status::unauthorized,"unauthorized");
-        }
-    }
     const std::string& body {request.body()};
     boost::system::error_code ec;
     const boost::json::value v {boost::json::parse(body,ec)};
@@ -315,23 +307,24 @@ http::response<http::string_body> http_handler::handle_users_post(http::request<
     }
 
     std::string msg;
-    const bool& ok {dbase_handler_ptr_->users_info_post(body,msg)};
-    if(ok){
+    const status& status_ {dbase_handler_ptr_->users_info_post(body,requester_id,msg)};
+    switch(status_){
+    case status::fail:
+        return fail(std::move(request),http::status::bad_request,msg);
+    case status::success:
         return success(std::move(request),http::status::ok,"user created");
+    case status::not_found:
+        return fail(std::move(request),http::status::not_found,msg);
+    case status::unauthorized:
+        return fail(std::move(request),http::status::unauthorized,msg);
+    default:
+        return fail(std::move(request),http::status::bad_request,msg);
     }
-    return fail(std::move(request),http::status::not_found,msg);
+    return fail(std::move(request),http::status::not_found,"not found");
 }
 
 http::response<http::string_body> http_handler::handle_users_delete(http::request<http::string_body> &&request, const std::string &requester_id)
 {
-    {//check if authorized
-        std::string msg {};
-        const std::string& rp_name {"users:delete"};
-        const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-        if(!allowed){
-            return fail(std::move(request),http::status::unauthorized,"unauthorized");
-        }
-    }
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
     boost::smatch match;
@@ -340,9 +333,18 @@ http::response<http::string_body> http_handler::handle_users_delete(http::reques
     }
     const std::string& user_uid {match[1]};
     std::string msg;
-    const bool& ok {dbase_handler_ptr_->users_info_delete(user_uid,msg)};
-    if(ok){
+    const status& status_ {dbase_handler_ptr_->users_info_delete(user_uid,requester_id,msg)};
+    switch(status_){
+    case status::fail:
+        return fail(std::move(request),http::status::bad_request,msg);
+    case status::success:
         return success(std::move(request),http::status::no_content,msg);
+    case status::not_found:
+        return fail(std::move(request),http::status::not_found,msg);
+    case status::unauthorized:
+        return fail(std::move(request),http::status::unauthorized,msg);
+    default:
+        return fail(std::move(request),http::status::bad_request,msg);
     }
     return fail(std::move(request),http::status::not_found,msg);
 }
@@ -357,9 +359,19 @@ http::response<http::string_body> http_handler::handle_authz_get(http::request<h
         const std::string& user_uid {match[1]};
         const std::string& rp_ident {match[2]};
         std::string msg {};
-        {//check roles_permissions
-            const bool& ok {dbase_handler_ptr_->authz_check_get(user_uid,rp_ident,msg)};
-            return success(std::move(request),http::status::ok,std::to_string(ok));
+        bool authorized {false};
+        const status& status_ {dbase_handler_ptr_->authz_check_get(user_uid,rp_ident,authorized,msg)};
+        switch(status_){
+        case status::fail:
+            return fail(std::move(request),http::status::bad_request,msg);
+        case status::success:
+            return success(std::move(request),http::status::ok,std::to_string(authorized));
+        case status::not_found:
+            return fail(std::move(request),http::status::not_found,msg);
+        case status::unauthorized:
+            return fail(std::move(request),http::status::unauthorized,msg);
+        default:
+            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     return fail(std::move(request),http::status::bad_request,"bad request");
@@ -367,14 +379,6 @@ http::response<http::string_body> http_handler::handle_authz_get(http::request<h
 
 http::response<http::string_body> http_handler::handle_authz_manage_post(http::request<http::string_body> &&request, const std::string &requester_id)
 {
-    {//check if authorized
-        std::string msg {};
-        const std::string& rp_name {"authorization_manage"};
-        const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-        if(!allowed){
-            return fail(std::move(request),http::status::unauthorized,"unauthorized");
-        }
-    }
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/authz/manage/" + regex_uid_ + "/assign/" + regex_uid_ + "$"};
     boost::smatch match;
@@ -382,26 +386,25 @@ http::response<http::string_body> http_handler::handle_authz_manage_post(http::r
         const std::string& requested_user_id {match[1]};
         const std::string& requested_rp_id {match[2]};
         std::string msg {};
-
-        const bool& ok {dbase_handler_ptr_->authz_manage_post(requested_user_id,requested_rp_id,msg)};
-        if(ok){
+        const status& status_ {dbase_handler_ptr_->authz_manage_post(requested_user_id,requested_rp_id,requester_id,msg)};
+        switch(status_){
+        case status::fail:
+            return fail(std::move(request),http::status::bad_request,msg);
+        case status::success:
             return success(std::move(request),http::status::ok,msg);
+        case status::not_found:
+            return fail(std::move(request),http::status::not_found,msg);
+        case status::unauthorized:
+            return fail(std::move(request),http::status::unauthorized,msg);
+        default:
+            return fail(std::move(request),http::status::bad_request,msg);
         }
-        return fail(std::move(request),http::status::not_found,msg);
     }
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
 http::response<http::string_body> http_handler::handle_authz_manage_delete(http::request<http::string_body> &&request, const std::string &requester_id)
 {
-    {//check if authorized
-        std::string msg {};
-        const std::string& rp_name {"authorization_manage"};
-        const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-        if(!allowed){
-            return fail(std::move(request),http::status::unauthorized,"unauthorized");
-        }
-    }
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/authz/manage/" + regex_uid_ + "/revoke/" + regex_uid_ + "$"};
     boost::smatch match;
@@ -409,12 +412,19 @@ http::response<http::string_body> http_handler::handle_authz_manage_delete(http:
         const std::string& requested_user_id {match[1]};
         const std::string& requested_rp_id {match[2]};
         std::string msg {};
-
-        const bool& ok {dbase_handler_ptr_->authz_manage_delete(requested_user_id,requested_rp_id,msg)};
-        if(ok){
+        const status& status_ {dbase_handler_ptr_->authz_manage_delete(requested_user_id,requested_rp_id,requester_id,msg)};
+        switch(status_){
+        case status::fail:
+            return fail(std::move(request),http::status::bad_request,msg);
+        case status::success:
             return success(std::move(request),http::status::ok,msg);
+        case status::not_found:
+            return fail(std::move(request),http::status::not_found,msg);
+        case status::unauthorized:
+            return fail(std::move(request),http::status::unauthorized,msg);
+        default:
+            return fail(std::move(request),http::status::bad_request,msg);
         }
-        return fail(std::move(request),http::status::not_found,msg);
     }
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
@@ -423,106 +433,99 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
 {
     const std::string& target {request.target()};
     {//rps list
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"roles_permissions:read"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
         boost::regex re {"^/api/v1/u-auth/roles-permissions$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             std::string msg {};
             std::string rps {};
-            const bool& ok {dbase_handler_ptr_->rps_list_get(rps,msg)};
-            if(ok){
+            const status& status_ {dbase_handler_ptr_->rps_list_get(rps,requester_id,msg)};
+            switch(status_){
+            case status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case status::success:
                 return success(std::move(request),http::status::ok,rps);
+            case status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
             }
-            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//rps by rp_uid
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"roles_permissions:read"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             const std::string& rp_uid {match[1]};
             std::string msg {};
             std::string rp {};
-            const bool& ok {dbase_handler_ptr_->rps_info_get(rp_uid,rp,msg)};
-            if(ok){
+            const status& status_ {dbase_handler_ptr_->rps_info_get(rp_uid,rp,requester_id,msg)};
+            switch(status_){
+            case status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case status::success:
                 return success(std::move(request),http::status::ok,rp);
+            case status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
             }
-            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//rps details
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"roles_permissions:read"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
+
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "/detail$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             const std::string& rp_uid {match[1]};
             std::string msg {};
             std::string rp_detail {};
-            const bool& ok {dbase_handler_ptr_->rps_rp_detail_get(rp_uid,rp_detail,msg)};
-            if(ok){
-                return success(std::move(request),http::status::ok,rp_detail);
+            const status& status_ {dbase_handler_ptr_->rps_rp_detail_get(rp_uid,rp_detail,requester_id,msg)};
+            switch(status_){
+            case status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case status::success:
+                success(std::move(request),http::status::ok,rp_detail);
+            case status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
             }
-            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//all users for rps by rps_uid
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"users:read"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "/associated-users$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             const std::string& rp_uid {match[1]};
             std::string msg {};
             std::string users {};
-            const bool& ok {dbase_handler_ptr_->rps_users_get(rp_uid,users,msg)};
-            if(ok){
+            const status& status_ {dbase_handler_ptr_->rps_users_get(rp_uid,users,requester_id,msg)};
+            switch(status_){
+            case status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case status::success:
                 return success(std::move(request),http::status::ok,users);
+            case status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
             }
-            return fail(std::move(request),http::status::bad_request,msg);
         }
     }
     {//all users for rps by rps_uid with limit and/or offset
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"users:read"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
+
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "/associated-users?" + regex_any_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             const std::string& rp_uid {match[1]};
-
             std::string limit {};
             std::string offset {};
             boost::url url_ {target};
@@ -542,24 +545,24 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
 
                     std::string msg {};
                     std::string users {};
-                    const bool& ok {dbase_handler_ptr_->rps_users_get(rp_uid,users,limit,offset,msg)};
-                    if(ok){
+                    const status& status_ {dbase_handler_ptr_->rps_users_get(rp_uid,users,limit,offset,requester_id,msg)};
+                    switch(status_){
+                    case status::fail:
+                        return fail(std::move(request),http::status::bad_request,msg);
+                    case status::success:
                         return success(std::move(request),http::status::ok,users);
+                    case status::not_found:
+                        return fail(std::move(request),http::status::not_found,msg);
+                    case status::unauthorized:
+                        return fail(std::move(request),http::status::unauthorized,msg);
+                    default:
+                        return fail(std::move(request),http::status::bad_request,msg);
                     }
-                    return fail(std::move(request),http::status::bad_request,msg);
                 }
             }
         }
     }
     {//list with limit and/or offset and filter
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"roles_permissions:read"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
         std::string limit {};
         std::string offset {};
         std::string name {};
@@ -594,11 +597,19 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
 
                 std::string msg {};
                 std::string rps {};
-                const bool& ok {dbase_handler_ptr_->rps_list_get(rps,limit,offset,name,type,description,msg)};
-                if(ok){
+                const status& status_ {dbase_handler_ptr_->rps_list_get(rps,limit,offset,name,type,description,requester_id,msg)};
+                switch(status_){
+                case status::fail:
+                    return fail(std::move(request),http::status::bad_request,msg);
+                case status::success:
                     return success(std::move(request),http::status::ok,rps);
+                case status::not_found:
+                    return fail(std::move(request),http::status::not_found,msg);
+                case status::unauthorized:
+                    return fail(std::move(request),http::status::unauthorized,msg);
+                default:
+                    return fail(std::move(request),http::status::bad_request,msg);
                 }
-                return fail(std::move(request),http::status::bad_request,msg);
             }
         }
     }
@@ -610,14 +621,6 @@ http::response<http::string_body> http_handler::handle_rps_put(http::request<htt
 {
     const std::string& target {request.target()};
     {//update role_permission
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"roles_permissions:update"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
@@ -635,33 +638,41 @@ http::response<http::string_body> http_handler::handle_rps_put(http::request<htt
             }
 
             std::string msg;
-            const bool& ok {dbase_handler_ptr_->rps_info_put(rp_uid,body,msg)};
-            if(ok){
+            const status& status_ {dbase_handler_ptr_->rps_info_put(rp_uid,body,requester_id,msg)};
+            switch(status_){
+            case status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case status::success:
                 return success(std::move(request),http::status::ok,msg);
+            case status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
             }
-            return fail(std::move(request),http::status::not_found,msg);
         }
     }
     {//add role_permission relationship
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"roles_permissions:update"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "/add-child/" + regex_uid_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             const std::string& parent_uid {match[1]};
             const std::string& child_uid {match[2]};
             std::string msg;
-            const bool& ok {dbase_handler_ptr_->rps_child_put(parent_uid,child_uid,msg)};
-            if(ok){
+            const status& status_ {dbase_handler_ptr_->rps_child_put(parent_uid,child_uid,requester_id,msg)};
+            switch(status_){
+            case status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case status::success:
                 return success(std::move(request),http::status::ok,msg);
+            case status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
             }
-            return fail(std::move(request),http::status::not_found,msg);
         }
     }
     return fail(std::move(request),http::status::not_found,"not found");
@@ -669,14 +680,6 @@ http::response<http::string_body> http_handler::handle_rps_put(http::request<htt
 
 http::response<http::string_body> http_handler::handle_rps_post(http::request<http::string_body> &&request, const std::string &requester_id)
 {
-    {//check if authorized
-        std::string msg {};
-        const std::string& rp_name {"roles_permissions:create"};
-        const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-        if(!allowed){
-            return fail(std::move(request),http::status::unauthorized,"unauthorized");
-        }
-    }
     const std::string& body {request.body()};
     boost::system::error_code ec;
     const boost::json::value v {boost::json::parse(body,ec)};
@@ -689,57 +692,65 @@ http::response<http::string_body> http_handler::handle_rps_post(http::request<ht
     }
 
     std::string msg;
-    const bool& ok {dbase_handler_ptr_->rps_info_post(body,msg)};
-    if(ok){
+    const status& status_ {dbase_handler_ptr_->rps_info_post(body,requester_id,msg)};
+    switch(status_){
+    case status::fail:
+        return fail(std::move(request),http::status::bad_request,msg);
+    case status::success:
         return success(std::move(request),http::status::ok,msg);
+    case status::not_found:
+        return fail(std::move(request),http::status::not_found,msg);
+    case status::unauthorized:
+        return fail(std::move(request),http::status::unauthorized,msg);
+    default:
+        return fail(std::move(request),http::status::bad_request,msg);
     }
-    return fail(std::move(request),http::status::not_found,"not found");
 }
 
 http::response<http::string_body> http_handler::handle_rps_delete(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     {//remove role_permission
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"roles_permissions:delete"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             const std::string& rp_uid {match[1]};
             std::string msg;
-            const bool& ok {dbase_handler_ptr_->rps_info_delete(rp_uid,msg)};
-            if(ok){
+            const status& status_ {dbase_handler_ptr_->rps_info_delete(rp_uid,requester_id,msg)};
+            switch(status_){
+            case status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case status::success:
                 return success(std::move(request),http::status::no_content,msg);
+            case status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
             }
-            return fail(std::move(request),http::status::not_found,msg);
         }
     }
     {//remove role_permission relationship
-        {//check if authorized
-            std::string msg {};
-            const std::string& rp_name {"roles_permissions:update"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
-                return fail(std::move(request),http::status::unauthorized,"unauthorized");
-            }
-        }
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "/remove-child/" + regex_uid_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             const std::string& parent_uid {match[1]};
             const std::string& child_uid {match[2]};
             std::string msg;
-            const bool& ok {dbase_handler_ptr_->rps_child_delete(parent_uid,child_uid,msg)};
-            if(ok){
+            const status& status_ {dbase_handler_ptr_->rps_child_delete(parent_uid,child_uid,requester_id,msg)};
+            switch(status_){
+            case status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case status::success:
                 return success(std::move(request),http::status::ok,msg);
+            case status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
             }
-            return fail(std::move(request),http::status::not_found,msg);
         }
     }
     return fail(std::move(request),http::status::not_found,"not found");
@@ -752,8 +763,10 @@ http::response<http::string_body> http_handler::handle_certificates_post(http::r
         {//check if authorized
             std::string msg {};
             const std::string& rp_name {"user_certificates"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
+            bool authorized {false};
+            const status& status_ {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,authorized,msg)};
+            boost::ignore_unused(status_);
+            if(!authorized){
                 return fail(std::move(request),http::status::unauthorized,"unauthorized");
             }
         }
@@ -783,10 +796,11 @@ http::response<http::string_body> http_handler::handle_certificates_post(http::r
             {//check user by user_id and get user email
                 std::string msg {};
                 std::string user {};
-                const bool& ok {dbase_handler_ptr_->users_info_get(user_id,user,msg)};
-                if(!ok){
+                const status& status_ {dbase_handler_ptr_->users_info_get(user_id,user,requester_id,msg)};
+                if(status_!=status::success){
                     return fail(std::move(request),http::status::not_found,msg);
                 }
+
                 boost::system::error_code ec;
                 const boost::json::value& v {boost::json::parse(user,ec)};
                 if(ec || !v.is_object()){
@@ -826,8 +840,10 @@ http::response<http::string_body> http_handler::handle_certificates_post(http::r
         {//check if authorized
             std::string msg {};
             const std::string& rp_name {"agent_certificates"};
-            const bool& allowed {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,msg)};
-            if(!allowed){
+            bool authorized {false};
+            const status& status_ {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,authorized,msg)};
+            boost::ignore_unused(status_);
+            if(!authorized){
                 return fail(std::move(request),http::status::unauthorized,"unauthorized");
             }
         }

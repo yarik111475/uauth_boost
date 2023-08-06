@@ -1,5 +1,5 @@
 ### USERS PART ###
-curl -H "X-Client-Cert-Dn: 6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET  http://127.0.0.1:8030/api/v1/u-auth/users
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET  http://127.0.0.1:8030/api/v1/u-auth/users
 curl -X GET http://127.0.0.1:8030/api/v1/u-auth/users?limit=2&offset=2
 curl -X GET http://127.0.0.1:8030/api/v1/u-auth/users/3fa85f64-5717-4562-b3fc-2c963f66afa6
 curl -X GET http://127.0.0.1:8030/api/v1/u-auth/users/dc77b7f3-71d9-4ce9-95a2-100b88d0306c/roles-permissions
@@ -11,11 +11,11 @@ curl -X PUT  -H 'Content-Type: application/json' -d {\"first_name\":\"new_user_u
 curl -X DELETE http://127.0.0.1:8030/api/v1/u-auth/users/a4e771bd-7fdb-479a-973d-57cf59492147
 
 ### ROLES-PERMISSIONS PART ###
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions?limit=1&offset=1
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/d344f776-4e3b-47ce-a4b0-6ea34d89d13b
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/bdf0ac17-6e54-4b1a-a233-0099b504267e/detail
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/b961eb97-ce93-4715-9d22-9ed886478c37/associated-users
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions?limit=1&offset=1
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/d344f776-4e3b-47ce-a4b0-6ea34d89d13b
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/c4529cdb-8325-4380-8b83-2ec6ef058ca4/detail
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/c4529cdb-8325-4380-8b83-2ec6ef058ca4/associated-users
 
 curl -X POST -H 'Content-Type: application/json' -d {\"name\":\"new_test_role2\",\"type\":\"role\",\"description\":\"new_test_role2\"} http://127.0.0.1:8030/api/v1/u-auth/roles-permissions
 
@@ -38,19 +38,16 @@ curl -X POST http://127.0.0.1:8030/api/v1/u-auth/certificates/user/c2dcd82f-56df
 curl -X POST --data-binary "@C:/cert/agent_csr.bin" http://127.0.0.1:8030/api/v1/u-auth/certificates/agent/sign-csr -o "C:/cert/agent_cert.pem"
 
 ### AUTHZ PART ###
-curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/dc77b7f3-71d9-4ce9-95a2-100b88d0306c/authorized-to/b961eb97-ce93-4715-9d22-9ed886478c37
-
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/a10928ea-a86f-4f7d-8df8-046ff2bcd4d3/authorized-to/9f575640-2aa1-4e87-908f-9d4c79c84f58
-
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/a10928ea-a86f-4f7d-8df8-046ff2bcd4d3/authorized-to/ChildRole%20ChildPermission
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/a10928ea-a86f-4f7d-8df8-046ff2bcd4d3/authorized-to/ChildRole%20ParentPermission%20UAuthAdmin
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/8afdb8b1-f54c-4a14-8779-05ff3d547eef/authorized-to/ChildRole
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/8afdb8b1-f54c-4a14-8779-05ff3d547eef/authorized-to/ChildRole%20ChildPermission
-
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/8afdb8b1-f54c-4a14-8779-05ff3d547eef/authorized-to/ChildRole%20ChildPermission
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/dc77b7f3-71d9-4ce9-95a2-100b88d0306c/authorized-to/ChildRole%20ChildPermission
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/a10928ea-a86f-4f7d-8df8-046ff2bcd4d3/authorized-to/ParentRole%20ChildPermission
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/3fa85f64-5717-4562-b3fc-2c963f66afa6/authorized-to/ParentRole%20ChildPermission
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/3fa85f64-5717-4562-b3fc-2c963f66afa6/authorized-to/ChildPermission
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/3fa85f64-5717-4562-b3fc-2c963f66afa6/authorized-to/c4529cdb-8325-4380-8b83-2ec6ef058ca4
-curl -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/3fa85f64-5717-4562-b3fc-2c963f66afa6/authorized-to/roles_permissions%3Aread
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/dc77b7f3-71d9-4ce9-95a2-100b88d0306c/authorized-to/b961eb97-ce93-4715-9d22-9ed886478c37
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/a10928ea-a86f-4f7d-8df8-046ff2bcd4d3/authorized-to/9f575640-2aa1-4e87-908f-9d4c79c84f58
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/a10928ea-a86f-4f7d-8df8-046ff2bcd4d3/authorized-to/ChildRole%20ChildPermission
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/a10928ea-a86f-4f7d-8df8-046ff2bcd4d3/authorized-to/ChildRole%20ParentPermission%20UAuthAdmin
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/8afdb8b1-f54c-4a14-8779-05ff3d547eef/authorized-to/ChildRole
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/8afdb8b1-f54c-4a14-8779-05ff3d547eef/authorized-to/ChildRole%20ChildPermission
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/8afdb8b1-f54c-4a14-8779-05ff3d547eef/authorized-to/ChildRole%20ChildPermission
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/dc77b7f3-71d9-4ce9-95a2-100b88d0306c/authorized-to/ChildRole%20ChildPermission
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/a10928ea-a86f-4f7d-8df8-046ff2bcd4d3/authorized-to/ParentRole%20ChildPermission
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/3fa85f64-5717-4562-b3fc-2c963f66afa6/authorized-to/ParentRole%20ChildPermission
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/3fa85f64-5717-4562-b3fc-2c963f66afa6/authorized-to/ChildPermission
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/3fa85f64-5717-4562-b3fc-2c963f66afa6/authorized-to/c4529cdb-8325-4380-8b83-2ec6ef058ca4
+curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/3fa85f64-5717-4562-b3fc-2c963f66afa6/authorized-to/roles_permissions:read
