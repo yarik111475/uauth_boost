@@ -570,6 +570,7 @@ status dbase_handler::users_list_get(std::string &users, const std::string &requ
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -630,6 +631,7 @@ status dbase_handler::users_list_get(std::string& users, const std::string& limi
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -695,6 +697,7 @@ status dbase_handler::users_info_get(const std::string &user_uid, std::string &u
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -744,6 +747,7 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -820,6 +824,7 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -902,6 +907,7 @@ status dbase_handler::users_info_put(const std::string &user_uid, const std::str
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -978,6 +984,7 @@ status dbase_handler::users_info_post(const std::string &user, const std::string
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -1026,6 +1033,7 @@ status dbase_handler::users_info_delete(const std::string &user_uid, const std::
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -1053,6 +1061,7 @@ status dbase_handler::rps_list_get(std::string &rps, const std::string &requeste
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -1111,6 +1120,7 @@ status dbase_handler::rps_list_get(std::string &rps, const std::string &limit,
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -1175,6 +1185,7 @@ status dbase_handler::rps_info_get(const std::string &rp_uid, std::string &rp, c
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -1222,6 +1233,7 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -1307,6 +1319,7 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -1400,6 +1413,7 @@ status dbase_handler::rps_rp_detail_get(const std::string &rp_uid, std::string &
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -1452,6 +1466,7 @@ status dbase_handler::rps_info_post(const std::string &rp, const std::string &re
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -1488,6 +1503,7 @@ status dbase_handler::rps_info_put(const std::string &rp_uid, const std::string 
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -1554,6 +1570,7 @@ status dbase_handler::rps_info_delete(const std::string &rp_uid, const std::stri
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -1566,6 +1583,8 @@ status dbase_handler::rps_info_delete(const std::string &rp_uid, const std::stri
         PQfinish(conn_ptr);
         return fail;
     }
+    PQclear(res_ptr);
+    PQfinish(conn_ptr);
     return success;
 }
 
@@ -1581,10 +1600,11 @@ status dbase_handler::rps_child_put(const std::string &parent_uid, const std::st
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
-    {//check
+    {//check if rp exists
         if(!is_rp_exists(conn_ptr,parent_uid,msg) || !is_rp_exists(conn_ptr,child_uid,msg)){
             PQfinish(conn_ptr);
             return not_found;
@@ -1654,10 +1674,11 @@ status dbase_handler::rps_child_delete(const std::string &parent_uid, const std:
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
-    {//check
+    {//check if rp exists
         if(!is_rp_exists(conn_ptr,parent_uid,msg) || !is_rp_exists(conn_ptr,child_uid,msg)){
             PQfinish(conn_ptr);
             return not_found;
@@ -1852,6 +1873,7 @@ status dbase_handler::authz_manage_post(const std::string &requested_user_uid, c
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
@@ -1922,6 +1944,7 @@ status dbase_handler::authz_manage_delete(const std::string &requested_user_uid,
         const std::string& rp_ident {"users:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
+            PQfinish(conn_ptr);
             return unauthorized;
         }
     }
