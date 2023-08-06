@@ -46,6 +46,8 @@ private:
     int rps_total_get(PGconn* conn_ptr);
     //Get total users
     int users_total_get(PGconn* conn_ptr);
+    //Get UAuthAmin rp_uid
+    std::string uath_admin_rp_uid_get(PGconn* conn_ptr);
 
     void rp_uid_recursive_get(PGconn* conn_ptr, std::vector<std::string> &rp_uids);
     void rp_children_get(PGconn* conn_ptr,const std::string& rp_uid,boost::json::array& rp_objs);

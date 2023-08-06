@@ -304,7 +304,7 @@ bool dbase_handler::is_user_exists(PGconn *conn_ptr, const std::string &user_uid
 //Check if user authorized
 bool dbase_handler::is_authorized(PGconn *conn_ptr, const std::string &user_uid, const std::string &rp_ident)
 {
-    PGresult* res_ptr {nullptr};
+    PGresult* res_ptr {NULL};
     std::vector<std::string> rp_uids {};
     {//get all rp_uid for user_uid
         const char* param_values[] {user_uid.c_str()};
@@ -324,6 +324,14 @@ bool dbase_handler::is_authorized(PGconn *conn_ptr, const std::string &user_uid,
             rp_uids.push_back(rp_uid);
         }
         PQclear(res_ptr);
+
+        {//check if UAuthAdmin role
+            const std::string admin_rp_uid {uath_admin_rp_uid_get(conn_ptr)};
+            const auto& it {std::find(rp_uids.begin(),rp_uids.end(),admin_rp_uid)};
+            if(it!=rp_uids.end()){
+                return true;
+            }
+        }
     }
     {//get all rp_uids recursive
         rp_uid_recursive_get(conn_ptr,rp_uids);
@@ -378,15 +386,10 @@ int dbase_handler::urp_total_get(PGconn *conn_ptr)
     PGresult* res_ptr=PQexec(conn_ptr,command.c_str());
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         PQclear(res_ptr);
-        PQfinish(conn_ptr);
         return -1;
     }
     const int& rows {PQntuples(res_ptr)};
-    if(!rows){
-        PQclear(res_ptr);
-        PQfinish(conn_ptr);
-        return -1;
-    }
+    PQclear(res_ptr);
     return rows;
 }
 
@@ -397,15 +400,10 @@ int dbase_handler::rps_total_get(PGconn *conn_ptr)
     PGresult* res_ptr=PQexec(conn_ptr,command.c_str());
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         PQclear(res_ptr);
-        PQfinish(conn_ptr);
         return -1;
     }
     const int& rows {PQntuples(res_ptr)};
-    if(!rows){
-        PQclear(res_ptr);
-        PQfinish(conn_ptr);
-        return -1;
-    }
+    PQclear(res_ptr);
     return rows;
 }
 
@@ -416,16 +414,33 @@ int dbase_handler::users_total_get(PGconn *conn_ptr)
     PGresult* res_ptr=PQexec(conn_ptr,command.c_str());
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         PQclear(res_ptr);
-        PQfinish(conn_ptr);
         return -1;
     }
     const int& rows {PQntuples(res_ptr)};
+    PQclear(res_ptr);
+    return rows;
+}
+
+//Get UAuthAdmin rp_uid
+std::string dbase_handler::uath_admin_rp_uid_get(PGconn *conn_ptr)
+{
+    PGresult* res_ptr {NULL};
+    const char* param_values[] {"UAuthAdmin"};
+    res_ptr=PQexecParams(conn_ptr,"SELECT id FROM roles_permissions WHERE name=$1",
+                                   1,NULL,param_values,NULL,NULL,0);
+    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        PQclear(res_ptr);
+        return std::string {};
+    }
+
+    const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
-        PQfinish(conn_ptr);
-        return -1;
+        return std::string {};
     }
-    return rows;
+    const std::string& rp_uid {PQgetvalue(res_ptr,0,0)};
+    PQclear(res_ptr);
+    return rp_uid;
 }
 
 //Recursive get all low_level rp_uids by top_level rp_uid
@@ -562,6 +577,7 @@ bool dbase_handler::init_database(std::string &msg)
 status dbase_handler::users_list_get(std::string &users, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
@@ -575,7 +591,7 @@ status dbase_handler::users_list_get(std::string &users, const std::string &requ
         }
     }
 
-    PGresult* res_ptr=PQexec(conn_ptr,"SELECT * FROM users LIMIT 100 OFFSET 0");
+    res_ptr=PQexec(conn_ptr,"SELECT * FROM users LIMIT 100 OFFSET 0");
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
@@ -623,6 +639,7 @@ status dbase_handler::users_list_get(std::string& users, const std::string& limi
                                    const std::string &is_blocked,const std::string& requester_id,std::string& msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
@@ -644,7 +661,7 @@ status dbase_handler::users_list_get(std::string& users, const std::string& limi
         command +=" OFFSET " + offset;
     }
 
-    PGresult* res_ptr=PQexec(conn_ptr,command.c_str());
+    res_ptr=PQexec(conn_ptr,command.c_str());
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
@@ -689,6 +706,7 @@ status dbase_handler::users_list_get(std::string& users, const std::string& limi
 status dbase_handler::users_info_get(const std::string &user_uid, std::string &user, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
@@ -702,7 +720,7 @@ status dbase_handler::users_info_get(const std::string &user_uid, std::string &u
         }
     }
     const char* param_values[] {user_uid.c_str()};
-    PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1",
+    res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1",
         1,NULL,param_values,NULL,NULL,0);
 
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -739,12 +757,13 @@ status dbase_handler::users_info_get(const std::string &user_uid, std::string &u
 status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rps, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"roles_permissions:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -753,7 +772,7 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
     }
 
     const char* param_values[] {user_uid.c_str()};
-    PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT role_permission_id FROM users_roles_permissions WHERE user_id=$1",
+    res_ptr=PQexecParams(conn_ptr,"SELECT role_permission_id FROM users_roles_permissions WHERE user_id=$1",
                                    1,NULL,param_values,NULL,NULL,0);
 
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -778,7 +797,7 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
         }
         for(const std::string& rp_id: rp_ids){
             const char* param_values[] {rp_id.c_str()};
-            PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
+            res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
                                            1,NULL,param_values,NULL,NULL,0);
 
             if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -816,12 +835,13 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
                                   const std::string &limit, const std::string &offset, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"roles_permissions:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -830,7 +850,7 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
     }
 
     const char* param_values[] {user_uid.c_str()};
-    PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT role_permission_id FROM users_roles_permissions WHERE user_id=$1",
+    res_ptr=PQexecParams(conn_ptr,"SELECT role_permission_id FROM users_roles_permissions WHERE user_id=$1",
                                    1,NULL,param_values,NULL,NULL,0);
 
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -862,7 +882,7 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
                 command += " OFFSET " + offset;
             }
             const char* param_values[] {rp_id.c_str()};
-            PGresult* res_ptr=PQexecParams(conn_ptr,command.c_str(),
+            res_ptr=PQexecParams(conn_ptr,command.c_str(),
                                            1,NULL,param_values,NULL,NULL,0);
 
             if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -899,12 +919,13 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
 status dbase_handler::users_info_put(const std::string &user_uid, const std::string &user, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"users:update"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -928,7 +949,7 @@ status dbase_handler::users_info_put(const std::string &user_uid, const std::str
     {//update user
         const char* param_values[] {first_name.c_str(),last_name.c_str(),email.c_str(),is_blocked.c_str(),updated_at.c_str(),
             phone_number.c_str(),position.c_str(),gender.c_str(),location_id.c_str(),ou_id.c_str(),user_uid.c_str()};
-        PGresult* res_ptr=PQexecParams(conn_ptr,"UPDATE users SET first_name=$1,last_name=$2,email=$3,is_blocked=$4,updated_at=$5,"
+        res_ptr=PQexecParams(conn_ptr,"UPDATE users SET first_name=$1,last_name=$2,email=$3,is_blocked=$4,updated_at=$5,"
                                                 "phone_numder=$6,position=$7,gender=$8,location_id=8,ou_id=$10 WHERE id=$11",
                                                  11,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
@@ -942,7 +963,7 @@ status dbase_handler::users_info_put(const std::string &user_uid, const std::str
 
     {//get updated user back
         const char* param_values[] {user_uid.c_str()};
-        PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1",
+        res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1",
                                        1,NULL,param_values,NULL,NULL,0);
 
         if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -976,12 +997,13 @@ status dbase_handler::users_info_put(const std::string &user_uid, const std::str
 status dbase_handler::users_info_post(const std::string &user, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"users:create"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1009,7 +1031,7 @@ status dbase_handler::users_info_post(const std::string &user, const std::string
 
     const char* param_values[] {uuid.c_str(),first_name.c_str(),last_name.c_str(),email.c_str(),created_at.c_str(),updated_at.c_str(),is_blocked.c_str(),
                                 phone_number.c_str(),position.c_str(),gender.c_str(),location_id.c_str(),ou_id.c_str()};
-    PGresult* res_ptr=PQexecParams(conn_ptr,"INSERT INTO users (id,first_name,last_name,email,created_at,updated_at,is_blocked,phone_number,position,gender,location_id,ou_id)"
+    res_ptr=PQexecParams(conn_ptr,"INSERT INTO users (id,first_name,last_name,email,created_at,updated_at,is_blocked,phone_number,position,gender,location_id,ou_id)"
                                             " VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
                                             12,NULL,param_values,NULL,NULL,0);
     if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
@@ -1018,6 +1040,7 @@ status dbase_handler::users_info_post(const std::string &user, const std::string
         PQfinish(conn_ptr);
         return fail;
     }
+    PQclear(res_ptr);
     return success;
 }
 
@@ -1025,12 +1048,13 @@ status dbase_handler::users_info_post(const std::string &user, const std::string
 status dbase_handler::users_info_delete(const std::string &user_uid, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"users:delete"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1038,7 +1062,7 @@ status dbase_handler::users_info_delete(const std::string &user_uid, const std::
         }
     }
     const char* param_values[] {user_uid.c_str()};
-    PGresult* res_ptr=PQexecParams(conn_ptr,"DELETE FROM users WHERE id=$1",
+    res_ptr=PQexecParams(conn_ptr,"DELETE FROM users WHERE id=$1",
                                    1,NULL,param_values,NULL,NULL,0);
     if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -1046,6 +1070,7 @@ status dbase_handler::users_info_delete(const std::string &user_uid, const std::
         PQfinish(conn_ptr);
         return fail;
     }
+    PQclear(res_ptr);
     return success;
 }
 
@@ -1053,19 +1078,20 @@ status dbase_handler::users_info_delete(const std::string &user_uid, const std::
 status dbase_handler::rps_list_get(std::string &rps, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"roles_permissions:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
             return unauthorized;
         }
     }
-    PGresult* res_ptr=PQexec(conn_ptr,"SELECT * FROM roles_permissions");
+    res_ptr=PQexec(conn_ptr,"SELECT * FROM roles_permissions");
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
@@ -1112,12 +1138,13 @@ status dbase_handler::rps_list_get(std::string &rps, const std::string &limit,
                                  const std::string& type, const std::string& description, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"roles_permissions:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1132,7 +1159,7 @@ status dbase_handler::rps_list_get(std::string &rps, const std::string &limit,
         command +=" OFFSET " + offset;
     }
 
-    PGresult* res_ptr=PQexec(conn_ptr,command.c_str());
+    res_ptr=PQexec(conn_ptr,command.c_str());
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
@@ -1177,12 +1204,13 @@ status dbase_handler::rps_list_get(std::string &rps, const std::string &limit,
 status dbase_handler::rps_info_get(const std::string &rp_uid, std::string &rp, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"roles_permissions:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1190,7 +1218,7 @@ status dbase_handler::rps_info_get(const std::string &rp_uid, std::string &rp, c
         }
     }
     const char* param_values[] {rp_uid.c_str()};
-    PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
+    res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
                                    1,NULL,param_values,NULL,NULL,0);
 
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -1225,6 +1253,7 @@ status dbase_handler::rps_info_get(const std::string &rp_uid, std::string &rp, c
 status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &users, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
@@ -1238,7 +1267,7 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
         }
     }
     const char* param_values[] {rp_uid.c_str()};
-    PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT user_id FROM users_roles_permissions WHERE role_permission_id=$1",
+    res_ptr=PQexecParams(conn_ptr,"SELECT user_id FROM users_roles_permissions WHERE role_permission_id=$1",
                                    1,NULL, param_values,NULL,NULL,0);
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -1274,8 +1303,8 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
 
         for(const std::string& user_id: user_ids){
             const char* param_values[] {user_id.c_str()};
-            PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1",
-                1,NULL,param_values,NULL,NULL,0);
+            res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1",
+                                           1,NULL,param_values,NULL,NULL,0);
 
             if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
                 PQclear(res_ptr);
@@ -1308,9 +1337,11 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
     return success;
 }
 
+//Get Associated Users with limit and/or offset and filter
 status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &users, const std::string &limit, const std::string &offset, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
@@ -1332,7 +1363,7 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
     }
 
     const char* param_values[] {rp_uid.c_str()};
-    PGresult* res_ptr=PQexecParams(conn_ptr,command.c_str(),
+    res_ptr=PQexecParams(conn_ptr,command.c_str(),
                                    1,NULL, param_values,NULL,NULL,0);
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -1367,7 +1398,7 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
 
         for(const std::string& user_id: user_ids){
             const char* param_values[] {user_id.c_str()};
-            PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1",
+            res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1",
                                            1,NULL,param_values,NULL,NULL,0);
 
             if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -1405,12 +1436,13 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
 status dbase_handler::rps_rp_detail_get(const std::string &rp_uid, std::string &rp, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"roles_permissions:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1418,7 +1450,7 @@ status dbase_handler::rps_rp_detail_get(const std::string &rp_uid, std::string &
         }
     }
     const char* param_values[] {rp_uid.c_str()};
-    PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
+    res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
                                    1,NULL,param_values,NULL,NULL,0);
 
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -1458,12 +1490,13 @@ status dbase_handler::rps_rp_detail_get(const std::string &rp_uid, std::string &
 status dbase_handler::rps_info_post(const std::string &rp, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"roles_permissions:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1480,7 +1513,7 @@ status dbase_handler::rps_info_post(const std::string &rp, const std::string &re
     const std::string& uuid {boost::uuids::to_string(uuid_)};
 
     const char* param_values[] {uuid.c_str(),name.c_str(),type.c_str(),description.c_str()};
-    PGresult* res_ptr=PQexecParams(conn_ptr,"INSERT INTO roles_permissions (id,name,type,description) VALUES($1,$2,$3,$4)",
+    res_ptr=PQexecParams(conn_ptr,"INSERT INTO roles_permissions (id,name,type,description) VALUES($1,$2,$3,$4)",
                                    4,NULL,param_values,NULL,NULL,0);
     if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -1488,6 +1521,7 @@ status dbase_handler::rps_info_post(const std::string &rp, const std::string &re
         PQfinish(conn_ptr);
         return fail;
     }
+    PQclear(res_ptr);
     return success;
 }
 
@@ -1495,12 +1529,13 @@ status dbase_handler::rps_info_post(const std::string &rp, const std::string &re
 status dbase_handler::rps_info_put(const std::string &rp_uid, const std::string &rp, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"roles_permissions:update"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1515,7 +1550,7 @@ status dbase_handler::rps_info_put(const std::string &rp_uid, const std::string 
 
     {//update user
         const char* param_values[] {name.c_str(),type.c_str(),description.c_str(),rp_uid.c_str()};
-        PGresult* res_ptr=PQexecParams(conn_ptr,"UPDATE roles_permissions SET name=$1,type=$2,description=$3 WHERE id=$4",
+        res_ptr=PQexecParams(conn_ptr,"UPDATE roles_permissions SET name=$1,type=$2,description=$3 WHERE id=$4",
                                        4,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -1528,7 +1563,7 @@ status dbase_handler::rps_info_put(const std::string &rp_uid, const std::string 
 
     {//get updated user back
         const char* param_values[] {rp_uid.c_str()};
-        PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
+        res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
                                        1,NULL,param_values,NULL,NULL,0);
 
         if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -1562,12 +1597,13 @@ status dbase_handler::rps_info_put(const std::string &rp_uid, const std::string 
 status dbase_handler::rps_info_delete(const std::string &rp_uid, const std::string& requester_id,std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"roles_permissions:delete"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1575,7 +1611,7 @@ status dbase_handler::rps_info_delete(const std::string &rp_uid, const std::stri
         }
     }
     const char* param_values[] {rp_uid.c_str()};
-    PGresult* res_ptr=PQexecParams(conn_ptr,"DELETE FROM roles_permissions WHERE id=$1",
+    res_ptr=PQexecParams(conn_ptr,"DELETE FROM roles_permissions WHERE id=$1",
                                    1,NULL,param_values,NULL,NULL,0);
     if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -1592,12 +1628,13 @@ status dbase_handler::rps_info_delete(const std::string &rp_uid, const std::stri
 status dbase_handler::rps_child_put(const std::string &parent_uid, const std::string &child_uid, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"roles_permissions:update"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1613,7 +1650,7 @@ status dbase_handler::rps_child_put(const std::string &parent_uid, const std::st
     {//create relationship
         const std::string& created_at {time_with_timezone()};
         const char* param_values[] {created_at.c_str(),parent_uid.c_str(),child_uid.c_str()};
-        PGresult* res_ptr=PQexecParams(conn_ptr,"INSERT INTO roles_permissions_relationship (created_at,parent_id,child_id) VALUES($1,$2,$3)",
+        res_ptr=PQexecParams(conn_ptr,"INSERT INTO roles_permissions_relationship (created_at,parent_id,child_id) VALUES($1,$2,$3)",
                                        3,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -1621,10 +1658,11 @@ status dbase_handler::rps_child_put(const std::string &parent_uid, const std::st
             PQfinish(conn_ptr);
             return fail;
         }
+        PQclear(res_ptr);
     }
     {//send rp with all children back
         const char* param_values[] {parent_uid.c_str()};
-        PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
+        res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
                                        1,NULL,param_values,NULL,NULL,0);
 
         if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -1666,12 +1704,13 @@ status dbase_handler::rps_child_put(const std::string &parent_uid, const std::st
 status dbase_handler::rps_child_delete(const std::string &parent_uid, const std::string &child_uid, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"roles_permissions:update"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1686,7 +1725,7 @@ status dbase_handler::rps_child_delete(const std::string &parent_uid, const std:
     }
     {//delete relationship
         const char* param_values[] {parent_uid.c_str(),child_uid.c_str()};
-        PGresult* res_ptr=PQexecParams(conn_ptr,"DELETE FROM roles_permissions_relationship WHERE parent_id=$1 AND child_id=$2",
+        res_ptr=PQexecParams(conn_ptr,"DELETE FROM roles_permissions_relationship WHERE parent_id=$1 AND child_id=$2",
                                        2,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -1694,10 +1733,11 @@ status dbase_handler::rps_child_delete(const std::string &parent_uid, const std:
             PQfinish(conn_ptr);
             return fail;
         }
+        PQclear(res_ptr);
     }
     {//send rp with all children back
         const char* param_values[] {parent_uid.c_str()};
-        PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
+        res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
                                        1,NULL,param_values,NULL,NULL,0);
 
         if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -1742,135 +1782,22 @@ status dbase_handler::authz_check_get(const std::string &user_uid, const std::st
     if(!conn_ptr){
         return fail;
     }
-    {
-        authorized=is_authorized(conn_ptr,user_uid,rp_ident);
-        PQfinish(conn_ptr);
-        return success;
-    }
-    /*
-    std::vector<std::string> rp_uids {};
-    {//get top_level rp_uid
-        PGresult* res_ptr {NULL};
-        const char* param_values[] {user_uid.c_str()};
-        res_ptr=PQexecParams(conn_ptr,"SELECT role_permission_id FROM users_roles_permissions WHERE user_id=$1",
-                                       1,NULL,param_values,NULL,NULL,0);
-
-        if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
-            msg=std::string {PQresultErrorMessage(res_ptr)};
-            PQclear(res_ptr);
-            PQfinish(conn_ptr);
-            return false;
-        }
-
-        const int& rows {PQntuples(res_ptr)};
-        if(!rows){
-            msg=user_uid;
-            PQclear(res_ptr);
-            PQfinish(conn_ptr);
-            return false;
-        }
-        for(int r=0;r<rows;++r){
-            const std::string& rp_uid {PQgetvalue(res_ptr,r,0)};
-            rp_uids.push_back(rp_uid);
-        }
-        PQclear(res_ptr);
-    }
-    {//get all low_level rp_uids for top_level rp_uid
-        PGresult* res_ptr {NULL};
-        const std::string& command {"WITH RECURSIVE rp_list AS ("
-                                    "SELECT child_id, parent_id "
-                                    "FROM roles_permissions_relationship "
-                                    "WHERE parent_id IN ($1) "
-                                    "UNION "
-                                    "SELECT rpr.child_id, rpr.parent_id "
-                                    "FROM roles_permissions_relationship rpr "
-                                    "JOIN rp_list on rp_list.child_id = rpr.parent_id"
-                                    ") SELECT DISTINCT child_id FROM rp_list"};
-
-        std::vector<const char*> param_values {};
-        param_values.resize(rp_uids.size());
-        std::transform(rp_uids.begin(),rp_uids.end(),param_values.begin(),[](const std::string& item){
-            return item.c_str();
-        });
-        res_ptr=PQexecParams(conn_ptr,command.c_str(),
-                             1,NULL,param_values.data(),NULL,NULL,0);
-        if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
-            msg=std::string {PQresultErrorMessage(res_ptr)};
-            PQclear(res_ptr);
-            PQfinish(conn_ptr);
-            return false;
-        }
-        const int& rows {PQntuples(res_ptr)};
-        if(rows){
-            for(int r=0;r<rows;++r){
-                const std::string& rp_uid {PQgetvalue(res_ptr,r,0)};
-                rp_uids.push_back(rp_uid.c_str());
-            }
-        }
-        PQclear(res_ptr);
-    }
-
-    {//check 'rp_ident'
-        boost::regex re {"^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"};
-        boost::smatch match;
-        if(!boost::regex_match(rp_ident,match,re)){
-            //split by white_space and remove empty strings
-            std::vector<std::string> rp_names {};
-            boost::split(rp_names,rp_ident,boost::is_any_of("%20"),boost::token_compress_on);
-
-            PGresult* res_ptr {NULL};
-            std::vector<std::string> rp_uids_names {};
-            for(const std::string& rp_name: rp_names){
-                const char* param_values[] {rp_name.c_str()};
-                res_ptr=PQexecParams(conn_ptr,"SELECT id FROM roles_permissions WHERE name=$1",
-                                     1,NULL,param_values,NULL,NULL,0);
-                if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
-                    msg=std::string {PQresultErrorMessage(res_ptr)};
-                    PQclear(res_ptr);
-                    PQfinish(conn_ptr);
-                    return false;
-                }
-                const int& rows {PQntuples(res_ptr)};
-                if(!rows){
-                    PQclear(res_ptr);
-                    PQfinish(conn_ptr);
-                    return false;
-                }
-                for(int r=0;r<rows;++r){
-                    const std::string& rp_uid_name {PQgetvalue(res_ptr,r,0)};
-                    rp_uids_names.push_back(rp_uid_name.c_str());
-                }
-            }
-            const bool contains_all {std::all_of(rp_uids_names.begin(),rp_uids_names.end(),[&](const std::string& rp_uid){
-                const auto& it {std::find(rp_uids.begin(),rp_uids.end(),rp_uid)};
-                return (it!=rp_uids.end());
-            })};
-            PQfinish(conn_ptr);
-            return contains_all;
-        }
-        else{
-            auto it {std::find(rp_uids.begin(),rp_uids.end(),rp_ident)};
-            if(it!=rp_uids.end()){
-                PQfinish(conn_ptr);
-                return true;
-            }
-        }
-    }
+    authorized=is_authorized(conn_ptr,user_uid,rp_ident);
     PQfinish(conn_ptr);
-    return false;
-    */
+    return success;
 }
 
 //Assign Role Or Permission To User
 status dbase_handler::authz_manage_post(const std::string &requested_user_uid, const std::string &requested_rp_uid, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"authorization_manage"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1884,7 +1811,6 @@ status dbase_handler::authz_manage_post(const std::string &requested_user_uid, c
         }
     }
     {//assign
-        PGresult* res_ptr {NULL};
         const std::string& created_at {time_with_timezone()};
 
         const char* param_values[] {created_at.c_str(),requested_user_uid.c_str(),requested_rp_uid.c_str()};
@@ -1896,10 +1822,11 @@ status dbase_handler::authz_manage_post(const std::string &requested_user_uid, c
             PQfinish(conn_ptr);
             return fail;
         }
+        PQclear(res_ptr);
     }
     {//send assigned role and permission back
         const char* param_values[] {requested_rp_uid.c_str()};
-        PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
+        res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
                                        1,NULL,param_values,NULL,NULL,0);
 
         if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -1936,12 +1863,13 @@ status dbase_handler::authz_manage_post(const std::string &requested_user_uid, c
 status dbase_handler::authz_manage_delete(const std::string &requested_user_uid, const std::string &requested_rp_uid, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return fail;
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"authorization_manage"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1955,7 +1883,6 @@ status dbase_handler::authz_manage_delete(const std::string &requested_user_uid,
         }
     }
     {//remove
-        PGresult* res_ptr {NULL};
         const char* param_values[] {requested_user_uid.c_str(),requested_rp_uid.c_str()};
         res_ptr=PQexecParams(conn_ptr,"DELETE FROM users_roles_permissions WHERE user_id=$1 AND role_permission_id=$2",
                              2,NULL,param_values,NULL,NULL,0);
@@ -1965,10 +1892,11 @@ status dbase_handler::authz_manage_delete(const std::string &requested_user_uid,
             PQfinish(conn_ptr);
             return fail;
         }
+        PQclear(res_ptr);
     }
     {//send assigned role and permission back
         const char* param_values[] {requested_rp_uid.c_str()};
-        PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
+        res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
                                        1,NULL,param_values,NULL,NULL,0);
 
         if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
