@@ -236,6 +236,7 @@ bool dbase_handler::init_default_rps(PGconn *conn_ptr, std::string &msg)
         }
     };
 
+    PGresult* res_ptr {NULL};
     for(const boost::json::value& v: default_rps){
         const boost::json::object& rp {v.as_object()};
         const std::string& id {rp.at("id").as_string().c_str()};
@@ -244,7 +245,7 @@ bool dbase_handler::init_default_rps(PGconn *conn_ptr, std::string &msg)
         const std::string& description {rp.at("description").as_string().c_str()};
 
         const char* param_values[] {id.c_str(),name.c_str(),type.c_str(),description.c_str()};
-        PGresult* res_ptr=PQexecParams(conn_ptr,"INSERT INTO roles_permissions (id,name,type,description) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",
+        res_ptr=PQexecParams(conn_ptr,"INSERT INTO roles_permissions (id,name,type,description) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",
                                        4,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -259,7 +260,12 @@ bool dbase_handler::init_default_rps(PGconn *conn_ptr, std::string &msg)
 //Check if rp exists
 bool dbase_handler::is_rp_exists(PGconn *conn_ptr, const std::string &rp_uid, std::string &msg)
 {
-    PGresult* res_ptr=PQexec(conn_ptr,"SELECT * FROM roles_permissions");
+    PGresult* res_ptr {NULL};
+    const std::string& command {"SELECT * FROM roles_permissions WHERE id=$1"};
+    const char* param_values[] {rp_uid.c_str()};
+    res_ptr=PQexecParams(conn_ptr,command.c_str(),
+                        1,NULL,param_values,NULL,NULL,0);
+
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
@@ -280,9 +286,11 @@ bool dbase_handler::is_rp_exists(PGconn *conn_ptr, const std::string &rp_uid, st
 //Check if user exists
 bool dbase_handler::is_user_exists(PGconn *conn_ptr, const std::string &user_uid, std::string &msg)
 {
+    PGresult* res_ptr {NULL};
+    const std::string& command {"SELECT * FROM users WHERE id=$1"};
     const char* param_values[] {user_uid.c_str()};
-    PGresult* res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1",
-        1,NULL,param_values,NULL,NULL,0);
+    res_ptr=PQexecParams(conn_ptr,command.c_str(),
+                        1,NULL,param_values,NULL,NULL,0);
 
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -382,12 +390,15 @@ bool dbase_handler::is_authorized(PGconn *conn_ptr, const std::string &user_uid,
 //Get total urp
 int dbase_handler::urp_total_get(PGconn *conn_ptr)
 {
+    PGresult* res_ptr {NULL};
     const std::string& command {"SELECT * FROM users_roles_permissions"};
-    PGresult* res_ptr=PQexec(conn_ptr,command.c_str());
+    res_ptr=PQexec(conn_ptr,command.c_str());
+
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         PQclear(res_ptr);
-        return -1;
+        return 0;
     }
+
     const int& rows {PQntuples(res_ptr)};
     PQclear(res_ptr);
     return rows;
@@ -396,12 +407,15 @@ int dbase_handler::urp_total_get(PGconn *conn_ptr)
 //Get total rps
 int dbase_handler::rps_total_get(PGconn *conn_ptr)
 {
+    PGresult* res_ptr {NULL};
     const std::string& command {"SELECT * FROM roles_permissions"};
-    PGresult* res_ptr=PQexec(conn_ptr,command.c_str());
+    res_ptr=PQexec(conn_ptr,command.c_str());
+
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         PQclear(res_ptr);
-        return -1;
+        return 0;
     }
+
     const int& rows {PQntuples(res_ptr)};
     PQclear(res_ptr);
     return rows;
@@ -410,12 +424,15 @@ int dbase_handler::rps_total_get(PGconn *conn_ptr)
 //Get total users
 int dbase_handler::users_total_get(PGconn *conn_ptr)
 {
+    PGresult* res_ptr {NULL};
     const std::string& command {"SELECT id FROM users"};
-    PGresult* res_ptr=PQexec(conn_ptr,command.c_str());
+    res_ptr=PQexec(conn_ptr,command.c_str());
+
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         PQclear(res_ptr);
-        return -1;
+        return 0;
     }
+
     const int& rows {PQntuples(res_ptr)};
     PQclear(res_ptr);
     return rows;
