@@ -11,7 +11,7 @@ echo "Create needed directories"
 mkdir -p "${CURRENT_DIR}"/build
 BUILD_DIR="${CURRENT_DIR}"/build
 OPENSSL_LIB_DIR="/usr/lib/x86_64-linux-gnu"
-#POSTGRE_LIB_DIR="/usr/lib/x86_64-linux-gnu"
+POSTGRE_LIB_DIR="/usr/lib/x86_64-linux-gnu"
 
 HOME_DIR="/home/${USER_NAME}"
 INSTALL_DIR="${HOME_DIR}"/uauth
@@ -39,6 +39,6 @@ rm -rf "${BUILD_DIR}"
 mkdir -p ${INSTALL_DIR}/lib
 LIB_DIR=${INSTALL_DIR}/lib
 
-cp -f ${POSTGRE_LIB_DIR}/libpq.so.5.9 ${LIB_DIR}/libpq.so.5.9
+cp -f ${POSTGRE_LIB_DIR}/libpq.so.5.12 ${LIB_DIR}/libpq.so.5.12
 cp -f ${OPENSSL_LIB_DIR}/libssl.so.1.1    ${LIB_DIR}/libssl.so.1.1
 cp -f ${OPENSSL_LIB_DIR}/libcrypto.so.1.1 ${LIB_DIR}/libcrypto.so.1.1

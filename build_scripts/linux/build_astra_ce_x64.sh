@@ -11,7 +11,7 @@ echo "Create needed directories"
 mkdir -p "${CURRENT_DIR}"/build
 BUILD_DIR="${CURRENT_DIR}"/build
 OPENSSL_LIB_DIR="/usr/lib32/i386-linux-gnu"
-#POSTGRE_LIB_DIR="/usr/lib/x86_64-linux-gnu"
+POSTGRE_LIB_DIR="/usr/lib/x86_64-linux-gnu"
 
 HOME_DIR="/home/${USER_NAME}"
 INSTALL_DIR="${HOME_DIR}"/uauth
