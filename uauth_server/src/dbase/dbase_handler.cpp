@@ -591,12 +591,12 @@ bool dbase_handler::init_database(std::string &msg)
 }
 
 //List Of Users
-status dbase_handler::users_list_get(std::string &users, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::users_list_get(std::string &users, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -604,7 +604,7 @@ status dbase_handler::users_list_get(std::string &users, const std::string &requ
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
 
@@ -613,14 +613,14 @@ status dbase_handler::users_list_get(std::string &users, const std::string &requ
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
 
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return not_found;
+        return db_status::not_found;
     }
     const int& columns {PQnfields(res_ptr)};
 
@@ -646,11 +646,11 @@ status dbase_handler::users_list_get(std::string &users, const std::string &requ
         {"items",users_},
     };
     users=boost::json::serialize(out);
-    return success;
+    return db_status::success;
 }
 
 //List Of Users with limit and/or offset and filter
-status dbase_handler::users_list_get(std::string& users, const std::string& limit,
+db_status dbase_handler::users_list_get(std::string& users, const std::string& limit,
                                    const std::string& offset, const std::string &first_name,
                                    const std::string &last_name, const std::string &email,
                                    const std::string &is_blocked,const std::string& requester_id,std::string& msg)
@@ -658,7 +658,7 @@ status dbase_handler::users_list_get(std::string& users, const std::string& limi
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -666,7 +666,7 @@ status dbase_handler::users_list_get(std::string& users, const std::string& limi
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     //add limit/offset
@@ -683,14 +683,14 @@ status dbase_handler::users_list_get(std::string& users, const std::string& limi
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
 
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return not_found;
+        return db_status::not_found;
     }
     const int& columns {PQnfields(res_ptr)};
 
@@ -716,16 +716,16 @@ status dbase_handler::users_list_get(std::string& users, const std::string& limi
         {"items",users_},
     };
     users=boost::json::serialize(out);
-    return success;
+    return db_status::success;
 }
 
 //Get User Info
-status dbase_handler::users_info_get(const std::string &user_uid, std::string &user, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::users_info_get(const std::string &user_uid, std::string &user, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -733,7 +733,7 @@ status dbase_handler::users_info_get(const std::string &user_uid, std::string &u
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     const char* param_values[] {user_uid.c_str()};
@@ -744,7 +744,7 @@ status dbase_handler::users_info_get(const std::string &user_uid, std::string &u
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
 
     const int& rows {PQntuples(res_ptr)};
@@ -752,7 +752,7 @@ status dbase_handler::users_info_get(const std::string &user_uid, std::string &u
         msg="user not found";
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return not_found;
+        return db_status::not_found;
     }
 
     const int& columns {PQnfields(res_ptr)};
@@ -767,16 +767,16 @@ status dbase_handler::users_info_get(const std::string &user_uid, std::string &u
     PQfinish(conn_ptr);
 
     user=boost::json::serialize(user_);
-    return success;
+    return db_status::success;
 }
 
 //Get User Assigned Roles And Permissions
-status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rps, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rps, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -784,7 +784,7 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
 
@@ -796,7 +796,7 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
 
     boost::json::array rps_ {};
@@ -804,7 +804,7 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
     if(!rows){
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return not_found;
+        return db_status::not_found;
     }
     else{
         std::vector<std::string> rp_ids {};
@@ -844,17 +844,17 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
         {"items",rps_}
     };
     rps=boost::json::serialize(out);
-    return success;
+    return db_status::success;
 }
 
 //Get User Assigned Roles And Permissions with limit and/or offset
-status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rps,
+db_status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rps,
                                   const std::string &limit, const std::string &offset, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -862,7 +862,7 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
 
@@ -874,7 +874,7 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
 
     boost::json::array rps_ {};
@@ -882,7 +882,7 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
     if(!rows){
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return not_found;
+        return db_status::not_found;
     }
     else{
         std::vector<std::string> rp_ids {};
@@ -929,16 +929,16 @@ status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rp
         {"items",rps_}
     };
     rps=boost::json::serialize(out);
-    return success;
+    return db_status::success;
 }
 
 //Update User
-status dbase_handler::users_info_put(const std::string &user_uid, const std::string &user, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::users_info_put(const std::string &user_uid, const std::string &user, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -946,7 +946,7 @@ status dbase_handler::users_info_put(const std::string &user_uid, const std::str
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     const boost::json::value& v {boost::json::parse(user)};
@@ -973,7 +973,7 @@ status dbase_handler::users_info_put(const std::string &user_uid, const std::str
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return fail;
+            return db_status::fail;
         }
         PQclear(res_ptr);
     }
@@ -987,13 +987,13 @@ status dbase_handler::users_info_put(const std::string &user_uid, const std::str
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return fail;
+            return db_status::fail;
         }
         const int& rows {PQntuples(res_ptr)};
         if(!rows){
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return not_found;
+            return db_status::not_found;
         }
 
         const int& columns {PQnfields(res_ptr)};
@@ -1007,16 +1007,16 @@ status dbase_handler::users_info_put(const std::string &user_uid, const std::str
         msg=boost::json::serialize(user_);
         PQclear(res_ptr);
     }
-    return success;
+    return db_status::success;
 }
 
 //Create User
-status dbase_handler::users_info_post(const std::string &user, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::users_info_post(const std::string &user, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1024,7 +1024,7 @@ status dbase_handler::users_info_post(const std::string &user, const std::string
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     const boost::json::value& v {boost::json::parse(user)};
@@ -1055,19 +1055,19 @@ status dbase_handler::users_info_post(const std::string &user, const std::string
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
     PQclear(res_ptr);
-    return success;
+    return db_status::success;
 }
 
 //Delete User
-status dbase_handler::users_info_delete(const std::string &user_uid, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::users_info_delete(const std::string &user_uid, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1075,7 +1075,7 @@ status dbase_handler::users_info_delete(const std::string &user_uid, const std::
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     const char* param_values[] {user_uid.c_str()};
@@ -1085,19 +1085,19 @@ status dbase_handler::users_info_delete(const std::string &user_uid, const std::
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
     PQclear(res_ptr);
-    return success;
+    return db_status::success;
 }
 
 //List Of Roles And Permissions
-status dbase_handler::rps_list_get(std::string &rps, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rps_list_get(std::string &rps, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1105,7 +1105,7 @@ status dbase_handler::rps_list_get(std::string &rps, const std::string &requeste
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     res_ptr=PQexec(conn_ptr,"SELECT * FROM roles_permissions");
@@ -1113,14 +1113,14 @@ status dbase_handler::rps_list_get(std::string &rps, const std::string &requeste
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
 
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return not_found;
+        return db_status::not_found;
     }
     const int& columns {PQnfields(res_ptr)};
     boost::json::array rps_ {};
@@ -1146,18 +1146,18 @@ status dbase_handler::rps_list_get(std::string &rps, const std::string &requeste
         {"items",rps_}
     };
     rps=boost::json::serialize(out);
-    return success;
+    return db_status::success;
 }
 
 //List Of Roles And Permissions with limit and/or offset and filter
-status dbase_handler::rps_list_get(std::string &rps, const std::string &limit,
+db_status dbase_handler::rps_list_get(std::string &rps, const std::string &limit,
                                  const std::string offset, const std::string& name,
                                  const std::string& type, const std::string& description, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1165,7 +1165,7 @@ status dbase_handler::rps_list_get(std::string &rps, const std::string &limit,
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     std::string command {"SELECT * FROM roles_permissions"};
@@ -1181,14 +1181,14 @@ status dbase_handler::rps_list_get(std::string &rps, const std::string &limit,
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
 
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return not_found;
+        return db_status::not_found;
     }
     const int& columns {PQnfields(res_ptr)};
     boost::json::array rps_ {};
@@ -1214,16 +1214,16 @@ status dbase_handler::rps_list_get(std::string &rps, const std::string &limit,
         {"items",rps_}
     };
     rps=boost::json::serialize(out);
-    return success;
+    return db_status::success;
 }
 
 //Get Permission Or Role
-status dbase_handler::rps_info_get(const std::string &rp_uid, std::string &rp, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rps_info_get(const std::string &rp_uid, std::string &rp, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1231,7 +1231,7 @@ status dbase_handler::rps_info_get(const std::string &rp_uid, std::string &rp, c
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     const char* param_values[] {rp_uid.c_str()};
@@ -1242,14 +1242,14 @@ status dbase_handler::rps_info_get(const std::string &rp_uid, std::string &rp, c
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
 
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return not_found;
+        return db_status::not_found;
     }
     const int& columns {PQnfields(res_ptr)};
     boost::json::object rp_ {};
@@ -1263,16 +1263,16 @@ status dbase_handler::rps_info_get(const std::string &rp_uid, std::string &rp, c
     PQfinish(conn_ptr);
 
     rp=boost::json::serialize(rp_);
-    return success;
+    return db_status::success;
 }
 
 //Get Associated Users
-status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &users, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &users, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1280,7 +1280,7 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     const char* param_values[] {rp_uid.c_str()};
@@ -1290,7 +1290,7 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
 
     boost::json::array users_ {};
@@ -1309,7 +1309,7 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
         };
         users=boost::json::serialize(out);
         users=boost::json::serialize(users_);
-        return success;
+        return db_status::success;
     }
     else{
         std::vector<std::string> user_ids {};
@@ -1351,16 +1351,16 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
         {"items",users_}
     };
     users=boost::json::serialize(out);
-    return success;
+    return db_status::success;
 }
 
 //Get Associated Users with limit and/or offset and filter
-status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &users, const std::string &limit, const std::string &offset, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &users, const std::string &limit, const std::string &offset, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1368,7 +1368,7 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     std::string command {"SELECT user_id FROM users_roles_permissions WHERE role_permission_id=$1"};
@@ -1386,7 +1386,7 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
 
     boost::json::array users_ {};
@@ -1404,7 +1404,7 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
             {"items",users_}
         };
         users=boost::json::serialize(out);
-        return success;
+        return db_status::success;
     }
     else{
         std::vector<std::string> user_ids {};
@@ -1446,16 +1446,16 @@ status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &user
         {"items",users_}
     };
     users=boost::json::serialize(out);
-    return success;
+    return db_status::success;
 }
 
 //Get Permission Or Role Detail
-status dbase_handler::rps_rp_detail_get(const std::string &rp_uid, std::string &rp, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rps_rp_detail_get(const std::string &rp_uid, std::string &rp, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1463,7 +1463,7 @@ status dbase_handler::rps_rp_detail_get(const std::string &rp_uid, std::string &
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     const char* param_values[] {rp_uid.c_str()};
@@ -1474,14 +1474,14 @@ status dbase_handler::rps_rp_detail_get(const std::string &rp_uid, std::string &
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
 
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
     const int& columns {PQnfields(res_ptr)};
     boost::json::object rp_ {};
@@ -1500,16 +1500,16 @@ status dbase_handler::rps_rp_detail_get(const std::string &rp_uid, std::string &
     PQfinish(conn_ptr);
 
     rp=boost::json::serialize(rp_);
-    return success;
+    return db_status::success;
 }
 
 //Create Permission Or Role
-status dbase_handler::rps_info_post(const std::string &rp, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rps_info_post(const std::string &rp, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1517,7 +1517,7 @@ status dbase_handler::rps_info_post(const std::string &rp, const std::string &re
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     const boost::json::value& v {boost::json::parse(rp)};
@@ -1536,19 +1536,19 @@ status dbase_handler::rps_info_post(const std::string &rp, const std::string &re
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
     PQclear(res_ptr);
-    return success;
+    return db_status::success;
 }
 
 //Update Permission Or Role
-status dbase_handler::rps_info_put(const std::string &rp_uid, const std::string &rp, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rps_info_put(const std::string &rp_uid, const std::string &rp, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1556,7 +1556,7 @@ status dbase_handler::rps_info_put(const std::string &rp_uid, const std::string 
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     const boost::json::value& v {boost::json::parse(rp)};
@@ -1573,7 +1573,7 @@ status dbase_handler::rps_info_put(const std::string &rp_uid, const std::string 
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return fail;
+            return db_status::fail;
         }
         PQclear(res_ptr);
     }
@@ -1587,13 +1587,13 @@ status dbase_handler::rps_info_put(const std::string &rp_uid, const std::string 
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return fail;
+            return db_status::fail;
         }
         const int& rows {PQntuples(res_ptr)};
         if(!rows){
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return not_found;
+            return db_status::not_found;
         }
 
         const int& columns {PQnfields(res_ptr)};
@@ -1607,16 +1607,16 @@ status dbase_handler::rps_info_put(const std::string &rp_uid, const std::string 
         msg=boost::json::serialize(rp_);
         PQclear(res_ptr);
     }
-    return success;
+    return db_status::success;
 }
 
 //Delete Permission Or Role
-status dbase_handler::rps_info_delete(const std::string &rp_uid, const std::string& requester_id,std::string &msg)
+db_status dbase_handler::rps_info_delete(const std::string &rp_uid, const std::string& requester_id,std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1624,7 +1624,7 @@ status dbase_handler::rps_info_delete(const std::string &rp_uid, const std::stri
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     const char* param_values[] {rp_uid.c_str()};
@@ -1634,20 +1634,20 @@ status dbase_handler::rps_info_delete(const std::string &rp_uid, const std::stri
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return fail;
+        return db_status::fail;
     }
     PQclear(res_ptr);
     PQfinish(conn_ptr);
-    return success;
+    return db_status::success;
 }
 
 //Add Child To Role
-status dbase_handler::rps_child_put(const std::string &parent_uid, const std::string &child_uid, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rps_child_put(const std::string &parent_uid, const std::string &child_uid, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1655,13 +1655,13 @@ status dbase_handler::rps_child_put(const std::string &parent_uid, const std::st
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     {//check if rp exists
         if(!is_rp_exists(conn_ptr,parent_uid,msg) || !is_rp_exists(conn_ptr,child_uid,msg)){
             PQfinish(conn_ptr);
-            return not_found;
+            return db_status::not_found;
         }
     }
     {//create relationship
@@ -1673,7 +1673,7 @@ status dbase_handler::rps_child_put(const std::string &parent_uid, const std::st
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return fail;
+            return db_status::fail;
         }
         PQclear(res_ptr);
     }
@@ -1686,14 +1686,14 @@ status dbase_handler::rps_child_put(const std::string &parent_uid, const std::st
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return fail;
+            return db_status::fail;
         }
 
         const int& rows {PQntuples(res_ptr)};
         if(!rows){
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return not_found;
+            return db_status::not_found;
         }
         const int& columns {PQnfields(res_ptr)};
         boost::json::object rp_ {};
@@ -1712,18 +1712,18 @@ status dbase_handler::rps_child_put(const std::string &parent_uid, const std::st
         PQfinish(conn_ptr);
 
         msg=boost::json::serialize(rp_);
-        return success;
+        return db_status::success;
     }
-    return fail;
+    return db_status::fail;
 }
 
 //Remove Child From Role
-status dbase_handler::rps_child_delete(const std::string &parent_uid, const std::string &child_uid, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rps_child_delete(const std::string &parent_uid, const std::string &child_uid, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1731,13 +1731,13 @@ status dbase_handler::rps_child_delete(const std::string &parent_uid, const std:
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     {//check if rp exists
         if(!is_rp_exists(conn_ptr,parent_uid,msg) || !is_rp_exists(conn_ptr,child_uid,msg)){
             PQfinish(conn_ptr);
-            return not_found;
+            return db_status::not_found;
         }
     }
     {//delete relationship
@@ -1748,7 +1748,7 @@ status dbase_handler::rps_child_delete(const std::string &parent_uid, const std:
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return fail;
+            return db_status::fail;
         }
         PQclear(res_ptr);
     }
@@ -1761,14 +1761,14 @@ status dbase_handler::rps_child_delete(const std::string &parent_uid, const std:
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return fail;
+            return db_status::fail;
         }
 
         const int& rows {PQntuples(res_ptr)};
         if(!rows){
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return not_found;
+            return db_status::not_found;
         }
         const int& columns {PQnfields(res_ptr)};
         boost::json::object rp_ {};
@@ -1787,30 +1787,30 @@ status dbase_handler::rps_child_delete(const std::string &parent_uid, const std:
         PQfinish(conn_ptr);
 
         msg=boost::json::serialize(rp_);
-        return success;
+        return db_status::success;
     }
-    return fail;
+    return db_status::fail;
 }
 
 //Check That User Authorized To Role Or Permission
-status dbase_handler::authz_check_get(const std::string &user_uid, const std::string &rp_ident, bool &authorized, std::string &msg)
+db_status dbase_handler::authz_check_get(const std::string &user_uid, const std::string &rp_ident, bool &authorized, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     authorized=is_authorized(conn_ptr,user_uid,rp_ident);
     PQfinish(conn_ptr);
-    return success;
+    return db_status::success;
 }
 
 //Assign Role Or Permission To User
-status dbase_handler::authz_manage_post(const std::string &requested_user_uid, const std::string &requested_rp_uid, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::authz_manage_post(const std::string &requested_user_uid, const std::string &requested_rp_uid, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1818,13 +1818,13 @@ status dbase_handler::authz_manage_post(const std::string &requested_user_uid, c
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     {//check if user exists
         if(!is_user_exists(conn_ptr,requested_user_uid,msg) || !is_rp_exists(conn_ptr,requested_rp_uid,msg)){
             PQfinish(conn_ptr);
-            return not_found;
+            return db_status::not_found;
         }
     }
     {//assign
@@ -1837,7 +1837,7 @@ status dbase_handler::authz_manage_post(const std::string &requested_user_uid, c
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return fail;
+            return db_status::fail;
         }
         PQclear(res_ptr);
     }
@@ -1850,14 +1850,14 @@ status dbase_handler::authz_manage_post(const std::string &requested_user_uid, c
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return fail;
+            return db_status::fail;
         }
 
         const int& rows {PQntuples(res_ptr)};
         if(!rows){
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return not_found;
+            return db_status::not_found;
         }
         const int& columns {PQnfields(res_ptr)};
         boost::json::object rp_ {};
@@ -1871,18 +1871,18 @@ status dbase_handler::authz_manage_post(const std::string &requested_user_uid, c
         PQfinish(conn_ptr);
 
         msg=boost::json::serialize(rp_);
-        return success;
+        return db_status::success;
     }
-    return fail;
+    return db_status::fail;
 }
 
 //Revoke Role Or Permission From User
-status dbase_handler::authz_manage_delete(const std::string &requested_user_uid, const std::string &requested_rp_uid, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::authz_manage_delete(const std::string &requested_user_uid, const std::string &requested_rp_uid, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
-        return fail;
+        return db_status::fail;
     }
     {//check if authorized
         std::string msg {};
@@ -1890,13 +1890,13 @@ status dbase_handler::authz_manage_delete(const std::string &requested_user_uid,
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
-            return unauthorized;
+            return db_status::unauthorized;
         }
     }
     {//check if user exists
         if(!is_user_exists(conn_ptr,requested_user_uid,msg) || !is_rp_exists(conn_ptr,requested_rp_uid,msg)){
             PQfinish(conn_ptr);
-            return not_found;
+            return db_status::not_found;
         }
     }
     {//remove
@@ -1907,7 +1907,7 @@ status dbase_handler::authz_manage_delete(const std::string &requested_user_uid,
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return fail;
+            return db_status::fail;
         }
         PQclear(res_ptr);
     }
@@ -1920,14 +1920,14 @@ status dbase_handler::authz_manage_delete(const std::string &requested_user_uid,
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return fail;
+            return db_status::fail;
         }
 
         const int& rows {PQntuples(res_ptr)};
         if(!rows){
             PQclear(res_ptr);
             PQfinish(conn_ptr);
-            return not_found;
+            return db_status::not_found;
         }
         const int& columns {PQnfields(res_ptr)};
         boost::json::object rp_ {};
@@ -1941,7 +1941,7 @@ status dbase_handler::authz_manage_delete(const std::string &requested_user_uid,
         PQfinish(conn_ptr);
 
         msg=boost::json::serialize(rp_);
-        return success;
+        return db_status::success;
     }
-    return fail;
+    return db_status::fail;
 }

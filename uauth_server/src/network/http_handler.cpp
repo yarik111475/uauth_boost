@@ -135,15 +135,15 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
         if(boost::regex_match(target,match,re)){
             std::string msg {};
             std::string users {};
-            const status& status_ {dbase_handler_ptr_->users_list_get(users,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->users_list_get(users,requester_id,msg)};
             switch(status_){
-            case status::fail:
+            case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
-            case status::success:
+            case db_status::success:
                 return success(std::move(request),http::status::ok,users);
-            case status::not_found:
+            case db_status::not_found:
                 return fail(std::move(request),http::status::not_found,msg);
-            case status::unauthorized:
+            case db_status::unauthorized:
                 return fail(std::move(request),http::status::unauthorized,msg);
             default:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -157,15 +157,15 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
             const std::string& user_uid {match[1]};
             std::string msg {};
             std::string user {};
-            const status& status_ {dbase_handler_ptr_->users_info_get(user_uid,user,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->users_info_get(user_uid,user,requester_id,msg)};
             switch(status_){
-            case status::fail:
+            case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
-            case status::success:
+            case db_status::success:
                 return success(std::move(request),http::status::ok,user);
-            case status::not_found:
+            case db_status::not_found:
                 return fail(std::move(request),http::status::not_found,msg);
-            case status::unauthorized:
+            case db_status::unauthorized:
                 return fail(std::move(request),http::status::unauthorized,msg);
             default:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -180,15 +180,15 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
             const std::string& user_uid {match[1]};
             std::string msg {};
             std::string rps {};
-            const status& status_ {dbase_handler_ptr_->users_rps_get(user_uid,rps,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->users_rps_get(user_uid,rps,requester_id,msg)};
             switch(status_){
-            case status::fail:
+            case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
-            case status::success:
+            case db_status::success:
                 return success(std::move(request),http::status::ok,rps);
-            case status::not_found:
+            case db_status::not_found:
                 return fail(std::move(request),http::status::not_found,msg);
-            case status::unauthorized:
+            case db_status::unauthorized:
                 return fail(std::move(request),http::status::unauthorized,msg);
             default:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -235,15 +235,15 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
 
                 std::string msg {};
                 std::string users {};
-                const status& status_ {dbase_handler_ptr_->users_list_get(users,limit,offset,first_name,last_name,email,is_blocked,requester_id,msg)};
+                const db_status& status_ {dbase_handler_ptr_->users_list_get(users,limit,offset,first_name,last_name,email,is_blocked,requester_id,msg)};
                 switch(status_){
-                case status::fail:
+                case db_status::fail:
                     return fail(std::move(request),http::status::bad_request,msg);
-                case status::success:
+                case db_status::success:
                     return success(std::move(request),http::status::ok,users);
-                case status::not_found:
+                case db_status::not_found:
                     return fail(std::move(request),http::status::not_found,msg);
-                case status::unauthorized:
+                case db_status::unauthorized:
                     return fail(std::move(request),http::status::unauthorized,msg);
                 default:
                     return fail(std::move(request),http::status::bad_request,msg);
@@ -275,15 +275,15 @@ http::response<http::string_body> http_handler::handle_users_put(http::request<h
         }
 
         std::string msg;
-        const status& status_ {dbase_handler_ptr_->users_info_put(user_uid,body,requester_id,msg)};
+        const db_status& status_ {dbase_handler_ptr_->users_info_put(user_uid,body,requester_id,msg)};
         switch(status_){
-        case status::fail:
+        case db_status::fail:
             return fail(std::move(request),http::status::bad_request,msg);
-        case status::success:
+        case db_status::success:
             return success(std::move(request),http::status::ok,msg);
-        case status::not_found:
+        case db_status::not_found:
             return fail(std::move(request),http::status::not_found,msg);
-        case status::unauthorized:
+        case db_status::unauthorized:
             return fail(std::move(request),http::status::unauthorized,msg);
         default:
             return fail(std::move(request),http::status::bad_request,msg);
@@ -307,15 +307,15 @@ http::response<http::string_body> http_handler::handle_users_post(http::request<
     }
 
     std::string msg;
-    const status& status_ {dbase_handler_ptr_->users_info_post(body,requester_id,msg)};
+    const db_status& status_ {dbase_handler_ptr_->users_info_post(body,requester_id,msg)};
     switch(status_){
-    case status::fail:
+    case db_status::fail:
         return fail(std::move(request),http::status::bad_request,msg);
-    case status::success:
+    case db_status::success:
         return success(std::move(request),http::status::ok,"user created");
-    case status::not_found:
+    case db_status::not_found:
         return fail(std::move(request),http::status::not_found,msg);
-    case status::unauthorized:
+    case db_status::unauthorized:
         return fail(std::move(request),http::status::unauthorized,msg);
     default:
         return fail(std::move(request),http::status::bad_request,msg);
@@ -333,15 +333,15 @@ http::response<http::string_body> http_handler::handle_users_delete(http::reques
     }
     const std::string& user_uid {match[1]};
     std::string msg;
-    const status& status_ {dbase_handler_ptr_->users_info_delete(user_uid,requester_id,msg)};
+    const db_status& status_ {dbase_handler_ptr_->users_info_delete(user_uid,requester_id,msg)};
     switch(status_){
-    case status::fail:
+    case db_status::fail:
         return fail(std::move(request),http::status::bad_request,msg);
-    case status::success:
+    case db_status::success:
         return success(std::move(request),http::status::no_content,msg);
-    case status::not_found:
+    case db_status::not_found:
         return fail(std::move(request),http::status::not_found,msg);
-    case status::unauthorized:
+    case db_status::unauthorized:
         return fail(std::move(request),http::status::unauthorized,msg);
     default:
         return fail(std::move(request),http::status::bad_request,msg);
@@ -360,15 +360,15 @@ http::response<http::string_body> http_handler::handle_authz_get(http::request<h
         const std::string& rp_ident {match[2]};
         std::string msg {};
         bool authorized {false};
-        const status& status_ {dbase_handler_ptr_->authz_check_get(user_uid,rp_ident,authorized,msg)};
+        const db_status& status_ {dbase_handler_ptr_->authz_check_get(user_uid,rp_ident,authorized,msg)};
         switch(status_){
-        case status::fail:
+        case db_status::fail:
             return fail(std::move(request),http::status::bad_request,msg);
-        case status::success:
+        case db_status::success:
             return success(std::move(request),http::status::ok,std::to_string(authorized));
-        case status::not_found:
+        case db_status::not_found:
             return fail(std::move(request),http::status::not_found,msg);
-        case status::unauthorized:
+        case db_status::unauthorized:
             return fail(std::move(request),http::status::unauthorized,msg);
         default:
             return fail(std::move(request),http::status::bad_request,msg);
@@ -386,15 +386,15 @@ http::response<http::string_body> http_handler::handle_authz_manage_post(http::r
         const std::string& requested_user_id {match[1]};
         const std::string& requested_rp_id {match[2]};
         std::string msg {};
-        const status& status_ {dbase_handler_ptr_->authz_manage_post(requested_user_id,requested_rp_id,requester_id,msg)};
+        const db_status& status_ {dbase_handler_ptr_->authz_manage_post(requested_user_id,requested_rp_id,requester_id,msg)};
         switch(status_){
-        case status::fail:
+        case db_status::fail:
             return fail(std::move(request),http::status::bad_request,msg);
-        case status::success:
+        case db_status::success:
             return success(std::move(request),http::status::ok,msg);
-        case status::not_found:
+        case db_status::not_found:
             return fail(std::move(request),http::status::not_found,msg);
-        case status::unauthorized:
+        case db_status::unauthorized:
             return fail(std::move(request),http::status::unauthorized,msg);
         default:
             return fail(std::move(request),http::status::bad_request,msg);
@@ -412,15 +412,15 @@ http::response<http::string_body> http_handler::handle_authz_manage_delete(http:
         const std::string& requested_user_id {match[1]};
         const std::string& requested_rp_id {match[2]};
         std::string msg {};
-        const status& status_ {dbase_handler_ptr_->authz_manage_delete(requested_user_id,requested_rp_id,requester_id,msg)};
+        const db_status& status_ {dbase_handler_ptr_->authz_manage_delete(requested_user_id,requested_rp_id,requester_id,msg)};
         switch(status_){
-        case status::fail:
+        case db_status::fail:
             return fail(std::move(request),http::status::bad_request,msg);
-        case status::success:
+        case db_status::success:
             return success(std::move(request),http::status::ok,msg);
-        case status::not_found:
+        case db_status::not_found:
             return fail(std::move(request),http::status::not_found,msg);
-        case status::unauthorized:
+        case db_status::unauthorized:
             return fail(std::move(request),http::status::unauthorized,msg);
         default:
             return fail(std::move(request),http::status::bad_request,msg);
@@ -438,15 +438,15 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
         if(boost::regex_match(target,match,re)){
             std::string msg {};
             std::string rps {};
-            const status& status_ {dbase_handler_ptr_->rps_list_get(rps,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rps_list_get(rps,requester_id,msg)};
             switch(status_){
-            case status::fail:
+            case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
-            case status::success:
+            case db_status::success:
                 return success(std::move(request),http::status::ok,rps);
-            case status::not_found:
+            case db_status::not_found:
                 return fail(std::move(request),http::status::not_found,msg);
-            case status::unauthorized:
+            case db_status::unauthorized:
                 return fail(std::move(request),http::status::unauthorized,msg);
             default:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -460,15 +460,15 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
             const std::string& rp_uid {match[1]};
             std::string msg {};
             std::string rp {};
-            const status& status_ {dbase_handler_ptr_->rps_info_get(rp_uid,rp,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rps_info_get(rp_uid,rp,requester_id,msg)};
             switch(status_){
-            case status::fail:
+            case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
-            case status::success:
+            case db_status::success:
                 return success(std::move(request),http::status::ok,rp);
-            case status::not_found:
+            case db_status::not_found:
                 return fail(std::move(request),http::status::not_found,msg);
-            case status::unauthorized:
+            case db_status::unauthorized:
                 return fail(std::move(request),http::status::unauthorized,msg);
             default:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -483,15 +483,15 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
             const std::string& rp_uid {match[1]};
             std::string msg {};
             std::string rp_detail {};
-            const status& status_ {dbase_handler_ptr_->rps_rp_detail_get(rp_uid,rp_detail,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rps_rp_detail_get(rp_uid,rp_detail,requester_id,msg)};
             switch(status_){
-            case status::fail:
+            case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
-            case status::success:
+            case db_status::success:
                 success(std::move(request),http::status::ok,rp_detail);
-            case status::not_found:
+            case db_status::not_found:
                 return fail(std::move(request),http::status::not_found,msg);
-            case status::unauthorized:
+            case db_status::unauthorized:
                 return fail(std::move(request),http::status::unauthorized,msg);
             default:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -505,15 +505,15 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
             const std::string& rp_uid {match[1]};
             std::string msg {};
             std::string users {};
-            const status& status_ {dbase_handler_ptr_->rps_users_get(rp_uid,users,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rps_users_get(rp_uid,users,requester_id,msg)};
             switch(status_){
-            case status::fail:
+            case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
-            case status::success:
+            case db_status::success:
                 return success(std::move(request),http::status::ok,users);
-            case status::not_found:
+            case db_status::not_found:
                 return fail(std::move(request),http::status::not_found,msg);
-            case status::unauthorized:
+            case db_status::unauthorized:
                 return fail(std::move(request),http::status::unauthorized,msg);
             default:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -545,15 +545,15 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
 
                     std::string msg {};
                     std::string users {};
-                    const status& status_ {dbase_handler_ptr_->rps_users_get(rp_uid,users,limit,offset,requester_id,msg)};
+                    const db_status& status_ {dbase_handler_ptr_->rps_users_get(rp_uid,users,limit,offset,requester_id,msg)};
                     switch(status_){
-                    case status::fail:
+                    case db_status::fail:
                         return fail(std::move(request),http::status::bad_request,msg);
-                    case status::success:
+                    case db_status::success:
                         return success(std::move(request),http::status::ok,users);
-                    case status::not_found:
+                    case db_status::not_found:
                         return fail(std::move(request),http::status::not_found,msg);
-                    case status::unauthorized:
+                    case db_status::unauthorized:
                         return fail(std::move(request),http::status::unauthorized,msg);
                     default:
                         return fail(std::move(request),http::status::bad_request,msg);
@@ -597,15 +597,15 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
 
                 std::string msg {};
                 std::string rps {};
-                const status& status_ {dbase_handler_ptr_->rps_list_get(rps,limit,offset,name,type,description,requester_id,msg)};
+                const db_status& status_ {dbase_handler_ptr_->rps_list_get(rps,limit,offset,name,type,description,requester_id,msg)};
                 switch(status_){
-                case status::fail:
+                case db_status::fail:
                     return fail(std::move(request),http::status::bad_request,msg);
-                case status::success:
+                case db_status::success:
                     return success(std::move(request),http::status::ok,rps);
-                case status::not_found:
+                case db_status::not_found:
                     return fail(std::move(request),http::status::not_found,msg);
-                case status::unauthorized:
+                case db_status::unauthorized:
                     return fail(std::move(request),http::status::unauthorized,msg);
                 default:
                     return fail(std::move(request),http::status::bad_request,msg);
@@ -638,15 +638,15 @@ http::response<http::string_body> http_handler::handle_rps_put(http::request<htt
             }
 
             std::string msg;
-            const status& status_ {dbase_handler_ptr_->rps_info_put(rp_uid,body,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rps_info_put(rp_uid,body,requester_id,msg)};
             switch(status_){
-            case status::fail:
+            case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
-            case status::success:
+            case db_status::success:
                 return success(std::move(request),http::status::ok,msg);
-            case status::not_found:
+            case db_status::not_found:
                 return fail(std::move(request),http::status::not_found,msg);
-            case status::unauthorized:
+            case db_status::unauthorized:
                 return fail(std::move(request),http::status::unauthorized,msg);
             default:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -660,15 +660,15 @@ http::response<http::string_body> http_handler::handle_rps_put(http::request<htt
             const std::string& parent_uid {match[1]};
             const std::string& child_uid {match[2]};
             std::string msg;
-            const status& status_ {dbase_handler_ptr_->rps_child_put(parent_uid,child_uid,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rps_child_put(parent_uid,child_uid,requester_id,msg)};
             switch(status_){
-            case status::fail:
+            case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
-            case status::success:
+            case db_status::success:
                 return success(std::move(request),http::status::ok,msg);
-            case status::not_found:
+            case db_status::not_found:
                 return fail(std::move(request),http::status::not_found,msg);
-            case status::unauthorized:
+            case db_status::unauthorized:
                 return fail(std::move(request),http::status::unauthorized,msg);
             default:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -692,15 +692,15 @@ http::response<http::string_body> http_handler::handle_rps_post(http::request<ht
     }
 
     std::string msg;
-    const status& status_ {dbase_handler_ptr_->rps_info_post(body,requester_id,msg)};
+    const db_status& status_ {dbase_handler_ptr_->rps_info_post(body,requester_id,msg)};
     switch(status_){
-    case status::fail:
+    case db_status::fail:
         return fail(std::move(request),http::status::bad_request,msg);
-    case status::success:
+    case db_status::success:
         return success(std::move(request),http::status::ok,msg);
-    case status::not_found:
+    case db_status::not_found:
         return fail(std::move(request),http::status::not_found,msg);
-    case status::unauthorized:
+    case db_status::unauthorized:
         return fail(std::move(request),http::status::unauthorized,msg);
     default:
         return fail(std::move(request),http::status::bad_request,msg);
@@ -716,15 +716,15 @@ http::response<http::string_body> http_handler::handle_rps_delete(http::request<
         if(boost::regex_match(target,match,re)){
             const std::string& rp_uid {match[1]};
             std::string msg;
-            const status& status_ {dbase_handler_ptr_->rps_info_delete(rp_uid,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rps_info_delete(rp_uid,requester_id,msg)};
             switch(status_){
-            case status::fail:
+            case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
-            case status::success:
+            case db_status::success:
                 return success(std::move(request),http::status::no_content,msg);
-            case status::not_found:
+            case db_status::not_found:
                 return fail(std::move(request),http::status::not_found,msg);
-            case status::unauthorized:
+            case db_status::unauthorized:
                 return fail(std::move(request),http::status::unauthorized,msg);
             default:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -738,15 +738,15 @@ http::response<http::string_body> http_handler::handle_rps_delete(http::request<
             const std::string& parent_uid {match[1]};
             const std::string& child_uid {match[2]};
             std::string msg;
-            const status& status_ {dbase_handler_ptr_->rps_child_delete(parent_uid,child_uid,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rps_child_delete(parent_uid,child_uid,requester_id,msg)};
             switch(status_){
-            case status::fail:
+            case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
-            case status::success:
+            case db_status::success:
                 return success(std::move(request),http::status::ok,msg);
-            case status::not_found:
+            case db_status::not_found:
                 return fail(std::move(request),http::status::not_found,msg);
-            case status::unauthorized:
+            case db_status::unauthorized:
                 return fail(std::move(request),http::status::unauthorized,msg);
             default:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -764,7 +764,7 @@ http::response<http::string_body> http_handler::handle_certificates_post(http::r
             std::string msg {};
             const std::string& rp_name {"user_certificates"};
             bool authorized {false};
-            const status& status_ {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,authorized,msg)};
+            const db_status& status_ {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,authorized,msg)};
             boost::ignore_unused(status_);
             if(!authorized){
                 return fail(std::move(request),http::status::unauthorized,"unauthorized");
@@ -796,8 +796,8 @@ http::response<http::string_body> http_handler::handle_certificates_post(http::r
             {//check user by user_id and get user email
                 std::string msg {};
                 std::string user {};
-                const status& status_ {dbase_handler_ptr_->users_info_get(user_id,user,requester_id,msg)};
-                if(status_!=status::success){
+                const db_status& status_ {dbase_handler_ptr_->users_info_get(user_id,user,requester_id,msg)};
+                if(status_!=db_status::success){
                     return fail(std::move(request),http::status::not_found,msg);
                 }
 
@@ -841,7 +841,7 @@ http::response<http::string_body> http_handler::handle_certificates_post(http::r
             std::string msg {};
             const std::string& rp_name {"agent_certificates"};
             bool authorized {false};
-            const status& status_ {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,authorized,msg)};
+            const db_status& status_ {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,authorized,msg)};
             boost::ignore_unused(status_);
             if(!authorized){
                 return fail(std::move(request),http::status::unauthorized,"unauthorized");

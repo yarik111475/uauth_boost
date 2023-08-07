@@ -1,6 +1,7 @@
 #include "bootloader.h"
 #include <settings/app_settings.h>
 #include "network/http_server.h"
+#include <ucontrol/uc_controller.h>
 
 #include <vector>
 #include <iostream>
