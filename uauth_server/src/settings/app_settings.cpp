@@ -14,6 +14,10 @@ bool app_settings::settings_init()
     const std::string& UA_HOST="127.0.0.1";
     const std::string& UA_PORT="8030";
 
+    //ucontrol client params
+    const std::string& UA_UC_HOST {"0.0.0.0"};
+    const std::string& UA_UC_PORT {"5678"};
+
     //db params
     const std::string& UA_DB_NAME="u-auth";
         //std::getenv("UA_DB_NAME")==NULL ? "" :std::getenv("UA_DB_NAME");
@@ -58,6 +62,9 @@ bool app_settings::settings_init()
 
     params_.emplace("UA_HOST",UA_HOST);
     params_.emplace("UA_PORT",UA_PORT);
+
+    params_.emplace("UA_UC_HOST",UA_UC_HOST);
+    params_.emplace("UA_UC_PORT",UA_UC_PORT);
 
     params_.emplace("UA_DB_NAME",UA_DB_NAME);
     params_.emplace("UA_DB_HOST",UA_DB_HOST);
