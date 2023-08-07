@@ -33,7 +33,7 @@ std::string dbase_handler::time_with_timezone()
 PGconn *dbase_handler::open_connection(std::string &msg)
 {
     PGconn* conn_ptr {NULL};
-    const std::string& UA_DB {params_.at("UA_DB").as_string().c_str()};
+    const std::string& UA_DB_NAME {params_.at("UA_DB_NAME").as_string().c_str()};
     const std::string& UA_DB_HOST {params_.at("UA_DB_HOST").as_string().c_str()};
     const std::string& UA_DB_PORT {params_.at("UA_DB_PORT").as_string().c_str()};
     const std::string& UA_DB_USER {params_.at("UA_DB_USER").as_string().c_str()};
@@ -52,7 +52,7 @@ PGconn *dbase_handler::open_connection(std::string &msg)
         % UA_DB_PASS
         % ep.address().to_string()
         % ep.port()
-        % UA_DB).str()};
+        % UA_DB_NAME).str()};
 
     conn_ptr=PQconnectdb(conninfo.c_str());
     if(PQstatus(conn_ptr)!=CONNECTION_OK){

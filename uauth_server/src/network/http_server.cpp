@@ -12,7 +12,7 @@ void http_server::on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::s
                                BOOST_CURRENT_FUNCTION);
         }
 
-        const std::string& UA_DB {app_settings_ptr_->value_get("UA_DB")};
+        const std::string& UA_DB_NAME {app_settings_ptr_->value_get("UA_DB_NAME")};
         const std::string& UA_DB_HOST {app_settings_ptr_->value_get("UA_DB_HOST")};
         const std::string& UA_DB_PORT {app_settings_ptr_->value_get("UA_DB_PORT")};
         const std::string& UA_DB_USER {app_settings_ptr_->value_get("UA_DB_USER")};
@@ -23,7 +23,7 @@ void http_server::on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::s
         const std::string& UA_SIGNING_CA_KEY_PATH {app_settings_ptr_->value_get("UA_SIGNING_CA_KEY_PATH")};
         const std::string& UA_SIGNING_CA_KEY_PASS {app_settings_ptr_->value_get("UA_SIGNING_CA_KEY_PASS")};
 
-        if(UA_DB.empty() || UA_DB_HOST.empty() || UA_DB_PORT.empty() || UA_DB_USER.empty() || UA_DB_PASS.empty()){
+        if(UA_DB_NAME.empty() || UA_DB_HOST.empty() || UA_DB_PORT.empty() || UA_DB_USER.empty() || UA_DB_PASS.empty()){
             if(logger_ptr_){
                logger_ptr_->critical("{}, db params not defined in app_settings!",
                    BOOST_CURRENT_FUNCTION);
@@ -31,7 +31,7 @@ void http_server::on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::s
         }
         else{
             const boost::json::object& params {
-                {"UA_DB",UA_DB},
+                {"UA_DB_NAME",UA_DB_NAME},
                 {"UA_DB_HOST",UA_DB_HOST},
                 {"UA_DB_PORT",UA_DB_PORT},
                 {"UA_DB_USER",UA_DB_USER},
