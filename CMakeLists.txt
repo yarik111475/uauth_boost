@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 set(PROJECT_NAME UAUTH)
+set(GLOBAL_VERSION 0.0.0)
 project(${PROJECT_NAME} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 11)
