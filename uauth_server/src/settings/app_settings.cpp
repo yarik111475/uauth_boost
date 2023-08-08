@@ -38,14 +38,14 @@ bool app_settings::settings_init()
     const std::string& UA_SSL_WEB_CRT_VALID=std::getenv("UA_SSL_WEB_CRT_VALID")==NULL ? "365" : std::getenv("UA_SSL_WEB_CRT_VALID");
 
     //uauth certificates part
-    const std::string& UA_CA_CRT_PATH=std::getenv("UA_CA_CRT_PATH")==NULL ? "C:/cert/root-ca.pem" : std::getenv("UA_CA_CRT_PATH");
-    const std::string& UA_SIGNING_CA_CRT_PATH=std::getenv("UA_SIGNING_CA_CRT_PATH")==NULL ? "C:/cert/signing-ca.pem" : std::getenv("UA_SIGNING_CA_CRT_PATH");
-    const std::string& UA_SIGNING_CA_KEY_PATH=std::getenv("UA_SIGNING_CA_KEY_PATH")==NULL ? "C:/cert/signing-ca-key.pem" : std::getenv("UA_SIGNING_CA_KEY_PATH");
+    const std::string& UA_CA_CRT_PATH=std::getenv("UA_CA_CRT_PATH")==NULL ? "/home/yaroslav/cert/root-ca.pem" : std::getenv("UA_CA_CRT_PATH");
+    const std::string& UA_SIGNING_CA_CRT_PATH=std::getenv("UA_SIGNING_CA_CRT_PATH")==NULL ? "/home/yaroslav/cert/signing-ca.pem" : std::getenv("UA_SIGNING_CA_CRT_PATH");
+    const std::string& UA_SIGNING_CA_KEY_PATH=std::getenv("UA_SIGNING_CA_KEY_PATH")==NULL ? "/home/yaroslav/cert/signing-ca-key.pem" : std::getenv("UA_SIGNING_CA_KEY_PATH");
     const std::string& UA_SIGNING_CA_KEY_PASS=std::getenv("UA_SIGNING_CA_KEY_PASS")==NULL ? "U$vN#@D,v)*$N9\\N" : std::getenv("UA_SIGNING_CA_KEY_PASS");
 
     //ucontrol certificates part
-    const std::string& UA_CLIENT_CRT_PATH=std::getenv("UA_CLIENT_CRT_PATH")==NULL ? "C:/cert/clientCert.pem" : std::getenv("UA_CLIENT_CRT_PATH");
-    const std::string& UA_CLIENT_KEY_PATH=std::getenv("UA_CLIENT_KEY_PATH")==NULL ? "C:/cert/clientPrivateKey.pem" : std::getenv("UA_CLIENT_KEY_PATH");
+    const std::string& UA_CLIENT_CRT_PATH=std::getenv("UA_CLIENT_CRT_PATH")==NULL ? "/home/yaroslav/cert/clientCert.pem" : std::getenv("UA_CLIENT_CRT_PATH");
+    const std::string& UA_CLIENT_KEY_PATH=std::getenv("UA_CLIENT_KEY_PATH")==NULL ? "/home/yaroslav/cert/clientPrivateKey.pem" : std::getenv("UA_CLIENT_KEY_PATH");
     const std::string& UA_CLIENT_KEY_PASS=std::getenv("UA_CLIENT_KEY_PASS")==NULL ? "password" : std::getenv("UA_CLIENT_KEY_PASS");
 
     //sentry params
