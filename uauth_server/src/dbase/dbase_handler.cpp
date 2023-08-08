@@ -163,76 +163,82 @@ bool dbase_handler::init_default_rps(PGconn *conn_ptr, std::string &msg)
 {
     const boost::json::array& default_rps {
         {
-            {"id","49c0b1c9-58f7-557d-9a73-ed4850431c01"},
+            {"id","49c0b1c9-58f7-557d-9a73-ed4850431c01"},//1
             {"name","authorization_manage:read"},
             {"type","permission"},
             {"description","List roles or permissions assigned to user"}
         },
         {
-            {"id","699bf280-70eb-552d-aae6-01341e2b8f33"},
+            {"id","699bf280-70eb-552d-aae6-01341e2b8f33"},//2
             {"name","authorization_manage:update"},
             {"type","permission"},
             {"description","Assign role or permission to user"}
         },
         {
-            {"id","d3722305-0489-51c1-8036-357ed6099c30"},
-            {"name","roles_permissions:read"},
+            {"id","d3722305-0489-51c1-8036-357ed6099c30"},//3
+            {"name","role_permission:read"},
             {"type","permission"},
             {"description","List of roles and permissions; Get permission or role; Get permission or role with users;"}
         },
         {
-            {"id","12892e88-9fbf-5915-b9b1-410b2bb1b42c"},
-            {"name","roles_permissions:create"},
+            {"id","12892e88-9fbf-5915-b9b1-410b2bb1b42c"},//4
+            {"name","role_permission:create"},
             {"type","permission"},
             {"description","Create permission or role"}
         },
         {
-            {"id","e477530a-768d-5e87-bd79-a6c138edfef9"},
-            {"name","roles_permissions:update"},
+            {"id","e477530a-768d-5e87-bd79-a6c138edfef9"},//5
+            {"name","role_permission:update"},
             {"type","permission"},
             {"description","Update permission or role"}
         },
         {
-            {"id","005ece55-2703-5e10-9c20-561b87313b08"},
-            {"name","roles_permissions:delete"},
+            {"id","005ece55-2703-5e10-9c20-561b87313b08"},//6
+            {"name","role_permission:delete"},
             {"type","permission"},
             {"description","Delete permission or role"}
         },
         {
-            {"id","4cabf4b7-c371-524b-8f32-7b0ac43a18e1"},
-            {"name","users:read"},
+            {"id","4cabf4b7-c371-524b-8f32-7b0ac43a18e1"},//7
+            {"name","user:read"},
             {"type","permission"},
             {"description","List of users; Get user info; Get user with role and permissions;"}
         },
         {
-            {"id","5780bd9d-f6d9-5d14-b3fa-ffebc618f856"},
-            {"name","users:create"},
+            {"id","5780bd9d-f6d9-5d14-b3fa-ffebc618f856"},//8
+            {"name","user:create"},
             {"type","permission"},
             {"description","Create user"}
         },
         {
-            {"id","a131af2b-0b1c-5a77-9589-0a0118c6b03b"},
-            {"name","users:update"},
+            {"id","a131af2b-0b1c-5a77-9589-0a0118c6b03b"},//9
+            {"name","user:update"},
             {"type","permission"},
             {"description","Update user"}
         },
         {
-            {"id","072a6653-025f-52b0-8653-f9528b9f2fee"},
-            {"name","users:delete"},
+            {"id","072a6653-025f-52b0-8653-f9528b9f2fee"},//10
+            {"name","user:delete"},
             {"type","permission"},
             {"description","Delete user"}
         },
         {
-            {"id","deb145a5-044f-5aed-befd-fc1f0a297aa0"},
-            {"name","agent_certificates:create"},
+            {"id","deb145a5-044f-5aed-befd-fc1f0a297aa0"},//11
+            {"name","agent_certificate:create"},
             {"type","permission"},
             {"description","Sign agent certificate"}
         },
         {
-            {"id","0c9e9550-6131-5a7d-a4fa-1fab41987ea5"},
-            {"name","user_certificates:create"},
+            {"id","0c9e9550-6131-5a7d-a4fa-1fab41987ea5"},//12
+            {"name","user_certificate:create"},
             {"type","permission"},
             {"description","Create user certificate"}
+        },
+        {
+            {"id","a52851ae-b6d6-5df5-8534-8fb10d7a4eaa"},//13
+            {"name","UAuthAdmin"},
+            {"type","role"},
+            {"description","Default Super User"}
         }
     };
 
@@ -600,7 +606,7 @@ db_status dbase_handler::users_list_get(std::string &users, const std::string &r
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"user:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -662,7 +668,7 @@ db_status dbase_handler::users_list_get(std::string& users, const std::string& l
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"user:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -729,7 +735,7 @@ db_status dbase_handler::users_info_get(const std::string &user_uid, std::string
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"user:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -780,7 +786,7 @@ db_status dbase_handler::users_rps_get(const std::string &user_uid, std::string 
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"roles_permissions:read"};
+        const std::string& rp_ident {"role_permission:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -858,7 +864,7 @@ db_status dbase_handler::users_rps_get(const std::string &user_uid, std::string 
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"roles_permissions:read"};
+        const std::string& rp_ident {"role_permission:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -942,7 +948,7 @@ db_status dbase_handler::users_info_put(const std::string &user_uid, const std::
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:update"};
+        const std::string& rp_ident {"user:update"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1020,7 +1026,7 @@ db_status dbase_handler::users_info_post(const std::string &user, const std::str
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:create"};
+        const std::string& rp_ident {"user:create"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1071,7 +1077,7 @@ db_status dbase_handler::users_info_delete(const std::string &user_uid, const st
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:delete"};
+        const std::string& rp_ident {"user:delete"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1101,7 +1107,7 @@ db_status dbase_handler::rps_list_get(std::string &rps, const std::string &reque
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"roles_permissions:read"};
+        const std::string& rp_ident {"role_permission:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1161,7 +1167,7 @@ db_status dbase_handler::rps_list_get(std::string &rps, const std::string &limit
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"roles_permissions:read"};
+        const std::string& rp_ident {"role_permission:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1227,7 +1233,7 @@ db_status dbase_handler::rps_info_get(const std::string &rp_uid, std::string &rp
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"roles_permissions:read"};
+        const std::string& rp_ident {"role_permission:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1276,7 +1282,7 @@ db_status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &u
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"user:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1364,7 +1370,7 @@ db_status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &u
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"users:read"};
+        const std::string& rp_ident {"user:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1459,7 +1465,7 @@ db_status dbase_handler::rps_rp_detail_get(const std::string &rp_uid, std::strin
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"roles_permissions:read"};
+        const std::string& rp_ident {"role_permission:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1513,7 +1519,7 @@ db_status dbase_handler::rps_info_post(const std::string &rp, const std::string 
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"roles_permissions:read"};
+        const std::string& rp_ident {"role_permission:read"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1552,7 +1558,7 @@ db_status dbase_handler::rps_info_put(const std::string &rp_uid, const std::stri
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"roles_permissions:update"};
+        const std::string& rp_ident {"role_permission:update"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1620,7 +1626,7 @@ db_status dbase_handler::rps_info_delete(const std::string &rp_uid, const std::s
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"roles_permissions:delete"};
+        const std::string& rp_ident {"role_permission:delete"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1651,7 +1657,7 @@ db_status dbase_handler::rps_child_put(const std::string &parent_uid, const std:
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"roles_permissions:update"};
+        const std::string& rp_ident {"role_permission:update"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -1727,7 +1733,7 @@ db_status dbase_handler::rps_child_delete(const std::string &parent_uid, const s
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"roles_permissions:update"};
+        const std::string& rp_ident {"role_permission:update"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);

@@ -762,7 +762,7 @@ http::response<http::string_body> http_handler::handle_certificates_post(http::r
     {//handle user certificate
         {//check if authorized
             std::string msg {};
-            const std::string& rp_name {"user_certificates"};
+            const std::string& rp_name {"user_certificate"};
             bool authorized {false};
             const db_status& status_ {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,authorized,msg)};
             boost::ignore_unused(status_);
@@ -839,7 +839,7 @@ http::response<http::string_body> http_handler::handle_certificates_post(http::r
     {//handle agent certificate
         {//check if authorized
             std::string msg {};
-            const std::string& rp_name {"agent_certificates"};
+            const std::string& rp_name {"agent_certificate"};
             bool authorized {false};
             const db_status& status_ {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,authorized,msg)};
             boost::ignore_unused(status_);
