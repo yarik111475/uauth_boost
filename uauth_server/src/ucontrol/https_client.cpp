@@ -29,9 +29,16 @@ boost::optional<boost::asio::ssl::context> https_client::make_context()
     return ctx;
 }
 
-https_client::https_client(boost::asio::io_context &io, const std::string& app_dir, const boost::json::object &params, std::shared_ptr<spdlog::logger> logger_ptr)
+https_client::https_client(boost::asio::io_context &io,
+    const std::string& app_dir, const boost::json::object &params, std::shared_ptr<spdlog::logger> logger_ptr)
     :io_{io},app_dir_{app_dir},params_{params},logger_ptr_{logger_ptr}
 {
+}
+
+https_client::~https_client()
+{
+    boost::system::error_code ec;
+    io_.stop();
 }
 
 void https_client::client_run()
@@ -58,28 +65,28 @@ void https_client::client_run()
         return;
     }
 
-    boost::beast::ssl_stream<boost::asio::ip::tcp::socket> socket {io_,ctx.value()};
-    boost::beast::get_lowest_layer(socket).connect(*results.begin(),ec);
+    boost::beast::ssl_stream<boost::asio::ip::tcp::socket> socket_ {io_,ctx.value()};
+    boost::beast::get_lowest_layer(socket_).connect(*results.begin(),ec);
     if(ec){
         if(uc_status_signal_){
             uc_status_signal_(uc_status::bad_gateway,ec.message());
         }
         return;
     }
-    socket.set_verify_callback([&](bool preverified,boost::asio::ssl::verify_context& ctx){
+    socket_.set_verify_callback([&](bool preverified,boost::asio::ssl::verify_context& ctx){
         return true;
     });
-    socket.handshake(boost::asio::ssl::stream_base::client,ec);
+    socket_.handshake(boost::asio::ssl::stream_base::client,ec);
     if(ec){
         if(uc_status_signal_){
             uc_status_signal_(uc_status::bad_gateway,ec.message());
         }
         return;
     }
-    if(! SSL_set_tlsext_host_name(socket.native_handle(), UA_UC_HOST.c_str())){
+    if(! SSL_set_tlsext_host_name(socket_.native_handle(), UA_UC_HOST.c_str())){
         return;
     }
-    socket.set_verify_callback([&](bool preverified,boost::asio::ssl::verify_context& ctx){
+    socket_.set_verify_callback([&](bool preverified,boost::asio::ssl::verify_context& ctx){
         return true;
     });
 
@@ -87,7 +94,7 @@ void https_client::client_run()
     request.set(boost::beast::http::field::host, UA_UC_HOST);
     request.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
-    boost::beast::http::write(socket,request,ec);
+    boost::beast::http::write(socket_,request,ec);
     if(ec){
         if(uc_status_signal_){
             uc_status_signal_(uc_status::bad_gateway,ec.message());
@@ -97,14 +104,14 @@ void https_client::client_run()
 
     boost::beast::flat_buffer buffer;
     boost::beast::http::response<boost::beast::http::string_body> response;
-    boost::beast::http::read(socket, buffer, response,ec);
+    boost::beast::http::read(socket_, buffer, response,ec);
 
     const boost::json::value& v {boost::json::parse(response.body(),ec)};
     if(ec || !v.is_object()){
         if(uc_status_signal_){
             uc_status_signal_(uc_status::failed_dependency,ec.message());
         }
-        socket.shutdown(ec);
+        socket_.shutdown(ec);
         return;
 
     }
@@ -113,12 +120,12 @@ void https_client::client_run()
         if(uc_status_signal_){
             uc_status_signal_(uc_status::failed_dependency,ec.message());
         }
-        socket.shutdown(ec);
+        socket_.shutdown(ec);
         return;
     }
     const bool& success {body_obj.at("integrity").as_bool()};
     uc_status status {success ? uc_status::success : uc_status::failed_dependency};
     uc_status_signal_(status,ec.message());
-    socket.shutdown(ec);
+    socket_.shutdown(ec);
 }
 

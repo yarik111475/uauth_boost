@@ -14,6 +14,7 @@ void uc_controller::on_wait(const boost::system::error_code &ec)
     }
 }
 
+
 void uc_controller::uc_status_slot(uc_status status, const std::string &msg)
 {
     if(uc_status_signal_){
@@ -31,7 +32,7 @@ void uc_controller::controller_start()
     {//init https_client
         https_client_ptr_.reset(new https_client{io_,"",params_,logger_ptr_});
         https_client_ptr_->uc_status_signal_=
-            std::bind(&uc_controller::uc_status_slot,this,std::placeholders::_1,std::placeholders::_2);
+                std::bind(&uc_controller::uc_status_slot,this,std::placeholders::_1,std::placeholders::_2);
     }
     {//start timer
         timer_.expires_from_now(boost::posix_time::milliseconds(interval_));

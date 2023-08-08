@@ -16,15 +16,16 @@ namespace spdlog{
 
 class https_client
 {
-boost::asio::io_context& io_;
+    boost::asio::io_context& io_;
     std::string app_dir_ {};
     boost::json::object params_ {};
     std::shared_ptr<spdlog::logger> logger_ptr_ {nullptr};
     boost::optional<boost::asio::ssl::context> make_context();
 
 public:
-    explicit https_client(boost::asio::io_context& io,const std::string& app_dir,const boost::json::object& params,std::shared_ptr<spdlog::logger> logger_ptr);
-    ~https_client()=default;
+    explicit https_client(boost::asio::io_context& io,
+        const std::string& app_dir,const boost::json::object& params,std::shared_ptr<spdlog::logger> logger_ptr);
+    ~https_client();
     void client_run();
     std::function<void(uc_status status,const std::string& msg)> uc_status_signal_ {nullptr};
 };

@@ -135,8 +135,21 @@ void http_server::server_stop()
 void http_server::uc_status_slot(uc_status status, const std::string &msg)
 {
     status_=status;
+    const auto& to_string{[](uc_status status){
+            switch(status){
+            case uc_status::fail:
+                return "fail";
+            case uc_status::success:
+                return "success";
+            case uc_status::bad_gateway:
+                return "bad_gateway";
+            case uc_status::failed_dependency:
+                return "failed_dependency";
+            }
+        }
+    };
     if(status!=uc_status::success && logger_ptr_){
-        logger_ptr_->critical("{}, {}",
-            BOOST_CURRENT_FUNCTION,msg);
+        logger_ptr_->critical("{}, msg :{}, status: {}",
+            BOOST_CURRENT_FUNCTION,msg,to_string(status));
     }
 }

@@ -6,6 +6,8 @@
 #include <functional>
 #include <boost/asio.hpp>
 #include <boost/json.hpp>
+#include <boost/optional.hpp>
+#include <boost/asio/ssl.hpp>
 #include "defines.h"
 
 namespace spdlog{
