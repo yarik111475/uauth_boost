@@ -12,8 +12,9 @@ namespace spdlog{
 
 class app_settings
 {
-private:  
-    boost::any etc_uauth_dir_ {};
+private:
+    std::string filename_ {"uauth.config"};
+    std::string etc_uauth_dir_ {};
     std::shared_ptr<spdlog::logger> logger_ptr_ {nullptr};
     boost::json::object params_ {};
 
