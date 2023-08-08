@@ -45,10 +45,10 @@ void http_session::on_write(error_code ec, size_t bytes_transferred)
     return do_close();
 }
 
-http_session::http_session(boost::asio::ip::tcp::socket &&socket, const boost::json::object &params, std::shared_ptr<spdlog::logger> logger_ptr)
+http_session::http_session(boost::asio::ip::tcp::socket &&socket, const boost::json::object &params, uc_status status, std::shared_ptr<spdlog::logger> logger_ptr)
     :stream_{std::move(socket)},params_{params},logger_ptr_{logger_ptr}
 {
-    http_handler_ptr_.reset(new http_handler{params_,logger_ptr});
+    http_handler_ptr_.reset(new http_handler{params_,status,logger_ptr});
 }
 
 void http_session::session_run()

@@ -92,6 +92,8 @@ bool bootloader::start_listen()
         http_server_ptr_.reset();
         return false;
     }
+    uc_controller_ptr_->uc_status_signal_=
+        std::bind(&http_server::uc_status_slot,http_server_ptr_.get(),std::placeholders::_1,std::placeholders::_2);
     return true;
 }
 
@@ -154,9 +156,24 @@ bootloader::bootloader(boost::asio::io_context &io, const std::string &app_dir, 
 
 void bootloader::bootloader_start()
 {
-    //init and start timer
-    timer_.expires_from_now(boost::posix_time::milliseconds(interval_));
-    timer_.async_wait(boost::bind(&bootloader::on_wait,this,boost::asio::placeholders::error));
+
+    {//init and start http_server timer
+        timer_.expires_from_now(boost::posix_time::milliseconds(interval_));
+        timer_.async_wait(boost::bind(&bootloader::on_wait,this,boost::asio::placeholders::error));
+    }
+    {//init and start uc_controller
+        const boost::json::object& params {
+            {"UA_UC_HOST",app_settings_ptr_->value_get("UA_UC_HOST")},
+            {"UA_UC_PORT",app_settings_ptr_->value_get("UA_UC_PORT")},
+            {"UA_CA_CRT_PATH",app_settings_ptr_->value_get("UA_CA_CRT_PATH")},
+            {"UA_CLIENT_CRT_PATH",app_settings_ptr_->value_get("UA_CLIENT_CRT_PATH")},
+            {"UA_CLIENT_KEY_PATH",app_settings_ptr_->value_get("UA_CLIENT_KEY_PATH")},
+            {"UA_CLIENT_KEY_PASS",app_settings_ptr_->value_get("UA_CLIENT_KEY_PASS")}
+        };
+        uc_controller_ptr_.reset(new uc_controller{io_,params,logger_ptr_});
+        uc_controller_ptr_->controller_start();
+    }
+
     if(logger_ptr_){
         logger_ptr_->info("{}, bootloader started",
             BOOST_CURRENT_FUNCTION);
@@ -165,14 +182,22 @@ void bootloader::bootloader_start()
 
 void bootloader::bootloader_stop()
 {
-     if(http_server_ptr_){
-        http_server_ptr_->server_stop();
+    {//stop http_server
+        if(http_server_ptr_){
+            http_server_ptr_->server_stop();
+
+        }
+        boost::system::error_code ec;
+        timer_.cancel(ec);
+    }
+    {//stop uc_controller
+        if(uc_controller_ptr_){
+            uc_controller_ptr_->controller_stop();
+        }
     }
 
-    boost::system::error_code ec;
-    timer_.cancel(ec);
     if(logger_ptr_){
         logger_ptr_->info("{}, bootloader stopped",
-            BOOST_CURRENT_FUNCTION);
+                          BOOST_CURRENT_FUNCTION);
     }
 }

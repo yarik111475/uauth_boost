@@ -879,8 +879,8 @@ http::response<http::string_body> http_handler::handle_certificates_post(http::r
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
-http_handler::http_handler(const boost::json::object &params, std::shared_ptr<spdlog::logger> logger_ptr)
-    :params_{params},logger_ptr_{logger_ptr}
+http_handler::http_handler(const boost::json::object &params, uc_status status, std::shared_ptr<spdlog::logger> logger_ptr)
+    :params_{params},status_{status},logger_ptr_{logger_ptr}
 {
     {//init dbase_handler
         dbase_handler_ptr_.reset(new dbase_handler{params_,logger_ptr});

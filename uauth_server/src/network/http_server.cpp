@@ -42,7 +42,7 @@ void http_server::on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::s
                 {"UA_SIGNING_CA_KEY_PATH",UA_SIGNING_CA_KEY_PATH},
                 {"UA_SIGNING_CA_KEY_PASS",UA_SIGNING_CA_KEY_PASS}
             };
-            std::make_shared<http_session>(std::move(socket),params,logger_ptr_)->session_run();
+            std::make_shared<http_session>(std::move(socket),params,status_,logger_ptr_)->session_run();
         }
         acceptor_.async_accept(boost::asio::make_strand(io_),
             boost::beast::bind_front_handler(&http_server::on_accept,shared_from_this()));
@@ -129,5 +129,16 @@ void http_server::server_stop()
     if(logger_ptr_){
         logger_ptr_->info("{}, http_server stopped",
             BOOST_CURRENT_FUNCTION);
+    }
+}
+
+void http_server::uc_status_slot(uc_status status, const std::string &msg)
+{
+    status_=status;
+    if(status_!=uc_status::success){
+        if(logger_ptr_){
+            logger_ptr_->critical("{}, {}",
+                BOOST_CURRENT_FUNCTION,msg);
+        }
     }
 }

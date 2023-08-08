@@ -15,7 +15,7 @@ bool app_settings::settings_init()
     const std::string& UA_PORT="8030";
 
     //ucontrol client params
-    const std::string& UA_UC_HOST {"0.0.0.0"};
+    const std::string& UA_UC_HOST {"127.0.0.1"};
     const std::string& UA_UC_PORT {"5678"};
 
     //db params
@@ -42,17 +42,24 @@ bool app_settings::settings_init()
     const std::string& UA_SSL_WEB_CRT_VALID="365";
         //std::getenv("UA_SSL_WEB_CRT_VALID")==NULL ? "" : std::getenv("UA_SSL_WEB_CRT_VALID");
 
+    //uauth certificates part
     const std::string& UA_CA_CRT_PATH="C:/cert/root-ca.pem";
         //std::getenv("UA_CA_CRT_PATH")==NULL ? "" : std::getenv("UA_CA_CRT_PATH")
-
     const std::string& UA_SIGNING_CA_CRT_PATH="C:/cert/signing-ca.pem";
         //std::getenv("UA_SIGNING_CA_CRT_PATH")==NULL ? "" : std::getenv("UA_SIGNING_CA_CRT_PATH");
-
     const std::string& UA_SIGNING_CA_KEY_PATH="C:/cert/signing-ca-key.pem";
         //std::getenv("UA_SIGNING_CA_KEY_PATH")==NULL ? "" : std::getenv("UA_SIGNING_CA_KEY_PATH");
-
     const std::string& UA_SIGNING_CA_KEY_PASS="U$vN#@D,v)*$N9\\N";
         //std::getenv("UA_SIGNING_CA_KEY_PASS")==NULL ? "" : std::getenv("UA_SIGNING_CA_KEY_PASS");
+
+    //ucontrol certificates part
+    const std::string& UA_CLIENT_CRT_PATH="C:/cert/clientCert.pem";
+        //std::getenv("UA_CLIENT_CRT_PATH")==NULL ? "" : std::getenv("UA_CLIENT_CRT_PATH");
+    const std::string& UA_CLIENT_KEY_PATH="C:/cert/clientPrivateKey.pem";
+        //std::getenv("UA_CLIENT_KEY_PATH")==NULL ? "" : std::getenv("UA_CLIENT_KEY_PATH");
+    const std::string& UA_CLIENT_KEY_PASS=
+        std::getenv("UA_CLIENT_KEY_PASS")==NULL ? ""
+"" : std::getenv("UA_CLIENT_KEY_PASS");
 
 
     const std::string& UA_SENTRY_DSN="";
@@ -84,17 +91,21 @@ bool app_settings::settings_init()
     params_.emplace("UA_SIGNING_CA_KEY_PATH",UA_SIGNING_CA_KEY_PATH);
     params_.emplace("UA_SIGNING_CA_KEY_PASS",UA_SIGNING_CA_KEY_PASS);
 
-//    auto it {params_.begin()};
-//    while(it!=params_.end()){
-//        if(it->value().is_string()){
-//            const std::string& value {it->value().as_string().c_str()};
-//            if(value.empty()){
-//                return false;
-//            }
-//        }
-//        ++it;
-//    }
+    params_.emplace("UA_CLIENT_CRT_PATH",UA_CLIENT_CRT_PATH);
+    params_.emplace("UA_CLIENT_KEY_PATH",UA_CLIENT_KEY_PATH);
 
+
+    auto it {params_.begin()};
+    while(it!=params_.end()){
+        if(it->value().is_string()){
+            const std::string& value {it->value().as_string().c_str()};
+            if(value.empty()){
+                return false;
+            }
+        }
+        ++it;
+    }
+    params_.emplace("UA_CLIENT_KEY_PASS",UA_CLIENT_KEY_PASS);
     params_.emplace("UA_SENTRY_DSN",UA_SENTRY_DSN);
     params_.emplace("UA_SENTRY_TRACES_SAMPLE_RATE",UA_SENTRY_TRACES_SAMPLE_RATE);
     return true;

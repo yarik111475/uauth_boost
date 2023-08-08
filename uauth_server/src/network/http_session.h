@@ -38,7 +38,7 @@ private:
     }
 
 public:
-    explicit http_session(boost::asio::ip::tcp::socket&& socket,const boost::json::object& params,std::shared_ptr<spdlog::logger> logger_ptr);
+    explicit http_session(boost::asio::ip::tcp::socket&& socket,const boost::json::object& params,uc_status status,std::shared_ptr<spdlog::logger> logger_ptr);
     void session_run();
 };
 

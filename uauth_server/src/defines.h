@@ -9,7 +9,10 @@ enum class db_status{
 };
 
 enum class uc_status{
-    success
+    fail,
+    success,
+    bad_gateway,
+    failed_dependency
 };
 
 #endif // DEFINES_H

@@ -1,5 +1,7 @@
 #ifndef HTTP_HANDLER_H
 #define HTTP_HANDLER_H
+#include "defines.h"
+#include "dbase/dbase_handler.h"
 
 #include <map>
 #include <string>
@@ -11,7 +13,6 @@
 #include <boost/beast/http.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/beast/http/message_generator.hpp>
-#include "dbase/dbase_handler.h"
 
 namespace spdlog{
     class logger;
@@ -22,6 +23,7 @@ using namespace boost::beast;
 class http_handler
 {
 private:
+    uc_status status_ {uc_status::fail};
     const std::string regex_any_ {"([\\s\\S]+)"};
     const std::string regex_uid_ {"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"};
     boost::json::object params_ {};
@@ -64,11 +66,23 @@ private:
     std::shared_ptr<spdlog::logger> logger_ptr_ {nullptr};
 
 public:
-    explicit http_handler(const boost::json::object& params,std::shared_ptr<spdlog::logger> logger_ptr);
+    explicit http_handler(const boost::json::object& params,uc_status status,std::shared_ptr<spdlog::logger> logger_ptr);
     ~http_handler()=default;
 
     template <class Body, class Allocator>
     http::message_generator handle_request(http::request<Body, http::basic_fields<Allocator>>&& request){
+        {//handle uc_status
+            switch(status_){
+            case uc_status::fail:
+                break;
+            case uc_status::success:
+                break;
+            case uc_status::bad_gateway:
+                break;
+            case uc_status::failed_dependency:
+                break;
+            }
+        }
         std::string msg {};
         std::string requester_id {};
         const std::string& target {request.target()};

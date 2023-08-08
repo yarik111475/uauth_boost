@@ -10,6 +10,7 @@
 
 int main(int argc,char* argv[])
 {
+    std::system("chcp 1251");
     boost::filesystem::path path_ {argv[0]};
     const std::string& app_dir {path_.remove_filename().string()};
     const unsigned int& max_threads {std::thread::hardware_concurrency()-1};
