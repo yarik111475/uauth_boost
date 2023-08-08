@@ -99,7 +99,7 @@ public:
         {//check and init database
             const bool& db_ok {dbase_handler_ptr_->init_database(msg)};
             if(!db_ok){
-                return fail(std::move(request),boost::beast::http::status::internal_server_error,msg);
+                return fail(std::move(request),http::status::internal_server_error,msg);
             }
         }
         {//handle users
@@ -127,7 +127,7 @@ public:
                 return handle_certificates_post(std::move(request),requester_id);
             }
         }
-        return fail(std::move(request),boost::beast::http::status::not_found,"not found");
+        return fail(std::move(request),http::status::not_found,"not found");
     }
 };
 
