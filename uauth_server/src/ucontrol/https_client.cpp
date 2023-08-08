@@ -117,14 +117,8 @@ void https_client::client_run()
         return;
     }
     const bool& success {body_obj.at("integrity").as_bool()};
-    if(!success){
-        if(uc_status_signal_){
-            uc_status_signal_(uc_status::failed_dependency,ec.message());
-        }
-        else{
-            uc_status_signal_(uc_status::success,ec.message());
-        }
-    }
+    uc_status status {success ? uc_status::success : uc_status::failed_dependency};
+    uc_status_signal_(status,ec.message());
     socket.shutdown(ec);
 }
 

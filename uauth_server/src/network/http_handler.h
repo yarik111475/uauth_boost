@@ -74,13 +74,13 @@ public:
         {//handle uc_status
             switch(status_){
             case uc_status::fail:
-                break;
+                return fail(std::move(request),http::status::bad_request,"bad_request");
             case uc_status::success:
                 break;
             case uc_status::bad_gateway:
-                break;
+                return fail(std::move(request),http::status::bad_gateway,"bad_gateway");
             case uc_status::failed_dependency:
-                break;
+                return fail(std::move(request),http::status::failed_dependency,"failed_dependency");
             }
         }
         std::string msg {};
