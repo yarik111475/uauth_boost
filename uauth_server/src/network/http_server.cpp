@@ -135,4 +135,8 @@ void http_server::server_stop()
 void http_server::uc_status_slot(uc_status status, const std::string &msg)
 {
     status_=status;
+    if(status!=uc_status::success && logger_ptr_){
+        logger_ptr_->critical("{}, {}",
+            BOOST_CURRENT_FUNCTION,msg);
+    }
 }
