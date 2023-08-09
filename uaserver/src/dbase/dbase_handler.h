@@ -22,7 +22,6 @@ private:
     std::shared_ptr<spdlog::logger> logger_ptr_ {nullptr};
     static bool is_initiated_;
 
-
     std::string time_with_timezone();
     PGconn* open_connection(std::string& msg);
     bool init_tables(PGconn* conn_ptr, std::string &msg);
