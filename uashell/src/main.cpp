@@ -92,25 +92,62 @@ PGconn* open_connection(boost::asio::io_context& io,const boost::json::object& p
 }
 
 bool user_put(PGconn* conn_ptr,const boost::json::object& user,std::string& msg){
-    const std::string& id {user.at("id").as_string().c_str()};
-    const std::string& created_at {user.at("created_at").as_string().c_str()};
-    const std::string& updated_at {user.at("updated_at").as_string().c_str()};
-    const std::string& first_name {user.at("first_name").as_string().c_str()};
-    const std::string& last_name {user.at("last_name").as_string().c_str()};
-    const std::string& email {user.at("email").as_string().c_str()};
-    const std::string& is_blocked {std::to_string(user.at("is_blocked").as_bool())};
-    const std::string& phone_number {user.at("phone_number").as_string().c_str()};
-    const std::string& position {user.at("position").as_string().c_str()};
-    const std::string& gender {user.at("gender").as_string().c_str()};
-    const std::string& location_id {user.at("location_id").as_string().c_str()};
-    const std::string& ou_id {user.at("ou_id").as_string().c_str()};
+    PGresult* res_ptr {NULL};
+    {//put user
+        const std::string& id {user.at("id").as_string().c_str()};
+        const std::string& created_at {user.at("created_at").as_string().c_str()};
+        const std::string& updated_at {user.at("updated_at").as_string().c_str()};
+        const std::string& first_name {user.at("first_name").as_string().c_str()};
+        const std::string& last_name {user.at("last_name").as_string().c_str()};
+        const std::string& email {user.at("email").as_string().c_str()};
+        const std::string& is_blocked {std::to_string(user.at("is_blocked").as_bool())};
+        const std::string& phone_number {user.at("phone_number").as_string().c_str()};
+        const std::string& position {user.at("position").as_string().c_str()};
+        const std::string& gender {user.at("gender").as_string().c_str()};
+        const std::string& location_id {user.at("location_id").as_string().c_str()};
+        const std::string& ou_id {user.at("ou_id").as_string().c_str()};
 
-    const char* param_values[] {id.c_str(),created_at.c_str(),updated_at.c_str(),
-                                first_name.c_str(),last_name.c_str(),email.c_str(),
-                                is_blocked.c_str(),phone_number.c_str(),
-                                position.c_str(),gender.c_str(),location_id.c_str(),ou_id.c_str()};
-    const std::string& command {"INSERT INTO users (id,created_at,updated_at,first_name,last_name,email,is_blocked,phone_number,position,gender,location_id,ou_id) "
-                                "VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)"};
+        const char* param_values[] {id.c_str(),created_at.c_str(),updated_at.c_str(),
+                                    first_name.c_str(),last_name.c_str(),email.c_str(),
+                                    is_blocked.c_str(),phone_number.c_str(),
+                                    position.c_str(),gender.c_str(),location_id.c_str(),ou_id.c_str()};
+        const std::string& command {"INSERT INTO users (id,created_at,updated_at,first_name,last_name,email,is_blocked,phone_number,position,gender,location_id,ou_id) "
+                                    "VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)"};
+        res_ptr=PQexecParams(conn_ptr,command.c_str(),12,NULL,param_values,NULL,NULL,0);
+        if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
+            msg=std::string {PQresultErrorMessage(res_ptr)};
+            PQclear(res_ptr);
+            return false;
+        }
+    }
+    {//get user back
+        const std::string& id {user.at("id").as_string().c_str()};
+        const char* param_values[] {id.c_str()};
+        const std::string& command {"SELECT * FROM users WHERE id=$1"};
+        res_ptr=PQexecParams(conn_ptr,command.c_str(),1,NULL,param_values,NULL,NULL,0);
+        if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
+            msg=std::string {PQresultErrorMessage(res_ptr)};
+            PQclear(res_ptr);
+            return false;
+        }
+        const int& rows {PQntuples(res_ptr)};
+        if(!rows){
+            PQclear(res_ptr);
+            msg="user with id '" + id + "' not found";
+            return false;
+        }
+        const int& columns {PQnfields(res_ptr)};
+        boost::json::object user_ {};
+        for(int c=0;c<columns;++c){
+            const std::string& key {PQfname(res_ptr,c)};
+            const std::string& value {PQgetvalue(res_ptr,0,c)};
+            user_.emplace(key,value);
+        }
+        msg=boost::json::serialize(user_);
+        PQclear(res_ptr);
+        return true;
+    }
+    PQclear(res_ptr);
     return false;
 }
 
