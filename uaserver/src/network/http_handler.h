@@ -33,17 +33,17 @@ private:
     http::response<http::string_body> success(http::request<http::string_body>&& request, http::status code, const std::string& body);
 
     //rote handlers
-    http::response<http::string_body> handle_users(http::request<http::string_body>&& request,const std::string& requester_id);
+    http::response<http::string_body> handle_user(http::request<http::string_body>&& request,const std::string& requester_id);
     http::response<http::string_body> handle_authz(http::request<http::string_body>&& request,const std::string& requester_id);
     http::response<http::string_body> handle_authz_manage(http::request<http::string_body>&& request,const std::string& requester_id);
-    http::response<http::string_body> handle_rps(http::request<http::string_body>&& request,const std::string& requester_id);
-    http::response<http::string_body> handle_certificates(http::request<http::string_body>&& request,const std::string& requester_id);
+    http::response<http::string_body> handle_rp(http::request<http::string_body>&& request,const std::string& requester_id);
+    http::response<http::string_body> handle_certificate(http::request<http::string_body>&& request,const std::string& requester_id);
 
     //users verb handlers
-    http::response<http::string_body> handle_users_get(http::request<http::string_body>&& request,const std::string& requester_id);
-    http::response<http::string_body> handle_users_put(http::request<http::string_body>&& request,const std::string& requester_id);
-    http::response<http::string_body> handle_users_post(http::request<http::string_body>&& request,const std::string& requester_id);
-    http::response<http::string_body> handle_users_delete(http::request<http::string_body>&& request,const std::string& requester_id);
+    http::response<http::string_body> handle_user_get(http::request<http::string_body>&& request,const std::string& requester_id);
+    http::response<http::string_body> handle_user_put(http::request<http::string_body>&& request,const std::string& requester_id);
+    http::response<http::string_body> handle_user_post(http::request<http::string_body>&& request,const std::string& requester_id);
+    http::response<http::string_body> handle_user_delete(http::request<http::string_body>&& request,const std::string& requester_id);
 
     //authz verb handlers
     http::response<http::string_body> handle_authz_get(http::request<http::string_body>&& request,const std::string& requester_id);
@@ -53,13 +53,13 @@ private:
     http::response<http::string_body> handle_authz_manage_delete(http::request<http::string_body>&& request,const std::string& requester_id);
 
     //rps varb handlers
-    http::response<http::string_body> handle_rps_get(http::request<http::string_body>&& request,const std::string& requester_id);
-    http::response<http::string_body> handle_rps_put(http::request<http::string_body>&& request,const std::string& requester_id);
-    http::response<http::string_body> handle_rps_post(http::request<http::string_body>&& request,const std::string& requester_id);
-    http::response<http::string_body> handle_rps_delete(http::request<http::string_body>&& request,const std::string& requester_id);
+    http::response<http::string_body> handle_rp_get(http::request<http::string_body>&& request,const std::string& requester_id);
+    http::response<http::string_body> handle_rp_put(http::request<http::string_body>&& request,const std::string& requester_id);
+    http::response<http::string_body> handle_rp_post(http::request<http::string_body>&& request,const std::string& requester_id);
+    http::response<http::string_body> handle_rp_delete(http::request<http::string_body>&& request,const std::string& requester_id);
 
     //certificate verb handler
-    http::response<http::string_body> handle_certificates_post(http::request<http::string_body>&& request,const std::string& requester_id);
+    http::response<http::string_body> handle_certificate_post(http::request<http::string_body>&& request,const std::string& requester_id);
 
     std::shared_ptr<std::string> body_ptr_ {nullptr};
     std::shared_ptr<dbase_handler> dbase_handler_ptr_ {nullptr};
@@ -104,7 +104,7 @@ public:
         }
         {//handle users
             if(boost::starts_with(target,"/api/v1/u-auth/users")){
-                return handle_users(std::move(request),requester_id);
+                return handle_user(std::move(request),requester_id);
             }
         }
         {//handle authz-manage
@@ -119,12 +119,12 @@ public:
         }
         {//handle rps
             if(boost::starts_with(target,"/api/v1/u-auth/roles-permissions")){
-                return handle_rps(std::move(request),requester_id);
+                return handle_rp(std::move(request),requester_id);
             }
         }
         {//handle certificates
             if(boost::starts_with(target,"/api/v1/u-auth/certificates")){
-                return handle_certificates_post(std::move(request),requester_id);
+                return handle_certificate_post(std::move(request),requester_id);
             }
         }
         return fail(std::move(request),http::status::not_found,"not found");

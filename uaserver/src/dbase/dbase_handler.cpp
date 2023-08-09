@@ -411,7 +411,7 @@ int dbase_handler::urp_total_get(PGconn *conn_ptr)
 }
 
 //Get total rps
-int dbase_handler::rps_total_get(PGconn *conn_ptr)
+int dbase_handler::rp_total_get(PGconn *conn_ptr)
 {
     PGresult* res_ptr {NULL};
     const std::string& command {"SELECT * FROM roles_permissions"};
@@ -428,7 +428,7 @@ int dbase_handler::rps_total_get(PGconn *conn_ptr)
 }
 
 //Get total users
-int dbase_handler::users_total_get(PGconn *conn_ptr)
+int dbase_handler::user_total_get(PGconn *conn_ptr)
 {
     PGresult* res_ptr {NULL};
     const std::string& command {"SELECT id FROM users"};
@@ -597,7 +597,7 @@ bool dbase_handler::init_database(std::string &msg)
 }
 
 //List Of Users
-db_status dbase_handler::users_list_get(std::string &users, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::user_list_get(std::string &users, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -641,7 +641,7 @@ db_status dbase_handler::users_list_get(std::string &users, const std::string &r
         users_.push_back(user_);
     }
     PQclear(res_ptr);
-    const int& total {users_total_get(conn_ptr)};
+    const int& total {user_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
     const boost::json::object out {
@@ -656,7 +656,7 @@ db_status dbase_handler::users_list_get(std::string &users, const std::string &r
 }
 
 //List Of Users with limit and/or offset and filter
-db_status dbase_handler::users_list_get(std::string& users, const std::string& limit,
+db_status dbase_handler::user_list_get(std::string& users, const std::string& limit,
                                    const std::string& offset, const std::string &first_name,
                                    const std::string &last_name, const std::string &email,
                                    const std::string &is_blocked,const std::string& requester_id,std::string& msg)
@@ -711,7 +711,7 @@ db_status dbase_handler::users_list_get(std::string& users, const std::string& l
         users_.push_back(user_);
     }
     PQclear(res_ptr);
-    const int& total {users_total_get(conn_ptr)};
+    const int& total {user_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
     const boost::json::object out {
@@ -726,7 +726,7 @@ db_status dbase_handler::users_list_get(std::string& users, const std::string& l
 }
 
 //Get User Info
-db_status dbase_handler::users_info_get(const std::string &user_uid, std::string &user, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::user_info_get(const std::string &user_uid, std::string &user, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -777,7 +777,7 @@ db_status dbase_handler::users_info_get(const std::string &user_uid, std::string
 }
 
 //Get User Assigned Roles And Permissions
-db_status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rps, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::user_rp_get(const std::string &user_uid, std::string &rps, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -839,7 +839,7 @@ db_status dbase_handler::users_rps_get(const std::string &user_uid, std::string 
             PQclear(res_ptr);
         }
     }
-    const int& total {rps_total_get(conn_ptr)};
+    const int& total {rp_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
     const boost::json::object& out {
@@ -854,7 +854,7 @@ db_status dbase_handler::users_rps_get(const std::string &user_uid, std::string 
 }
 
 //Get User Assigned Roles And Permissions with limit and/or offset
-db_status dbase_handler::users_rps_get(const std::string &user_uid, std::string &rps,
+db_status dbase_handler::user_rp_get(const std::string &user_uid, std::string &rps,
                                   const std::string &limit, const std::string &offset, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
@@ -924,7 +924,7 @@ db_status dbase_handler::users_rps_get(const std::string &user_uid, std::string 
             PQclear(res_ptr);
         }
     }
-    const int& total {rps_total_get(conn_ptr)};
+    const int& total {rp_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
     const boost::json::object& out {
@@ -939,7 +939,7 @@ db_status dbase_handler::users_rps_get(const std::string &user_uid, std::string 
 }
 
 //Update User
-db_status dbase_handler::users_info_put(const std::string &user_uid, const std::string &user, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::user_info_put(const std::string &user_uid, const std::string &user, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -1017,7 +1017,7 @@ db_status dbase_handler::users_info_put(const std::string &user_uid, const std::
 }
 
 //Create User
-db_status dbase_handler::users_info_post(const std::string &user, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::user_info_post(const std::string &user, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -1068,7 +1068,7 @@ db_status dbase_handler::users_info_post(const std::string &user, const std::str
 }
 
 //Delete User
-db_status dbase_handler::users_info_delete(const std::string &user_uid, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::user_info_delete(const std::string &user_uid, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -1098,7 +1098,7 @@ db_status dbase_handler::users_info_delete(const std::string &user_uid, const st
 }
 
 //List Of Roles And Permissions
-db_status dbase_handler::rps_list_get(std::string &rps, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rp_list_get(std::string &rps, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -1141,7 +1141,7 @@ db_status dbase_handler::rps_list_get(std::string &rps, const std::string &reque
         rps_.push_back(rp_);
     }
     PQclear(res_ptr);
-    const int& total {rps_total_get(conn_ptr)};
+    const int& total {rp_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
     const boost::json::object& out {
@@ -1156,7 +1156,7 @@ db_status dbase_handler::rps_list_get(std::string &rps, const std::string &reque
 }
 
 //List Of Roles And Permissions with limit and/or offset and filter
-db_status dbase_handler::rps_list_get(std::string &rps, const std::string &limit,
+db_status dbase_handler::rp_list_get(std::string &rps, const std::string &limit,
                                  const std::string offset, const std::string& name,
                                  const std::string& type, const std::string& description, const std::string &requester_id, std::string &msg)
 {
@@ -1209,7 +1209,7 @@ db_status dbase_handler::rps_list_get(std::string &rps, const std::string &limit
         rps_.push_back(rp_);
     }
     PQclear(res_ptr);
-    const int& total {rps_total_get(conn_ptr)};
+    const int& total {rp_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
     const boost::json::object& out {
@@ -1224,7 +1224,7 @@ db_status dbase_handler::rps_list_get(std::string &rps, const std::string &limit
 }
 
 //Get Permission Or Role
-db_status dbase_handler::rps_info_get(const std::string &rp_uid, std::string &rp, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rp_info_get(const std::string &rp_uid, std::string &rp, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -1273,7 +1273,7 @@ db_status dbase_handler::rps_info_get(const std::string &rp_uid, std::string &rp
 }
 
 //Get Associated Users
-db_status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &users, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &users, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -1361,7 +1361,7 @@ db_status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &u
 }
 
 //Get Associated Users with limit and/or offset and filter
-db_status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &users, const std::string &limit, const std::string &offset, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &users, const std::string &limit, const std::string &offset, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -1456,7 +1456,7 @@ db_status dbase_handler::rps_users_get(const std::string &rp_uid, std::string &u
 }
 
 //Get Permission Or Role Detail
-db_status dbase_handler::rps_rp_detail_get(const std::string &rp_uid, std::string &rp, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rp_rp_detail_get(const std::string &rp_uid, std::string &rp, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -1510,7 +1510,7 @@ db_status dbase_handler::rps_rp_detail_get(const std::string &rp_uid, std::strin
 }
 
 //Create Permission Or Role
-db_status dbase_handler::rps_info_post(const std::string &rp, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rp_info_post(const std::string &rp, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -1549,7 +1549,7 @@ db_status dbase_handler::rps_info_post(const std::string &rp, const std::string 
 }
 
 //Update Permission Or Role
-db_status dbase_handler::rps_info_put(const std::string &rp_uid, const std::string &rp, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rp_info_put(const std::string &rp_uid, const std::string &rp, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -1617,12 +1617,19 @@ db_status dbase_handler::rps_info_put(const std::string &rp_uid, const std::stri
 }
 
 //Delete Permission Or Role
-db_status dbase_handler::rps_info_delete(const std::string &rp_uid, const std::string& requester_id,std::string &msg)
+db_status dbase_handler::rp_info_delete(const std::string &rp_uid, const std::string& requester_id,std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
     if(!conn_ptr){
         return db_status::fail;
+    }
+    {//check if UAuthAdmin role
+        const std::string admin_rp_uid {uath_admin_rp_uid_get(conn_ptr)};
+        if(rp_uid==admin_rp_uid){
+            msg="delete 'UAuthAdmin role impossible";
+            return db_status::fail;
+        }
     }
     {//check if authorized
         std::string msg {};
@@ -1648,7 +1655,7 @@ db_status dbase_handler::rps_info_delete(const std::string &rp_uid, const std::s
 }
 
 //Add Child To Role
-db_status dbase_handler::rps_child_put(const std::string &parent_uid, const std::string &child_uid, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rp_child_put(const std::string &parent_uid, const std::string &child_uid, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -1724,7 +1731,7 @@ db_status dbase_handler::rps_child_put(const std::string &parent_uid, const std:
 }
 
 //Remove Child From Role
-db_status dbase_handler::rps_child_delete(const std::string &parent_uid, const std::string &child_uid, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rp_child_delete(const std::string &parent_uid, const std::string &child_uid, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};

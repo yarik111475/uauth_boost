@@ -35,7 +35,7 @@ http::response<http::string_body> http_handler::success(http::request<http::stri
     return response;
 }
 
-http::response<http::string_body> http_handler::handle_users(http::request<http::string_body> &&request, const std::string &requester_id)
+http::response<http::string_body> http_handler::handle_user(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     //verb check
     if((request.method()!=http::verb::get) & (request.method()!=http::verb::put) &
@@ -44,16 +44,16 @@ http::response<http::string_body> http_handler::handle_users(http::request<http:
     }
     switch(request.method()){
     case http::verb::get:
-        return handle_users_get(std::move(request),requester_id);
+        return handle_user_get(std::move(request),requester_id);
         break;
     case http::verb::put:
-        return handle_users_put(std::move(request),requester_id);
+        return handle_user_put(std::move(request),requester_id);
         break;
     case http::verb::post:
-        return handle_users_post(std::move(request),requester_id);
+        return handle_user_post(std::move(request),requester_id);
         break;
     case http::verb::delete_:
-        return handle_users_delete(std::move(request),requester_id);
+        return handle_user_delete(std::move(request),requester_id);
         break;
     default:
         return fail(std::move(request),http::status::not_found,"not found");
@@ -91,7 +91,7 @@ http::response<http::string_body> http_handler::handle_authz_manage(http::reques
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
-http::response<http::string_body> http_handler::handle_rps(http::request<http::string_body> &&request, const std::string &requester_id)
+http::response<http::string_body> http_handler::handle_rp(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     //verb check
     if((request.method()!=http::verb::get) & (request.method()!=http::verb::put) &
@@ -100,16 +100,16 @@ http::response<http::string_body> http_handler::handle_rps(http::request<http::s
     }
     switch(request.method()){
     case http::verb::get:
-        return handle_rps_get(std::move(request),requester_id);
+        return handle_rp_get(std::move(request),requester_id);
         break;
     case http::verb::put:
-        return handle_rps_put(std::move(request),requester_id);
+        return handle_rp_put(std::move(request),requester_id);
         break;
     case http::verb::post:
-        return handle_rps_post(std::move(request),requester_id);
+        return handle_rp_post(std::move(request),requester_id);
         break;
     case http::verb::delete_:
-        return handle_rps_delete(std::move(request),requester_id);
+        return handle_rp_delete(std::move(request),requester_id);
         break;
     default:
         return fail(std::move(request),http::status::not_found,"not found");
@@ -118,15 +118,15 @@ http::response<http::string_body> http_handler::handle_rps(http::request<http::s
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
-http::response<http::string_body> http_handler::handle_certificates(http::request<http::string_body> &&request, const std::string &requester_id)
+http::response<http::string_body> http_handler::handle_certificate(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     if(request.method()==http::verb::post){
-        return handle_certificates_post(std::move(request),requester_id);
+        return handle_certificate_post(std::move(request),requester_id);
     }
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
-http::response<http::string_body> http_handler::handle_users_get(http::request<http::string_body> &&request, const std::string &requester_id)
+http::response<http::string_body> http_handler::handle_user_get(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     {//users list
@@ -135,7 +135,7 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
         if(boost::regex_match(target,match,re)){
             std::string msg {};
             std::string users {};
-            const db_status& status_ {dbase_handler_ptr_->users_list_get(users,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->user_list_get(users,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -157,7 +157,7 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
             const std::string& user_uid {match[1]};
             std::string msg {};
             std::string user {};
-            const db_status& status_ {dbase_handler_ptr_->users_info_get(user_uid,user,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->user_info_get(user_uid,user,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -180,7 +180,7 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
             const std::string& user_uid {match[1]};
             std::string msg {};
             std::string rps {};
-            const db_status& status_ {dbase_handler_ptr_->users_rps_get(user_uid,rps,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->user_rp_get(user_uid,rps,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -235,7 +235,7 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
 
                 std::string msg {};
                 std::string users {};
-                const db_status& status_ {dbase_handler_ptr_->users_list_get(users,limit,offset,first_name,last_name,email,is_blocked,requester_id,msg)};
+                const db_status& status_ {dbase_handler_ptr_->user_list_get(users,limit,offset,first_name,last_name,email,is_blocked,requester_id,msg)};
                 switch(status_){
                 case db_status::fail:
                     return fail(std::move(request),http::status::bad_request,msg);
@@ -254,7 +254,7 @@ http::response<http::string_body> http_handler::handle_users_get(http::request<h
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
-http::response<http::string_body> http_handler::handle_users_put(http::request<http::string_body> &&request, const std::string &requester_id)
+http::response<http::string_body> http_handler::handle_user_put(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
@@ -275,7 +275,7 @@ http::response<http::string_body> http_handler::handle_users_put(http::request<h
         }
 
         std::string msg;
-        const db_status& status_ {dbase_handler_ptr_->users_info_put(user_uid,body,requester_id,msg)};
+        const db_status& status_ {dbase_handler_ptr_->user_info_put(user_uid,body,requester_id,msg)};
         switch(status_){
         case db_status::fail:
             return fail(std::move(request),http::status::bad_request,msg);
@@ -292,7 +292,7 @@ http::response<http::string_body> http_handler::handle_users_put(http::request<h
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
-http::response<http::string_body> http_handler::handle_users_post(http::request<http::string_body> &&request, const std::string &requester_id)
+http::response<http::string_body> http_handler::handle_user_post(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& body {request.body()};
     boost::system::error_code ec;
@@ -307,7 +307,7 @@ http::response<http::string_body> http_handler::handle_users_post(http::request<
     }
 
     std::string msg;
-    const db_status& status_ {dbase_handler_ptr_->users_info_post(body,requester_id,msg)};
+    const db_status& status_ {dbase_handler_ptr_->user_info_post(body,requester_id,msg)};
     switch(status_){
     case db_status::fail:
         return fail(std::move(request),http::status::bad_request,msg);
@@ -323,7 +323,7 @@ http::response<http::string_body> http_handler::handle_users_post(http::request<
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
-http::response<http::string_body> http_handler::handle_users_delete(http::request<http::string_body> &&request, const std::string &requester_id)
+http::response<http::string_body> http_handler::handle_user_delete(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
@@ -333,7 +333,7 @@ http::response<http::string_body> http_handler::handle_users_delete(http::reques
     }
     const std::string& user_uid {match[1]};
     std::string msg;
-    const db_status& status_ {dbase_handler_ptr_->users_info_delete(user_uid,requester_id,msg)};
+    const db_status& status_ {dbase_handler_ptr_->user_info_delete(user_uid,requester_id,msg)};
     switch(status_){
     case db_status::fail:
         return fail(std::move(request),http::status::bad_request,msg);
@@ -429,7 +429,7 @@ http::response<http::string_body> http_handler::handle_authz_manage_delete(http:
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
-http::response<http::string_body> http_handler::handle_rps_get(http::request<http::string_body> &&request, const std::string &requester_id)
+http::response<http::string_body> http_handler::handle_rp_get(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     {//rps list
@@ -438,7 +438,7 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
         if(boost::regex_match(target,match,re)){
             std::string msg {};
             std::string rps {};
-            const db_status& status_ {dbase_handler_ptr_->rps_list_get(rps,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rp_list_get(rps,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -460,7 +460,7 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
             const std::string& rp_uid {match[1]};
             std::string msg {};
             std::string rp {};
-            const db_status& status_ {dbase_handler_ptr_->rps_info_get(rp_uid,rp,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rp_info_get(rp_uid,rp,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -483,7 +483,7 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
             const std::string& rp_uid {match[1]};
             std::string msg {};
             std::string rp_detail {};
-            const db_status& status_ {dbase_handler_ptr_->rps_rp_detail_get(rp_uid,rp_detail,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rp_rp_detail_get(rp_uid,rp_detail,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -505,7 +505,7 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
             const std::string& rp_uid {match[1]};
             std::string msg {};
             std::string users {};
-            const db_status& status_ {dbase_handler_ptr_->rps_users_get(rp_uid,users,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rp_user_get(rp_uid,users,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -545,7 +545,7 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
 
                     std::string msg {};
                     std::string users {};
-                    const db_status& status_ {dbase_handler_ptr_->rps_users_get(rp_uid,users,limit,offset,requester_id,msg)};
+                    const db_status& status_ {dbase_handler_ptr_->rp_user_get(rp_uid,users,limit,offset,requester_id,msg)};
                     switch(status_){
                     case db_status::fail:
                         return fail(std::move(request),http::status::bad_request,msg);
@@ -597,7 +597,7 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
 
                 std::string msg {};
                 std::string rps {};
-                const db_status& status_ {dbase_handler_ptr_->rps_list_get(rps,limit,offset,name,type,description,requester_id,msg)};
+                const db_status& status_ {dbase_handler_ptr_->rp_list_get(rps,limit,offset,name,type,description,requester_id,msg)};
                 switch(status_){
                 case db_status::fail:
                     return fail(std::move(request),http::status::bad_request,msg);
@@ -617,7 +617,7 @@ http::response<http::string_body> http_handler::handle_rps_get(http::request<htt
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
 
-http::response<http::string_body> http_handler::handle_rps_put(http::request<http::string_body> &&request, const std::string &requester_id)
+http::response<http::string_body> http_handler::handle_rp_put(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     {//update role_permission
@@ -638,7 +638,7 @@ http::response<http::string_body> http_handler::handle_rps_put(http::request<htt
             }
 
             std::string msg;
-            const db_status& status_ {dbase_handler_ptr_->rps_info_put(rp_uid,body,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rp_info_put(rp_uid,body,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -660,7 +660,7 @@ http::response<http::string_body> http_handler::handle_rps_put(http::request<htt
             const std::string& parent_uid {match[1]};
             const std::string& child_uid {match[2]};
             std::string msg;
-            const db_status& status_ {dbase_handler_ptr_->rps_child_put(parent_uid,child_uid,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rp_child_put(parent_uid,child_uid,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -678,7 +678,7 @@ http::response<http::string_body> http_handler::handle_rps_put(http::request<htt
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
-http::response<http::string_body> http_handler::handle_rps_post(http::request<http::string_body> &&request, const std::string &requester_id)
+http::response<http::string_body> http_handler::handle_rp_post(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& body {request.body()};
     boost::system::error_code ec;
@@ -692,7 +692,7 @@ http::response<http::string_body> http_handler::handle_rps_post(http::request<ht
     }
 
     std::string msg;
-    const db_status& status_ {dbase_handler_ptr_->rps_info_post(body,requester_id,msg)};
+    const db_status& status_ {dbase_handler_ptr_->rp_info_post(body,requester_id,msg)};
     switch(status_){
     case db_status::fail:
         return fail(std::move(request),http::status::bad_request,msg);
@@ -707,7 +707,7 @@ http::response<http::string_body> http_handler::handle_rps_post(http::request<ht
     }
 }
 
-http::response<http::string_body> http_handler::handle_rps_delete(http::request<http::string_body> &&request, const std::string &requester_id)
+http::response<http::string_body> http_handler::handle_rp_delete(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     {//remove role_permission
@@ -716,7 +716,7 @@ http::response<http::string_body> http_handler::handle_rps_delete(http::request<
         if(boost::regex_match(target,match,re)){
             const std::string& rp_uid {match[1]};
             std::string msg;
-            const db_status& status_ {dbase_handler_ptr_->rps_info_delete(rp_uid,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rp_info_delete(rp_uid,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -738,7 +738,7 @@ http::response<http::string_body> http_handler::handle_rps_delete(http::request<
             const std::string& parent_uid {match[1]};
             const std::string& child_uid {match[2]};
             std::string msg;
-            const db_status& status_ {dbase_handler_ptr_->rps_child_delete(parent_uid,child_uid,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rp_child_delete(parent_uid,child_uid,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -756,7 +756,7 @@ http::response<http::string_body> http_handler::handle_rps_delete(http::request<
     return fail(std::move(request),http::status::not_found,"not found");
 }
 
-http::response<http::string_body> http_handler::handle_certificates_post(http::request<http::string_body> &&request, const std::string &requester_id)
+http::response<http::string_body> http_handler::handle_certificate_post(http::request<http::string_body> &&request, const std::string &requester_id)
 {
     const std::string& target {request.target()};
     {//handle user certificate
@@ -796,7 +796,7 @@ http::response<http::string_body> http_handler::handle_certificates_post(http::r
             {//check user by user_id and get user email
                 std::string msg {};
                 std::string user {};
-                const db_status& status_ {dbase_handler_ptr_->users_info_get(user_id,user,requester_id,msg)};
+                const db_status& status_ {dbase_handler_ptr_->user_info_get(user_id,user,requester_id,msg)};
                 if(status_!=db_status::success){
                     return fail(std::move(request),http::status::not_found,msg);
                 }
