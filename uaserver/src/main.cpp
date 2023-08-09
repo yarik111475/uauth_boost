@@ -3,6 +3,7 @@
 #include <vector>
 #include <boost/asio.hpp>
 #include <boost/json.hpp>
+#include <boost/predef/os.h>
 #include <boost/filesystem.hpp>
 #include <boost/asio/signal_set.hpp>
 
@@ -10,7 +11,9 @@
 
 int main(int argc,char* argv[])
 {
+#if BOOST_OS_WINDOWS
     std::system("chcp 1251");
+#endif
     boost::filesystem::path path_ {argv[0]};
     const std::string& app_dir {path_.remove_filename().string()};
     const unsigned int& max_threads {std::thread::hardware_concurrency()-1};
