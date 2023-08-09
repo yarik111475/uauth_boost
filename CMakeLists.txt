@@ -102,6 +102,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 find_package(OpenSSL REQUIRED)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/uauth_server)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/uauth_client)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/uashell)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/uaserver)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/uaclient)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/spdlog-1.9.2)

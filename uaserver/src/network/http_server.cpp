@@ -138,14 +138,15 @@ void http_server::uc_status_slot(uc_status status, const std::string &msg)
     const auto& to_string{[](uc_status status){
             switch(status){
             case uc_status::fail:
-                return "fail";
+                return std::string {"fail"};
             case uc_status::success:
-                return "success";
+                return std::string {"success"};
             case uc_status::bad_gateway:
-                return "bad_gateway";
+                return std::string {"bad_gateway"};
             case uc_status::failed_dependency:
-                return "failed_dependency";
+                return std::string {"failed_dependency"};
             }
+            return std::string {};
         }
     };
     if(status!=uc_status::success && logger_ptr_){

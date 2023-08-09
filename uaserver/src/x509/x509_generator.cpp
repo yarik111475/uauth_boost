@@ -25,7 +25,7 @@ bool x509_generator::decrypt_subject(const std::string &path, std::unordered_mul
 
     int ret {0};
     BIO* bio {BIO_new(BIO_s_mem())};
-    ret=BIO_write(bio, content.c_str(), content.size());
+    ret=BIO_write(bio, content.c_str(), (int)content.size());
     if(ret<=0){
         BIO_free(bio);
         return false;
@@ -126,7 +126,7 @@ bool x509_generator::create_PKCS12(const std::string &user_id, const std::string
         ret=i2d_PKCS12_bio(pkcs_bio.get(),pkcs.get());
         const int& pkcs_len {BIO_pending(pkcs_bio.get())};
         PKCS12_content.resize(pkcs_len);
-        ret=BIO_read(pkcs_bio.get(),PKCS12_content.data(),PKCS12_content.size());
+        ret=BIO_read(pkcs_bio.get(),PKCS12_content.data(),(int)PKCS12_content.size());
     }
     catch(const std::exception& ex){
         msg=ex.what();
@@ -147,7 +147,7 @@ bool x509_generator::create_X509(const std::string &pub_path, const std::string 
         int ret {};
         //create agent X509_REQ
         std::shared_ptr<BIO> req_bio {BIO_new(BIO_s_mem()),&BIO_free};
-        ret=BIO_write(req_bio.get(),x509_REQ_content.data(),x509_REQ_content.size());
+        ret=BIO_write(req_bio.get(),x509_REQ_content.data(),(int)x509_REQ_content.size());
         std::shared_ptr<X509_REQ> req {PEM_read_bio_X509_REQ(req_bio.get(),NULL,NULL,NULL),&X509_REQ_free};
         EVP_PKEY* req_key {X509_REQ_get0_pubkey(req.get())};
         X509_NAME* req_name {X509_REQ_get_subject_name(req.get())};
@@ -189,7 +189,7 @@ bool x509_generator::create_X509(const std::string &pub_path, const std::string 
         ret=PEM_write_bio_X509(x509_bio.get(),x509.get());
         const int& x509_len {BIO_pending(x509_bio.get())};
         x509_content.resize(x509_len);
-        ret=BIO_read(x509_bio.get(),x509_content.data(),x509_content.size());
+        ret=BIO_read(x509_bio.get(),x509_content.data(),(int)x509_content.size());
     }
     catch(const std::exception& ex){
         msg=ex.what();
