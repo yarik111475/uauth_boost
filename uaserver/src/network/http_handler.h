@@ -39,7 +39,7 @@ private:
     http::response<http::string_body> handle_rp(http::request<http::string_body>&& request,const std::string& requester_id);
     http::response<http::string_body> handle_certificate(http::request<http::string_body>&& request,const std::string& requester_id);
 
-    //users verb handlers
+    //user verb handlers
     http::response<http::string_body> handle_user_get(http::request<http::string_body>&& request,const std::string& requester_id);
     http::response<http::string_body> handle_user_put(http::request<http::string_body>&& request,const std::string& requester_id);
     http::response<http::string_body> handle_user_post(http::request<http::string_body>&& request,const std::string& requester_id);
@@ -52,7 +52,7 @@ private:
     http::response<http::string_body> handle_authz_manage_post(http::request<http::string_body>&& request,const std::string& requester_id);
     http::response<http::string_body> handle_authz_manage_delete(http::request<http::string_body>&& request,const std::string& requester_id);
 
-    //rps varb handlers
+    //rp varb handlers
     http::response<http::string_body> handle_rp_get(http::request<http::string_body>&& request,const std::string& requester_id);
     http::response<http::string_body> handle_rp_put(http::request<http::string_body>&& request,const std::string& requester_id);
     http::response<http::string_body> handle_rp_post(http::request<http::string_body>&& request,const std::string& requester_id);
@@ -102,7 +102,7 @@ public:
                 return fail(std::move(request),http::status::internal_server_error,msg);
             }
         }
-        {//handle users
+        {//handle user
             if(boost::starts_with(target,"/api/v1/u-auth/users")){
                 return handle_user(std::move(request),requester_id);
             }
@@ -117,12 +117,12 @@ public:
                 return handle_authz(std::move(request),requester_id);
             }
         }
-        {//handle rps
+        {//handle rp
             if(boost::starts_with(target,"/api/v1/u-auth/roles-permissions")){
                 return handle_rp(std::move(request),requester_id);
             }
         }
-        {//handle certificates
+        {//handle certificate
             if(boost::starts_with(target,"/api/v1/u-auth/certificates")){
                 return handle_certificate_post(std::move(request),requester_id);
             }
