@@ -186,7 +186,6 @@ bool exec_user(boost::json::object& user,bool& need_continue){
                                                               std::make_pair<std::string,bool>("location_id",false),
                                                               std::make_pair<std::string,bool>("ou_id",false)};
         for(const auto& pair: field_list){
-            const bool& nullabale {pair.second};
             std::cout<<"Enter value for field: '"<<pair.first<<"', empty string for null,can be null: '"<<std::boolalpha<<pair.second<<"'\n";
             std::string field {};
             std::getline(std::cin,field);
