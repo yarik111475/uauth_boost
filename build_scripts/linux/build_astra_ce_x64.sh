@@ -42,3 +42,11 @@ LIB_DIR=${INSTALL_DIR}/lib
 cp -f ${POSTGRE_LIB_DIR}/libpq.so.5.9 ${LIB_DIR}/libpq.so.5.9
 cp -f ${OPENSSL_LIB_DIR}/libssl.so.1.1    ${LIB_DIR}/libssl.so.1.1
 cp -f ${OPENSSL_LIB_DIR}/libcrypto.so.1.1 ${LIB_DIR}/libcrypto.so.1.1
+
+SCRIPT_PATH=${INSTALL_DIR}/bin
+UAUTH_SCRIPT_CONTENT="#!/bin/bash
+set -e
+sudo  ./uaserver
+
+echo "${UAUTH_SCRIPT_CONTENT}" >> "${SCRIPT_PATH}"/uaserver.sh
+chmod +x ${SCRIPT_PATH}/uaserver.sh
