@@ -152,7 +152,7 @@ bool user_put(PGconn* conn_ptr,const boost::json::object& user,std::string& msg)
     return false;
 }
 
-bool exec_user(boost::json::object& user,bool& need_continue){
+bool user_get(boost::json::object& user,bool& need_continue){
     start_lbl:
     std::cout<<"Enter command to execute and press 'Enter'\n"
              <<"Q or q (quit shell)\n"
@@ -231,7 +231,7 @@ int main(int argc,char* argv[])
     {//execute user's loop
         bool need_continue {false};
         while(true){
-            const bool& ok {exec_user(user,need_continue)};
+            const bool& ok {user_get(user,need_continue)};
             if(!ok){
                 if(need_continue){
                     continue;
