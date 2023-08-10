@@ -37,6 +37,6 @@ mkdir -p ${LIB_DIR}
 OPENSSL_LIB_DIR="/usr/lib/x86_64-linux-gnu"
 POSTGRE_LIB_DIR="/usr/lib/x86_64-linux-gnu"
 
-cp -f ${POSTGRE_LIB_DIR}/libpq.so.5.12 ${LIB_DIR}/libpq.so.5.12
+cp -Lf ${POSTGRE_LIB_DIR}/libpq.so.5 ${LIB_DIR}/libpq.so.5
 cp -f ${OPENSSL_LIB_DIR}/libssl.so.1.1    ${LIB_DIR}/libssl.so.1.1
 cp -f ${OPENSSL_LIB_DIR}/libcrypto.so.1.1 ${LIB_DIR}/libcrypto.so.1.1

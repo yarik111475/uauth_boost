@@ -39,7 +39,7 @@ rm -rf "${BUILD_DIR}"
 mkdir -p ${INSTALL_DIR}/lib
 LIB_DIR=${INSTALL_DIR}/lib
 
-cp -f ${POSTGRE_LIB_DIR}/libpq.so.5.9 ${LIB_DIR}/libpq.so.5.9
+cp -Lf ${POSTGRE_LIB_DIR}/libpq.so.5 ${LIB_DIR}/libpq.so.5
 cp -f ${OPENSSL_LIB_DIR}/libssl.so.1.1    ${LIB_DIR}/libssl.so.1.1
 cp -f ${OPENSSL_LIB_DIR}/libcrypto.so.1.1 ${LIB_DIR}/libcrypto.so.1.1
 

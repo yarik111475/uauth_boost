@@ -82,7 +82,7 @@ endif()
 if(UNIX AND NOT APPLE)
     set(PostgreSQL_INCLUDE_DIRS "/usr/include/postgresql")
     set(PostgreSQL_LIBRARY_DIRS "/usr/lib/x86_64-linux-gnu")
-    set(PostgreSQL_LIB libpq.so.5.9)
+    set(PostgreSQL_LIB libpq.so.5)
 endif()
 
 #rpath
