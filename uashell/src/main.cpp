@@ -119,13 +119,14 @@ bool user_put(PGconn* conn_ptr,const boost::json::object& user,std::string& msg)
             PQclear(res_ptr);
             return false;
         }
+        PQclear(res_ptr);
     }
     {//get user back
         const std::string& id {user.at("id").as_string().c_str()};
         const char* param_values[] {id.c_str()};
         const std::string& command {"SELECT * FROM users WHERE id=$1"};
         res_ptr=PQexecParams(conn_ptr,command.c_str(),1,NULL,param_values,NULL,NULL,0);
-        if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
+        if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             return false;
@@ -152,6 +153,7 @@ bool user_put(PGconn* conn_ptr,const boost::json::object& user,std::string& msg)
 }
 
 bool exec_user(boost::json::object& user,bool& need_continue){
+    start_lbl:
     std::cout<<"Enter command to execute and press 'Enter'\n"
              <<"Q or q (quit shell)\n"
              <<"CU or cu (create user)\n";
@@ -190,12 +192,16 @@ bool exec_user(boost::json::object& user,bool& need_continue){
             std::getline(std::cin,field);
             if(field.empty() && !pair.second){
                 need_continue=true;
-                std::cerr<<"Field '"<<pair.first<<"' can not be null, return  to start step!\n";
+                std::cerr<<"Field '"<<pair.first<<"' can not be null, return  to start point!\n";
                 std::cout<<"\n";
                 return false;
             }
             user.emplace(pair.first,field);
         }
+    }
+    else{
+        std::cerr<<"Unknown command,return to start point.\n";
+        goto start_lbl;
     }
     need_continue=false;
     return true;
