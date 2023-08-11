@@ -33,15 +33,16 @@ int main(int argc,char* argv[])
         });
     }
 #if BOOST_OS_WINDOWS
-    const std::home_dir {std::getenv("")==NULL ? "" : getenv("")};
+    const std::string home_dir {std::getenv("USERPROFILE")==NULL ? "" : getenv("USERPROFILE")};
 #endif
 #if BOOST_OS_LINUX
+    const std::string home_dir {std::getenv("HOME")==NULL ? "" : getenv("HOME")};
 #endif
 
     {//start bootloader
         const boost::json::object& params {
         };
-        bootloader b_loader {io,app_dir,params};
+        bootloader b_loader {io,app_dir,home_dir,params};
         b_loader.bootloader_start();
         io.run();
         b_loader.bootloader_stop();

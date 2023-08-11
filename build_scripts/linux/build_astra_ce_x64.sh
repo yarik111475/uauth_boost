@@ -84,7 +84,7 @@ export UA_CLIENT_KEY_PASS=\"password\"
 export UA_SENTRY_DSN=\"\"
 export UA_SENTRY_TRACES_SAMPLE_RATE=\"\"
 
-sudo  ./uaserver
+./uaserver
 "
 
 echo "${UAUTH_SCRIPT_CONTENT}" >> "${SCRIPT_PATH}"/uaserver.sh

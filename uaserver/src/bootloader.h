@@ -26,16 +26,11 @@ private:
     boost::asio::deadline_timer timer_;
 
     std::string app_dir_;
+    std::string home_dir_ {};
     boost::json::object params_ {};
 
-#if BOOST_OS_WINDOWS
-    const std::string etc_dir_ {app_dir_ + "/../etc"};
-    const std::string var_dir_ {app_dir_ + "/../var"};
-#endif
-#if BOOST_OS_LINUX
-    const std::string etc_dir_ {"/etc"};
-    const std::string var_dir_ {"/var"};
-#endif
+    const std::string etc_dir_ {home_dir_ + "/.etc"};
+    const std::string var_dir_ {home_dir_ + "/.var"};
     const std::string etc_uauth_dir_    {etc_dir_ + "/uauth"};
     const std::string var_uauth_dir_    {var_dir_ + "/uauth"};
     const std::string var_log_uath_dir_ {var_dir_ + "/log/uauth"};
@@ -52,7 +47,7 @@ private:
     void on_wait(const boost::system::error_code& ec);
 
 public:
-    explicit bootloader(boost::asio::io_context& io,const std::string& app_dir,const boost::json::object& params);
+    explicit bootloader(boost::asio::io_context& io,const std::string& app_dir,const std::string& home_dir,const boost::json::object& params);
     ~bootloader()=default;
 
     void bootloader_start();
