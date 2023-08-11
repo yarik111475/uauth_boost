@@ -1,6 +1,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <cstdlib>
 #include <boost/asio.hpp>
 #include <boost/json.hpp>
 #include <boost/predef/os.h>
@@ -31,6 +32,11 @@ int main(int argc,char* argv[])
             io.run();
         });
     }
+#if BOOST_OS_WINDOWS
+    const std::home_dir {std::getenv("")==NULL ? "" : getenv("")};
+#endif
+#if BOOST_OS_LINUX
+#endif
 
     {//start bootloader
         const boost::json::object& params {
