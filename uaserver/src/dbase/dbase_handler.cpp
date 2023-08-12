@@ -1519,7 +1519,7 @@ db_status dbase_handler::rp_info_post(const std::string &rp, const std::string &
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"role_permission:read"};
+        const std::string& rp_ident {"role_permission:create"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
         if(!authorized){
             PQfinish(conn_ptr);

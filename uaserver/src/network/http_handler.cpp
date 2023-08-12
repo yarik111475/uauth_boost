@@ -686,9 +686,9 @@ http::response<http::string_body> http_handler::handle_rp_post(http::request<htt
     if(ec || !v.is_object()){
         return fail(std::move(request),http::status::not_found,"not valid role-permission");
     }
-    const boost::json::object& user {v.as_object()};
-    if(!user.contains("name")|| !user.contains("type") || !user.contains("description")){
-        return fail(std::move(request),http::status::not_found,"not valid role-permission");
+    const boost::json::object& rp {v.as_object()};
+    if(!rp.contains("name") ||!rp.contains("type")|| !rp.contains("description")){
+        return fail(std::move(request),http::status::bad_request,"not valid role-permission");
     }
 
     std::string msg;
