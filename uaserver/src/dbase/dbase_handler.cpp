@@ -955,6 +955,21 @@ db_status dbase_handler::user_info_put(const std::string &user_uid, const std::s
             return db_status::unauthorized;
         }
     }
+    {//check user
+        boost::system::error_code ec;
+        std::set<std::string> fields {"first_name","last_name","email","is_blocked","phone_number","position","gender","location_id","ou_id"};
+        const boost::json::value user_ {boost::json::parse(user,ec)};
+        const boost::json::object& user_obj {user_.as_object()};
+        auto it {user_obj.begin()};
+        std::for_each(user_obj.begin(),user_obj.end(),[&](const boost::json::key_value_pair& pair){
+            const std::string& key {pair.key()};
+            const auto& found {fields.find(key)};
+            if(found==fields.end()){
+                msg="user not valid, key '" + key + "' not exists";
+                return db_status::fail;
+            }
+        });
+    }
     const boost::json::value& v {boost::json::parse(user)};
     const boost::json::object& user_obj {v.as_object()};;
     const std::string& first_name {user_obj.at("first_name").as_string().c_str()};
