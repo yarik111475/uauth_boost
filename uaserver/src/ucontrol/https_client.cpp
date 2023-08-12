@@ -10,19 +10,22 @@ boost::optional<boost::asio::ssl::context> https_client::make_context()
     const std::string& x509_root_path   {params_.at("UA_CA_CRT_PATH").as_string().c_str()};
     const std::string& x509_client_path {params_.at("UA_CLIENT_CRT_PATH").as_string().c_str()};
     const std::string& PKEY_client_path {params_.at("UA_CLIENT_KEY_PATH").as_string().c_str()};
-    std::string PKEY_client_pass {};
 
+    std::string PKEY_client_pass {};
     if(params_.contains("UA_CLIENT_KEY_PASS")){
         PKEY_client_pass=params_.at("UA_CLIENT_KEY_PASS").as_string().c_str();
     }
-    boost::ignore_unused(PKEY_client_pass);
 
     boost::system::error_code ec;
     boost::asio::ssl::context ctx {boost::asio::ssl::context_base::sslv23_client};
     ctx.set_verify_mode(boost::asio::ssl::verify_peer);
     ctx.use_certificate_chain_file(x509_root_path,ec);
     ctx.use_certificate_file(x509_client_path,boost::asio::ssl::context::pem,ec);
+    ctx.set_password_callback([&](std::size_t max_length,boost::asio::ssl::context::password_purpose purpose){
+        return PKEY_client_pass;
+    });
     ctx.use_private_key_file(PKEY_client_path,boost::asio::ssl::context::pem,ec);
+
     if(ec){
         return boost::none;
     }
