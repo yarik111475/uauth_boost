@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 set(PROJECT_NAME UACLIENT)
-set(TARGET_NAME ualient)
+set(TARGET_NAME uaclient)
 project(${PROJECT_NAME} LANGUAGES CXX VERSION ${GLOBAL_VERSION})
 
 set(CMAKE_CXX_STANDARD 11)

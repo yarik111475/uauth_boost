@@ -264,7 +264,7 @@ http::response<http::string_body> http_handler::handle_user_put(http::request<ht
         const std::string& body {request.body()};
 
         boost::system::error_code ec;
-        const boost::json::value v {boost::json::parse(body,ec)};
+        const boost::json::value& v {boost::json::parse(body,ec)};
         if(ec || !v.is_object()){
             return fail(std::move(request),http::status::bad_request,"not valid user");
         }
@@ -296,7 +296,7 @@ http::response<http::string_body> http_handler::handle_user_post(http::request<h
 {
     const std::string& body {request.body()};
     boost::system::error_code ec;
-    const boost::json::value v {boost::json::parse(body,ec)};
+    const boost::json::value& v {boost::json::parse(body,ec)};
     if(ec || !v.is_object()){
         return fail(std::move(request),http::status::bad_request,"not valid user");
     }
@@ -628,7 +628,7 @@ http::response<http::string_body> http_handler::handle_rp_put(http::request<http
             const std::string& body {request.body()};
 
             boost::system::error_code ec;
-            const boost::json::value v {boost::json::parse(body,ec)};
+            const boost::json::value& v {boost::json::parse(body,ec)};
             if(ec || !v.is_object()){
                 return fail(std::move(request),http::status::bad_request,"not valid role-permission");
             }
@@ -682,7 +682,7 @@ http::response<http::string_body> http_handler::handle_rp_post(http::request<htt
 {
     const std::string& body {request.body()};
     boost::system::error_code ec;
-    const boost::json::value v {boost::json::parse(body,ec)};
+    const boost::json::value& v {boost::json::parse(body,ec)};
     if(ec || !v.is_object()){
         return fail(std::move(request),http::status::not_found,"not valid role-permission");
     }

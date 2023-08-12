@@ -10,9 +10,12 @@
 #include <boost/json.hpp>
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
+#include <boost/format.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/beast/http/message_generator.hpp>
+
+#include "spdlog/logger.h"
 
 namespace spdlog{
     class logger;
@@ -100,6 +103,17 @@ public:
             const bool& db_ok {dbase_handler_ptr_->init_database(msg)};
             if(!db_ok){
                 return fail(std::move(request),http::status::internal_server_error,msg);
+            }
+        }
+        {//log request
+            if(logger_ptr_){
+                const std::string& body {request.body()};
+                const std::string& msg {(boost::format("method: %s, target: %s, body: %s")
+                                                       % request.method_string()
+                                                       % request.target()
+                                                       % body).str()};
+                logger_ptr_->debug("{}, request log, {}",
+                    BOOST_CURRENT_FUNCTION,msg);
             }
         }
         {//handle user
