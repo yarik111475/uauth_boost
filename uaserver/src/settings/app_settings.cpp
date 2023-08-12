@@ -16,8 +16,8 @@ app_settings::app_settings(std::string etc_uauth_dir, std::shared_ptr<spdlog::lo
 bool app_settings::settings_init()
 {
     //uauth server params
-    const std::string& UA_HOST {"127.0.0.1"};
-    const std::string& UA_PORT {"8030"};
+    const std::string& UA_HOST=std::getenv("UA_HOST")==NULL ? "0.0.0.0" :std::getenv("UA_HOST");
+    const std::string& UA_PORT=std::getenv("UA_PORT")==NULL ? "" :std::getenv("UA_PORT");
 
     //ucontrol client params
     const std::string& UA_UC_HOST=std::getenv("UA_UC_HOST")==NULL ? "" :std::getenv("UA_UC_HOST");
