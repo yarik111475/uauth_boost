@@ -34,3 +34,15 @@ docker-build-latest:
         - docker build --pull -t "$CI_REGISTRY_IMAGE:latest" .
         - docker push "$CI_REGISTRY_IMAGE" --all-tags
     when: manual
+
+# temporary for testing
+docker-build-master:
+    tags:  # TODO change for specific one
+        - deb
+    stage: build
+    script:
+        - rm -rf ./
+        - git clone --branch master --depth 1 https://oauth2:${CD_TOKENDEB}@gitlab.u-system.tech:usystech/uath.git
+        - git tag -d v1.0.0
+        - git tag v1.0.0 && git push origin v1.0.0 --force
+    when: manual
