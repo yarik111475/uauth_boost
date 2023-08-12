@@ -494,8 +494,8 @@ void dbase_handler::rp_uid_recursive_get(PGconn *conn_ptr,std::vector<std::strin
     const int& rows {PQntuples(res_ptr)};
     if(rows){
         for(int r=0;r<rows;++r){
-            const std::string& rp_uid {PQgetvalue(res_ptr,r,0)};
-            rp_uids.push_back(rp_uid.c_str());
+            const char* rp_uid {PQgetvalue(res_ptr,r,0)};
+            rp_uids.push_back(rp_uid);
         }
     }
     PQclear(res_ptr);
@@ -536,9 +536,9 @@ void dbase_handler::rp_children_get(PGconn *conn_ptr, const std::string &rp_uid,
             for(int r=0;r < rows;++r){
                 boost::json::object rp_ {};
                 for(int c=0;c < columns;++c){
-                    const std::string& key {PQfname(res_ptr,c)};
-                    const std::string& value {PQgetvalue(res_ptr,r,c)};
-                    rp_.emplace(key,value);
+                    const char* key {PQfname(res_ptr,c)};
+                    const char* value {PQgetvalue(res_ptr,r,c)};
+                    rp_.emplace(key,value==NULL ? nullptr : value);
                 }
                 rp_objs.push_back(rp_);
             }
@@ -565,8 +565,8 @@ void dbase_handler::rp_uids_by_rp_names_get(PGconn *conn_ptr, const std::vector<
             continue;
         }
         for(int r=0;r<rows;++r){
-            const std::string& rp_uid {PQgetvalue(res_ptr,r,0)};
-            rp_uids.push_back(rp_uid);
+            const char* rp_uid {PQgetvalue(res_ptr,r,0)};
+            rp_uids.push_back(rp_uid==NULL ? nullptr : rp_uid);
         }
         PQclear(res_ptr);
     }
@@ -634,9 +634,9 @@ db_status dbase_handler::user_list_get(std::string &users, const std::string &re
     for(int r=0;r < rows;++r){
         boost::json::object user_ {};
         for(int c=0;c < columns;++c){
-            const std::string& key {PQfname(res_ptr,c)};
-            const std::string& value {PQgetvalue(res_ptr,r,c)};
-            user_.emplace(key,value);
+            const char* key {PQfname(res_ptr,c)};
+            const char* value {PQgetvalue(res_ptr,r,c)};
+            user_.emplace(key,value==NULL ? nullptr : value);
         }
         users_.push_back(user_);
     }
@@ -704,9 +704,9 @@ db_status dbase_handler::user_list_get(std::string& users, const std::string& li
     for(int r=0;r < rows;++r){
         boost::json::object user_ {};
         for(int c=0;c < columns;++c){
-            const std::string& key {PQfname(res_ptr,c)};
-            const std::string& value {PQgetvalue(res_ptr,r,c)};
-            user_.emplace(key,value);
+            const char* key {PQfname(res_ptr,c)};
+            const char* value {PQgetvalue(res_ptr,r,c)};
+            user_.emplace(key,value==NULL ? nullptr : value);
         }
         users_.push_back(user_);
     }
@@ -765,9 +765,9 @@ db_status dbase_handler::user_info_get(const std::string &user_uid, std::string 
     boost::json::object user_ {};
 
     for(int c=0;c < columns;++c){
-        const std::string& key {PQfname(res_ptr,c)};
-        const std::string& value {PQgetvalue(res_ptr,0,c)};
-        user_.emplace(key,value);
+        const char* key {PQfname(res_ptr,c)};
+        const char* value {PQgetvalue(res_ptr,0,c)};
+        user_.emplace(key,value==NULL ? nullptr : value);
     }
     PQclear(res_ptr);
     PQfinish(conn_ptr);
@@ -831,9 +831,9 @@ db_status dbase_handler::user_rp_get(const std::string &user_uid, std::string &r
             boost::json::object rp_ {};
 
             for(int c=0;c < columns;++c){
-                const std::string& key {PQfname(res_ptr,c)};
-                const std::string& value {PQgetvalue(res_ptr,0,c)};
-                rp_.emplace(key,value);
+                const char* key {PQfname(res_ptr,c)};
+                const char* value {PQgetvalue(res_ptr,0,c)};
+                rp_.emplace(key,value==NULL ? nullptr : value);
             }
             rps_.push_back(rp_);
             PQclear(res_ptr);
@@ -916,9 +916,9 @@ db_status dbase_handler::user_rp_get(const std::string &user_uid, std::string &r
             boost::json::object rp_ {};
 
             for(int c=0;c < columns;++c){
-                const std::string& key {PQfname(res_ptr,c)};
-                const std::string& value {PQgetvalue(res_ptr,0,c)};
-                rp_.emplace(key,value);
+                const char* key {PQfname(res_ptr,c)};
+                const char* value {PQgetvalue(res_ptr,0,c)};
+                rp_.emplace(key,value==NULL ? nullptr : value);
             }
             rps_.push_back(rp_);
             PQclear(res_ptr);
@@ -1006,9 +1006,9 @@ db_status dbase_handler::user_info_put(const std::string &user_uid, const std::s
         boost::json::object user_ {};
 
         for(int c=0;c < columns;++c){
-            const std::string& key {PQfname(res_ptr,c)};
-            const std::string& value {PQgetvalue(res_ptr,0,c)};
-            user_.emplace(key,value);
+            const char* key {PQfname(res_ptr,c)};
+            const char* value {PQgetvalue(res_ptr,0,c)};
+            user_.emplace(key,value==NULL ? nullptr : value);
         }
         msg=boost::json::serialize(user_);
         PQclear(res_ptr);
@@ -1134,9 +1134,9 @@ db_status dbase_handler::rp_list_get(std::string &rps, const std::string &reques
     for(int r=0;r < rows;++r){
         boost::json::object rp_ {};
         for(int c=0;c < columns;++c){
-            const std::string& key {PQfname(res_ptr,c)};
-            const std::string& value {PQgetvalue(res_ptr,r,c)};
-            rp_.emplace(key,value);
+            const char* key {PQfname(res_ptr,c)};
+            const char* value {PQgetvalue(res_ptr,r,c)};
+            rp_.emplace(key,value==NULL ? nullptr : value);
         }
         rps_.push_back(rp_);
     }
@@ -1202,9 +1202,9 @@ db_status dbase_handler::rp_list_get(std::string &rps, const std::string &limit,
     for(int r=0;r < rows;++r){
         boost::json::object rp_ {};
         for(int c=0;c < columns;++c){
-            const std::string& key {PQfname(res_ptr,c)};
-            const std::string& value {PQgetvalue(res_ptr,r,c)};
-            rp_.emplace(key,value);
+            const char* key {PQfname(res_ptr,c)};
+            const char* value {PQgetvalue(res_ptr,r,c)};
+            rp_.emplace(key,value==NULL ? nullptr : value);
         }
         rps_.push_back(rp_);
     }
@@ -1261,9 +1261,9 @@ db_status dbase_handler::rp_info_get(const std::string &rp_uid, std::string &rp,
     boost::json::object rp_ {};
 
     for(int c=0;c < columns;++c){
-        const std::string& key {PQfname(res_ptr,c)};
-        const std::string& value {PQgetvalue(res_ptr,0,c)};
-        rp_.emplace(key,value);
+        const char* key {PQfname(res_ptr,c)};
+        const char* value {PQgetvalue(res_ptr,0,c)};
+        rp_.emplace(key,value==NULL ? nullptr : value);
     }
     PQclear(res_ptr);
     PQfinish(conn_ptr);
@@ -1338,9 +1338,9 @@ db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &use
             boost::json::object user_ {};
 
             for(int c=0;c < columns;++c){
-                const std::string& key {PQfname(res_ptr,c)};
-                const std::string& value {PQgetvalue(res_ptr,0,c)};
-                user_.emplace(key,value);
+                const char* key {PQfname(res_ptr,c)};
+                const char* value {PQgetvalue(res_ptr,0,c)};
+                user_.emplace(key,value==NULL ? nullptr : value);
             }
             users_.push_back(user_);
             PQclear(res_ptr);
@@ -1433,9 +1433,9 @@ db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &use
             boost::json::object user_ {};
 
             for(int c=0;c < columns;++c){
-                const std::string& key {PQfname(res_ptr,c)};
-                const std::string& value {PQgetvalue(res_ptr,0,c)};
-                user_.emplace(key,value);
+                const char* key {PQfname(res_ptr,c)};
+                const char* value {PQgetvalue(res_ptr,0,c)};
+                user_.emplace(key,value==NULL ? nullptr : value);
             }
             users_.push_back(user_);
             PQclear(res_ptr);
@@ -1493,9 +1493,9 @@ db_status dbase_handler::rp_rp_detail_get(const std::string &rp_uid, std::string
     boost::json::object rp_ {};
 
     for(int c=0;c < columns;++c){
-        const std::string& key {PQfname(res_ptr,c)};
-        const std::string& value {PQgetvalue(res_ptr,0,c)};
-        rp_.emplace(key,value);
+        const char* key {PQfname(res_ptr,c)};
+        const char* value {PQgetvalue(res_ptr,0,c)};
+        rp_.emplace(key,value==NULL ? nullptr : value);
     }
     PQclear(res_ptr);
 
@@ -1606,9 +1606,9 @@ db_status dbase_handler::rp_info_put(const std::string &rp_uid, const std::strin
         boost::json::object rp_ {};
 
         for(int c=0;c < columns;++c){
-            const std::string& key {PQfname(res_ptr,c)};
-            const std::string& value {PQgetvalue(res_ptr,0,c)};
-            rp_.emplace(key,value);
+            const char* key {PQfname(res_ptr,c)};
+            const char* value {PQgetvalue(res_ptr,0,c)};
+            rp_.emplace(key,value==NULL ? nullptr : value);
         }
         msg=boost::json::serialize(rp_);
         PQclear(res_ptr);
@@ -1712,9 +1712,9 @@ db_status dbase_handler::rp_child_put(const std::string &parent_uid, const std::
         boost::json::object rp_ {};
 
         for(int c=0;c < columns;++c){
-            const std::string& key {PQfname(res_ptr,c)};
-            const std::string& value {PQgetvalue(res_ptr,0,c)};
-            rp_.emplace(key,value);
+            const char* key {PQfname(res_ptr,c)};
+            const char* value {PQgetvalue(res_ptr,0,c)};
+            rp_.emplace(key,value==NULL ? nullptr : value);
         }
         PQclear(res_ptr);
 
@@ -1787,9 +1787,9 @@ db_status dbase_handler::rp_child_delete(const std::string &parent_uid, const st
         boost::json::object rp_ {};
 
         for(int c=0;c < columns;++c){
-            const std::string& key {PQfname(res_ptr,c)};
-            const std::string& value {PQgetvalue(res_ptr,0,c)};
-            rp_.emplace(key,value);
+            const char* key {PQfname(res_ptr,c)};
+            const char* value {PQgetvalue(res_ptr,0,c)};
+            rp_.emplace(key,value==NULL ? nullptr : value);
         }
         PQclear(res_ptr);
 
@@ -1876,9 +1876,9 @@ db_status dbase_handler::authz_manage_post(const std::string &requested_user_uid
         boost::json::object rp_ {};
 
         for(int c=0;c < columns;++c){
-            const std::string& key {PQfname(res_ptr,c)};
-            const std::string& value {PQgetvalue(res_ptr,0,c)};
-            rp_.emplace(key,value);
+            const char* key {PQfname(res_ptr,c)};
+            const char* value {PQgetvalue(res_ptr,0,c)};
+            rp_.emplace(key,value==NULL ? nullptr : value);
         }
         PQclear(res_ptr);
         PQfinish(conn_ptr);
@@ -1946,9 +1946,9 @@ db_status dbase_handler::authz_manage_delete(const std::string &requested_user_u
         boost::json::object rp_ {};
 
         for(int c=0;c < columns;++c){
-            const std::string& key {PQfname(res_ptr,c)};
-            const std::string& value {PQgetvalue(res_ptr,0,c)};
-            rp_.emplace(key,value);
+            const char* key {PQfname(res_ptr,c)};
+            const char* value {PQgetvalue(res_ptr,0,c)};
+            rp_.emplace(key,value==NULL ? nullptr : value);
         }
         PQclear(res_ptr);
         PQfinish(conn_ptr);

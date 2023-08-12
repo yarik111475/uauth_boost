@@ -5,6 +5,7 @@ curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://12
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://127.0.0.1:8030/api/v1/u-auth/users/dc77b7f3-71d9-4ce9-95a2-100b88d0306c/roles-permissions
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X POST -H 'Content-Type: application/json' -d {\"first_name\":\"new_user_test_new\",\"last_name\":\"new_new\",\"email\":\"test@gmail.ru\"} http://127.0.0.1:8030/api/v1/u-auth/users
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X PUT  -H 'Content-Type: application/json' -d {\"first_name\":\"new_user_updates\",\"last_name\":\"new_updated\",\"email\":\"test@gmail.com\",\"is_blocked\":false} http://127.0.0.1:8030/api/v1/u-auth/users/a4e771bd-7fdb-479a-973d-57cf59492147
+curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X PUT  -H 'Content-Type: application/json' -d '{"first_name":"new_user_updates","last_name":"new_updated","email":"test@gmail.com","is_blocked":false}' http://127.0.0.1:8030/api/v1/u-auth/users/a4e771bd-7fdb-479a-973d-57cf59492147
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X DELETE http://127.0.0.1:8030/api/v1/u-auth/users/a4e771bd-7fdb-479a-973d-57cf59492147
 
 ### ROLES-PERMISSIONS PART ###
@@ -15,7 +16,11 @@ curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://12
 curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/c4529cdb-8325-4380-8b83-2ec6ef058ca4/associated-users
 
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X POST -H 'Content-Type: application/json' -d {\"name\":\"new_test_role2\",\"type\":\"role\",\"description\":\"new_test_role2\"} http://127.0.0.1:8030/api/v1/u-auth/roles-permissions
+curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X POST -H 'Content-Type: application/json' -d '{"name":"new_test_role2","type":"role","description":"new_test_role2"}' http://127.0.0.1:8030/api/v1/u-auth/roles-permissions
+
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X PUT -H 'Content-Type: application/json' -d {\"name\":\"new_test_role_updated\",\"type\":\"role\",\"description\":\"new_test_role_updated\"} http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/2faf6adc-c4a0-491c-9aa2-24d6d1bcc085
+curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X PUT -H 'Content-Type: application/json' -d '{"name":"new_test_role_updated","type":"role","description":"new_test_role_updated"}' http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/2faf6adc-c4a0-491c-9aa2-24d6d1bcc085
+
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X DELETE http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/2faf6adc-c4a0-491c-9aa2-24d6d1bcc085
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X PUT  http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/b961eb97-ce93-4715-9d22-9ed886478c37/add-child/bdf0ac17-6e54-4b1a-a233-0099b504267e
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X DELETE  http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/b961eb97-ce93-4715-9d22-9ed886478c37/remove-child/bdf0ac17-6e54-4b1a-a233-0099b504267e
