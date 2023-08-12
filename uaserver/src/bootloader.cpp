@@ -48,11 +48,22 @@ void bootloader::init_spdlog()
         ok=boost::filesystem::create_directories(var_log_uath_dir_,ec);
     }
 
+#if BOOST_OS_WINDOWS
+    const std::wstring& logfilename_path {std::wstring {var_log_uath_dir_.begin(),var_log_uath_dir_.end()} +
+                                          L"/" +
+                                          std::wstring {log_filename_.begin(),log_filename_.end()}};
+    std::vector<spdlog::sink_ptr> sinks;
+    sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+    //sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_mt>(path_to_log_file, 0, 0));
+    sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logfilename_path, filesize, filescount));
+#endif
+#if BOOST_OS_LINUX
     const std::string& logfilename_path {var_log_uath_dir_ + "/" + log_filename_};
     std::vector<spdlog::sink_ptr> sinks;
     sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
     //sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_mt>(path_to_log_file, 0, 0));
     sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logfilename_path, filesize, filescount));
+#endif
 
     logger_ptr_=spdlog::get(log_name_);
     if(!logger_ptr_){
