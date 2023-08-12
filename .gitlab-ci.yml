@@ -1,0 +1,36 @@
+stages:
+    - build
+
+default:
+    image: docker:latest
+    services:
+        - docker:dind
+    before_script:
+        - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    tags:
+        - build
+
+
+docker-build-release:
+    stage: build
+    script:
+        - |
+         version=${CI_COMMIT_TAG//[!0-9\.]/}  # replace all non-digit or dot characters
+         MAJOR=`echo $version | cut -d. -f1`
+         MINOR=`echo $version | cut -d. -f2`
+         PATCH=`echo $version | cut -d. -f3`
+        - docker build --pull --build-arg VERSION="$CI_REGISTRY_IMAGE:$MAJOR.$MINOR.$PATCH" -t "$CI_REGISTRY_IMAGE:$MAJOR.$MINOR.$PATCH" .
+        - docker push "$CI_REGISTRY_IMAGE:$MAJOR.$MINOR.$PATCH"
+        - docker tag "$CI_REGISTRY_IMAGE:$MAJOR.$MINOR.$PATCH" "$CI_REGISTRY_IMAGE:$MAJOR.$MINOR" && docker push "$CI_REGISTRY_IMAGE:$MAJOR.$MINOR"
+        - docker tag "$CI_REGISTRY_IMAGE:$MAJOR.$MINOR.$PATCH" "$CI_REGISTRY_IMAGE:$MAJOR" && docker push "$CI_REGISTRY_IMAGE:$MAJOR"
+    only:
+        - tags
+
+docker-build-latest:
+    tags:  # TODO change for specific one
+        - deb
+    stage: build
+    script:
+        - docker build --pull -t "$CI_REGISTRY_IMAGE:latest" .
+        - docker push "$CI_REGISTRY_IMAGE" --all-tags
+    when: manual

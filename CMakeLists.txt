@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 set(PROJECT_NAME UAUTH)
-set(GLOBAL_VERSION 0.0.0)
+set(GLOBAL_VERSION ${VERSION})
 project(${PROJECT_NAME} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -82,7 +82,7 @@ endif()
 if(UNIX AND NOT APPLE)
     set(PostgreSQL_INCLUDE_DIRS "/usr/include/postgresql")
     set(PostgreSQL_LIBRARY_DIRS "/usr/lib/x86_64-linux-gnu")
-    set(PostgreSQL_LIB libpq.so.5.9)
+    set(PostgreSQL_LIB libpq.so.5)
 endif()
 
 #rpath
