@@ -2,7 +2,7 @@
 
 #include "spdlog/spdlog.h"
 
-boost::optional<boost::asio::ssl::context> https_client::make_context()
+boost::optional<boost::asio::ssl::context> https_client::make_context(std::string &msg)
 {
     if(!params_.contains("UA_CA_CRT_PATH") || !params_.contains("UA_CLIENT_CRT_PATH") || !params_.contains("UA_CLIENT_KEY_PATH")){
         return boost::none;
@@ -27,6 +27,7 @@ boost::optional<boost::asio::ssl::context> https_client::make_context()
     ctx.use_private_key_file(PKEY_client_path,boost::asio::ssl::context::pem,ec);
 
     if(ec){
+        msg=ec.message();
         return boost::none;
     }
     return ctx;
@@ -46,11 +47,12 @@ https_client::~https_client()
 
 void https_client::client_run()
 {
-    boost::optional<boost::asio::ssl::context> ctx {make_context()};
+    std::string msg {};
+    boost::optional<boost::asio::ssl::context> ctx {make_context(msg)};
     if(!ctx){
-        const std::string& msg {"https_client init ssl_context fail"};
+        const std::string& err {"https_client init ssl_context fail, error: " + msg};
         if(uc_status_signal_){
-            uc_status_signal_(uc_status::fail,msg);
+            uc_status_signal_(uc_status::fail,err);
         }
         return;
     }

@@ -20,7 +20,7 @@ class https_client
     std::string app_dir_ {};
     boost::json::object params_ {};
     std::shared_ptr<spdlog::logger> logger_ptr_ {nullptr};
-    boost::optional<boost::asio::ssl::context> make_context();
+    boost::optional<boost::asio::ssl::context> make_context(std::string& msg);
 
 public:
     explicit https_client(boost::asio::io_context& io,
