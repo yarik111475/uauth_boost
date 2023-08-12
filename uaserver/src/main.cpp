@@ -42,12 +42,12 @@ int main(int argc,char* argv[])
     {//start bootloader
         const boost::json::object& params {
         };
-        bootloader b_loader {io,app_dir,home_dir,params};
-        b_loader.bootloader_start();
+        bootloader bootloader_ {io,app_dir,home_dir,params};
+        bootloader_.bootloader_start();
         io.run();
-        b_loader.bootloader_stop();
+        bootloader_.bootloader_stop();
     }
-
+    //wait for all threads finished
     for(std::thread& t: threads){
         if(t.joinable()){
             t.join();
