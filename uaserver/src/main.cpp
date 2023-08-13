@@ -94,7 +94,7 @@ int main(int argc,char* argv[])
     set_env();
 #endif
 #if BOOST_OS_LINUX
-    set_env();
+    //set_env();
 #endif
     boost::filesystem::path path_ {argv[0]};
     const std::string& app_dir {path_.remove_filename().string()};
