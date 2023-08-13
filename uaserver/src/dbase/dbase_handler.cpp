@@ -1675,7 +1675,7 @@ db_status dbase_handler::rp_info_put(const std::string &rp_uid, const std::strin
     const char* type        {rp_obj.at("type").is_null () ? nullptr : rp_obj.at("type").as_string().c_str()};
     const char* description {rp_obj.at("description").is_null() ? nullptr : rp_obj.at("description").as_string().c_str()};
 
-    {//update user
+    {//update rp
         const char* param_values[] {name,type,description,rp_uid.c_str()};
         res_ptr=PQexecParams(conn_ptr,"UPDATE roles_permissions SET name=$1,type=$2,description=$3 WHERE id=$4",
                                        4,NULL,param_values,NULL,NULL,0);
@@ -1688,7 +1688,7 @@ db_status dbase_handler::rp_info_put(const std::string &rp_uid, const std::strin
         PQclear(res_ptr);
     }
 
-    {//get updated user back
+    {//get updated rp back
         const char* param_values[] {rp_uid.c_str()};
         res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
                                        1,NULL,param_values,NULL,NULL,0);
