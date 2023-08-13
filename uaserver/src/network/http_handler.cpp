@@ -135,6 +135,7 @@ http::response<http::string_body> http_handler::handle_user_get(http::request<ht
         if(boost::regex_match(target,match,re)){
             std::string msg {};
             std::string users {};
+
             const db_status& status_ {dbase_handler_ptr_->user_list_get(users,requester_id,msg)};
             switch(status_){
             case db_status::fail:
@@ -260,21 +261,10 @@ http::response<http::string_body> http_handler::handle_user_put(http::request<ht
     boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "$"};
     boost::smatch match;
     if(boost::regex_match(target,match,re)){
+        std::string msg;
         const std::string& user_uid {match[1]};
         const std::string& body {request.body()};
 
-        boost::system::error_code ec;
-        const boost::json::value& v {boost::json::parse(body,ec)};
-        if(ec || !v.is_object()){
-            return fail(std::move(request),http::status::bad_request,"not valid user");
-        }
-        const boost::json::object& user {v.as_object()};
-        if(!user.contains("first_name") ||!user.contains("last_name")|| !user.contains("email") || !user.contains("is_blocked") ||
-           !user.contains("phone_number") || !user.contains("position") || !user.contains("gender") || !user.contains("location_id") || !user.contains("ou_id")){
-            return fail(std::move(request),http::status::bad_request,"not valid user");
-        }
-
-        std::string msg;
         const db_status& status_ {dbase_handler_ptr_->user_info_put(user_uid,body,requester_id,msg)};
         switch(status_){
         case db_status::fail:
@@ -294,19 +284,9 @@ http::response<http::string_body> http_handler::handle_user_put(http::request<ht
 
 http::response<http::string_body> http_handler::handle_user_post(http::request<http::string_body> &&request, const std::string &requester_id)
 {
-    const std::string& body {request.body()};
-    boost::system::error_code ec;
-    const boost::json::value& v {boost::json::parse(body,ec)};
-    if(ec || !v.is_object()){
-        return fail(std::move(request),http::status::bad_request,"not valid user");
-    }
-    const boost::json::object& user {v.as_object()};
-    if(!user.contains("first_name") ||!user.contains("last_name")|| !user.contains("email") || !user.contains("phone_number") ||
-        !user.contains("position") || !user.contains("gender") || !user.contains("location_id") || !user.contains("ou_id")){
-        return fail(std::move(request),http::status::bad_request,"not valid user");
-    }
-
     std::string msg;
+    const std::string& body {request.body()};
+
     const db_status& status_ {dbase_handler_ptr_->user_info_post(body,requester_id,msg)};
     switch(status_){
     case db_status::fail:
@@ -331,8 +311,9 @@ http::response<http::string_body> http_handler::handle_user_delete(http::request
     if(!boost::regex_match(target,match,re)){
         return fail(std::move(request),http::status::bad_request,"bad request");
     }
-    const std::string& user_uid {match[1]};
     std::string msg;
+    const std::string& user_uid {match[1]};
+
     const db_status& status_ {dbase_handler_ptr_->user_info_delete(user_uid,requester_id,msg)};
     switch(status_){
     case db_status::fail:
@@ -356,10 +337,11 @@ http::response<http::string_body> http_handler::handle_authz_get(http::request<h
     boost::regex re {"^/api/v1/u-auth/authz/" + regex_uid_+ "/authorized-to/" + regex_any_ + "$"};
     boost::smatch match;
     if(boost::regex_match(target,match,re)){
-        const std::string& user_uid {match[1]};
-        const std::string& rp_ident {match[2]};
         std::string msg {};
         bool authorized {false};
+        const std::string& user_uid {match[1]};
+        const std::string& rp_ident {match[2]};
+
         const db_status& status_ {dbase_handler_ptr_->authz_check_get(user_uid,rp_ident,authorized,msg)};
         switch(status_){
         case db_status::fail:
@@ -383,9 +365,10 @@ http::response<http::string_body> http_handler::handle_authz_manage_post(http::r
     boost::regex re {"^/api/v1/u-auth/authz/manage/" + regex_uid_ + "/assign/" + regex_uid_ + "$"};
     boost::smatch match;
     if(boost::regex_match(target,match,re)){
+        std::string msg {};
         const std::string& requested_user_id {match[1]};
         const std::string& requested_rp_id {match[2]};
-        std::string msg {};
+
         const db_status& status_ {dbase_handler_ptr_->authz_manage_post(requested_user_id,requested_rp_id,requester_id,msg)};
         switch(status_){
         case db_status::fail:
@@ -409,9 +392,10 @@ http::response<http::string_body> http_handler::handle_authz_manage_delete(http:
     boost::regex re {"^/api/v1/u-auth/authz/manage/" + regex_uid_ + "/revoke/" + regex_uid_ + "$"};
     boost::smatch match;
     if(boost::regex_match(target,match,re)){
+        std::string msg {};
         const std::string& requested_user_id {match[1]};
         const std::string& requested_rp_id {match[2]};
-        std::string msg {};
+
         const db_status& status_ {dbase_handler_ptr_->authz_manage_delete(requested_user_id,requested_rp_id,requester_id,msg)};
         switch(status_){
         case db_status::fail:
@@ -438,6 +422,7 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
         if(boost::regex_match(target,match,re)){
             std::string msg {};
             std::string rps {};
+
             const db_status& status_ {dbase_handler_ptr_->rp_list_get(rps,requester_id,msg)};
             switch(status_){
             case db_status::fail:
@@ -460,6 +445,7 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
             const std::string& rp_uid {match[1]};
             std::string msg {};
             std::string rp {};
+
             const db_status& status_ {dbase_handler_ptr_->rp_info_get(rp_uid,rp,requester_id,msg)};
             switch(status_){
             case db_status::fail:
@@ -483,6 +469,7 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
             const std::string& rp_uid {match[1]};
             std::string msg {};
             std::string rp_detail {};
+
             const db_status& status_ {dbase_handler_ptr_->rp_rp_detail_get(rp_uid,rp_detail,requester_id,msg)};
             switch(status_){
             case db_status::fail:
@@ -505,6 +492,7 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
             const std::string& rp_uid {match[1]};
             std::string msg {};
             std::string users {};
+
             const db_status& status_ {dbase_handler_ptr_->rp_user_get(rp_uid,users,requester_id,msg)};
             switch(status_){
             case db_status::fail:
@@ -545,6 +533,7 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
 
                     std::string msg {};
                     std::string users {};
+
                     const db_status& status_ {dbase_handler_ptr_->rp_user_get(rp_uid,users,limit,offset,requester_id,msg)};
                     switch(status_){
                     case db_status::fail:
@@ -597,6 +586,7 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
 
                 std::string msg {};
                 std::string rps {};
+
                 const db_status& status_ {dbase_handler_ptr_->rp_list_get(rps,limit,offset,name,type,description,requester_id,msg)};
                 switch(status_){
                 case db_status::fail:
@@ -624,20 +614,10 @@ http::response<http::string_body> http_handler::handle_rp_put(http::request<http
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
+            std::string msg;
             const std::string& rp_uid {match[1]};
             const std::string& body {request.body()};
 
-            boost::system::error_code ec;
-            const boost::json::value& v {boost::json::parse(body,ec)};
-            if(ec || !v.is_object()){
-                return fail(std::move(request),http::status::bad_request,"not valid role-permission");
-            }
-            const boost::json::object& rp {v.as_object()};
-            if(!rp.contains("name") ||!rp.contains("type")|| !rp.contains("description")){
-                return fail(std::move(request),http::status::bad_request,"not valid role-permission");
-            }
-
-            std::string msg;
             const db_status& status_ {dbase_handler_ptr_->rp_info_put(rp_uid,body,requester_id,msg)};
             switch(status_){
             case db_status::fail:
@@ -657,9 +637,10 @@ http::response<http::string_body> http_handler::handle_rp_put(http::request<http
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "/add-child/" + regex_uid_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
+            std::string msg;
             const std::string& parent_uid {match[1]};
             const std::string& child_uid {match[2]};
-            std::string msg;
+
             const db_status& status_ {dbase_handler_ptr_->rp_child_put(parent_uid,child_uid,requester_id,msg)};
             switch(status_){
             case db_status::fail:
@@ -680,18 +661,9 @@ http::response<http::string_body> http_handler::handle_rp_put(http::request<http
 
 http::response<http::string_body> http_handler::handle_rp_post(http::request<http::string_body> &&request, const std::string &requester_id)
 {
-    const std::string& body {request.body()};
-    boost::system::error_code ec;
-    const boost::json::value& v {boost::json::parse(body,ec)};
-    if(ec || !v.is_object()){
-        return fail(std::move(request),http::status::not_found,"not valid role-permission");
-    }
-    const boost::json::object& rp {v.as_object()};
-    if(!rp.contains("name") ||!rp.contains("type")|| !rp.contains("description")){
-        return fail(std::move(request),http::status::bad_request,"not valid role-permission");
-    }
-
     std::string msg;
+    const std::string& body {request.body()};
+
     const db_status& status_ {dbase_handler_ptr_->rp_info_post(body,requester_id,msg)};
     switch(status_){
     case db_status::fail:
@@ -714,8 +686,9 @@ http::response<http::string_body> http_handler::handle_rp_delete(http::request<h
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
-            const std::string& rp_uid {match[1]};
             std::string msg;
+            const std::string& rp_uid {match[1]};
+
             const db_status& status_ {dbase_handler_ptr_->rp_info_delete(rp_uid,requester_id,msg)};
             switch(status_){
             case db_status::fail:
@@ -735,9 +708,10 @@ http::response<http::string_body> http_handler::handle_rp_delete(http::request<h
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "/remove-child/" + regex_uid_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
+            std::string msg;
             const std::string& parent_uid {match[1]};
             const std::string& child_uid {match[2]};
-            std::string msg;
+
             const db_status& status_ {dbase_handler_ptr_->rp_child_delete(parent_uid,child_uid,requester_id,msg)};
             switch(status_){
             case db_status::fail:
@@ -762,8 +736,9 @@ http::response<http::string_body> http_handler::handle_certificate_post(http::re
     {//handle user certificate
         {//check if authorized
             std::string msg {};
-            const std::string& rp_name {"user_certificate"};
             bool authorized {false};
+            const std::string& rp_name {"user_certificate"};
+
             const db_status& status_ {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,authorized,msg)};
             boost::ignore_unused(status_);
             if(!authorized){
@@ -812,9 +787,9 @@ http::response<http::string_body> http_handler::handle_certificate_post(http::re
 
             const std::string& pkcs_name {"pkcs"};
             const std::string& root_path {params_.at("UA_CA_CRT_PATH").as_string().c_str()};
-            const std::string& pub_path {params_.at("UA_SIGNING_CA_CRT_PATH").as_string().c_str()};
-            const std::string& pr_path {params_.at("UA_SIGNING_CA_KEY_PATH").as_string().c_str()};
-            const std::string& pr_pass {params_.at("UA_SIGNING_CA_KEY_PASS").as_string().c_str()};
+            const std::string& pub_path  {params_.at("UA_SIGNING_CA_CRT_PATH").as_string().c_str()};
+            const std::string& pr_path   {params_.at("UA_SIGNING_CA_KEY_PATH").as_string().c_str()};
+            const std::string& pr_pass   {params_.at("UA_SIGNING_CA_KEY_PASS").as_string().c_str()};
 
             std::string msg {};
             std::vector<char> PKCS12_content {};
@@ -839,8 +814,9 @@ http::response<http::string_body> http_handler::handle_certificate_post(http::re
     {//handle agent certificate
         {//check if authorized
             std::string msg {};
-            const std::string& rp_name {"agent_certificate"};
             bool authorized {false};
+            const std::string& rp_name {"agent_certificate"};
+
             const db_status& status_ {dbase_handler_ptr_->authz_check_get(requester_id,rp_name,authorized,msg)};
             boost::ignore_unused(status_);
             if(!authorized){
@@ -853,8 +829,8 @@ http::response<http::string_body> http_handler::handle_certificate_post(http::re
             const std::string& content {request.body()};
             const std::vector<char>& x509_REQ_content {content.begin(),content.end()};
             const std::string& pub_path {params_.at("UA_SIGNING_CA_CRT_PATH").as_string().c_str()};
-            const std::string& pr_path {params_.at("UA_SIGNING_CA_KEY_PATH").as_string().c_str()};
-            const std::string& pr_pass {params_.at("UA_SIGNING_CA_KEY_PASS").as_string().c_str()};
+            const std::string& pr_path  {params_.at("UA_SIGNING_CA_KEY_PATH").as_string().c_str()};
+            const std::string& pr_pass  {params_.at("UA_SIGNING_CA_KEY_PASS").as_string().c_str()};
 
             std::string msg {};
             std::vector<char> x509_content {};

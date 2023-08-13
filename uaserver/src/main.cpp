@@ -10,7 +10,46 @@
 
 #include "bootloader.h"
 
-void set_linux_env()
+#if BOOST_OS_WINDOWS
+void set_env()
+{
+    //uauth server params
+    _putenv("UA_HOST=127.0.0.1");
+    _putenv("UA_PORT=8030");
+
+    //ucontrol client params
+    _putenv("UA_UC_HOST=127.0.0.1");
+    _putenv("UA_UC_PORT=5678");
+
+    //database params
+    _putenv("UA_DB_NAME=u-auth");
+    _putenv("UA_DB_HOST=dev3.u-system.tech");
+    _putenv("UA_DB_PORT=5436");
+    _putenv("UA_DB_USER=u-backend");
+    _putenv("UA_DB_PASS=u-backend");
+
+    _putenv("UA_DB_POOL_SIZE_MIN=1");
+    _putenv("UA_DB_POOL_SIZE_MAX=100");
+    _putenv("UA_LOG_LEVEL=0");
+
+
+    _putenv("UA_ORIGINS=[http://127.0.0.1:8030]");
+    _putenv("UA_SSL_WEB_CRT_VALID=365");
+
+    //uauth certificates part
+    _putenv("UA_CA_CRT_PATH=C:/x509/root-ca.pem");
+    _putenv("UA_SIGNING_CA_CRT_PATH=C:/x509/signing-ca.pem");
+    _putenv("UA_SIGNING_CA_KEY_PATH=C:/x509/signing-ca-key.pem");
+    _putenv("UA_SIGNING_CA_KEY_PASS=U$vN#@D,v)*$N9\\N");
+
+    //ucontrol certificates part
+    _putenv("UA_CLIENT_CRT_PATH=C:/x509/clientCert.pem");
+    _putenv("UA_CLIENT_KEY_PATH=C:/x509/clientPrivateKey.pem");
+    _putenv("UA_CLIENT_KEY_PASS=password");
+}
+#endif
+#if BOOST_OS_LINUX
+void set_env()
 {
     //uauth server params
     setenv("UA_HOST","127.0.0.1",0);
@@ -46,14 +85,16 @@ void set_linux_env()
     setenv("UA_CLIENT_KEY_PATH","/home/yaroslav/x509/clientPrivateKey.pem",0);
     setenv("UA_CLIENT_KEY_PASS","password",0);
 }
+#endif
 
 int main(int argc,char* argv[])
 {
 #if BOOST_OS_WINDOWS
     std::system("chcp 1251");
+    set_env();
 #endif
 #if BOOST_OS_LINUX
-    //set_linux_env();
+    //set_env();
 #endif
     boost::filesystem::path path_ {argv[0]};
     const std::string& app_dir {path_.remove_filename().string()};
