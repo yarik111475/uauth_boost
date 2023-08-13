@@ -94,7 +94,7 @@ int main(int argc,char* argv[])
     set_env();
 #endif
 #if BOOST_OS_LINUX
-    //set_env();
+    set_env();
 #endif
     boost::filesystem::path path_ {argv[0]};
     const std::string& app_dir {path_.remove_filename().string()};
@@ -114,10 +114,10 @@ int main(int argc,char* argv[])
         });
     }
 #if BOOST_OS_WINDOWS
-    const std::string home_dir {std::getenv("USERPROFILE")==NULL ? "" : getenv("USERPROFILE")};
+    const std::string home_dir {std::getenv("USERPROFILE")==NULL ? "" : std::getenv("USERPROFILE")};
 #endif
 #if BOOST_OS_LINUX
-    const std::string home_dir {std::getenv("HOME")==NULL ? "" : getenv("HOME")};
+    const std::string home_dir {std::getenv("HOME")==NULL ? "" : std::getenv("HOME")};
 #endif
 
     {//start bootloader

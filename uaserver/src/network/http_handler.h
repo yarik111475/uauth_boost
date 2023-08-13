@@ -112,36 +112,44 @@ public:
                                                        % request.method_string()
                                                        % request.target()
                                                        % body).str()};
-                logger_ptr_->debug("{}, request log, {}",
-                    BOOST_CURRENT_FUNCTION,msg);
+                logger_ptr_->debug("request log, {}",msg);
             }
         }
+        http::response<http::string_body> response {fail(std::move(request),http::status::not_found,"not found")};
         {//handle user
             if(boost::starts_with(target,"/api/v1/u-auth/users")){
-                return handle_user(std::move(request),requester_id);
+                response=handle_user(std::move(request),requester_id);
             }
         }
         {//handle authz-manage
             if(boost::starts_with(target,"/api/v1/u-auth/authz/manage")){
-                return handle_authz_manage(std::move(request),requester_id);
+                response=handle_authz_manage(std::move(request),requester_id);
             }
         }
         {//handle authz
             if(boost::starts_with(target,"/api/v1/u-auth/authz")){
-                return handle_authz(std::move(request),requester_id);
+                response=handle_authz(std::move(request),requester_id);
             }
         }
         {//handle rp
             if(boost::starts_with(target,"/api/v1/u-auth/roles-permissions")){
-                return handle_rp(std::move(request),requester_id);
+                response=handle_rp(std::move(request),requester_id);
             }
         }
         {//handle certificate
             if(boost::starts_with(target,"/api/v1/u-auth/certificates")){
-                return handle_certificate_post(std::move(request),requester_id);
+                response=handle_certificate_post(std::move(request),requester_id);
             }
         }
-        return fail(std::move(request),http::status::not_found,"not found");
+        {//log response
+            if(logger_ptr_){
+                const std::string& body {response.body()};
+                const std::string& msg {(boost::format("body: %s")
+                                        % body).str()};
+                logger_ptr_->debug("response log, {}",msg);
+            }
+        }
+        return response;
     }
 };
 
