@@ -28,8 +28,8 @@ curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X PUT  http://1
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X DELETE  http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/b961eb97-ce93-4715-9d22-9ed886478c37/remove-child/bdf0ac17-6e54-4b1a-a233-0099b504267e
 
 ### AUTHZ-MANAGE PART ###
-curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X POST http://127.0.0.1:8030/api/v1/u-auth/authz/manage/3fa85f64-5717-4562-b3fc-2c963f66afa6/assign/b961eb97-ce93-4715-9d22-9ed886478c37
-curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X DELETE http://127.0.0.1:8030/api/v1/u-auth/authz/manage/3fa85f64-5717-4562-b3fc-2c963f66afa6/revoke/b961eb97-ce93-4715-9d22-9ed886478c37
+curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X POST http://127.0.0.1:8030/api/v1/u-auth/authz/manage/3fa85f64-5717-4562-b3fc-2c963f66afa6/assign/983202e9-59ca-58be-a3d6-6f1f746e80f8
+curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X DELETE http://127.0.0.1:8030/api/v1/u-auth/authz/manage/3fa85f64-5717-4562-b3fc-2c963f66afa6/revoke/983202e9-59ca-58be-a3d6-6f1f746e80f8
 
 ### CERTIFICATE PART ###
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X POST http://127.0.0.1:8030/api/v1/u-auth/certificates/user/c2dcd82f-56df-4959-981f-4d538a5a7697?certificate_password=password -o "C:/cert/http_pkcs.pfx"

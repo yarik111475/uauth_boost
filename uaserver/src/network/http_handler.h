@@ -119,28 +119,34 @@ public:
         {//handle user
             if(boost::starts_with(target,"/api/v1/u-auth/users")){
                 response=handle_user(std::move(request),requester_id);
+                goto log;
             }
         }
         {//handle authz-manage
             if(boost::starts_with(target,"/api/v1/u-auth/authz/manage")){
                 response=handle_authz_manage(std::move(request),requester_id);
+                goto log;
             }
         }
         {//handle authz
             if(boost::starts_with(target,"/api/v1/u-auth/authz")){
                 response=handle_authz(std::move(request),requester_id);
+                goto log;
             }
         }
         {//handle rp
             if(boost::starts_with(target,"/api/v1/u-auth/roles-permissions")){
                 response=handle_rp(std::move(request),requester_id);
+                goto log;
             }
         }
         {//handle certificate
             if(boost::starts_with(target,"/api/v1/u-auth/certificates")){
                 response=handle_certificate_post(std::move(request),requester_id);
+                goto log;
             }
         }
+        log:
         {//log response
             if(logger_ptr_){
                 const std::string& body {response.body()};
