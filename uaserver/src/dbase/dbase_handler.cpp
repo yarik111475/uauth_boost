@@ -1070,7 +1070,7 @@ db_status dbase_handler::user_info_post(const std::string &user, const std::stri
         }
         user_obj=user_.as_object();
 
-        std::set<std::string> fields_set {"first_name","last_name","email","phone_number","position","gender","location_id","ou_id"};
+        std::set<std::string> fields_set {"id,first_name","last_name","email","phone_number","position","gender","location_id","ou_id"};
         std::set<std::string> keys_set  {};
         std::for_each(user_obj.begin(),user_obj.end(),[&](const boost::json::key_value_pair& pair){
             const std::string& key {pair.key()};
@@ -1087,6 +1087,7 @@ db_status dbase_handler::user_info_post(const std::string &user, const std::stri
     }
 
     //get user fields
+    const char* id           {user_obj.at("id").is_null() ? nullptr : user_obj.at("id").as_string().c_str()};
     const char* first_name   {user_obj.at("first_name").is_null() ? nullptr : user_obj.at("first_name").as_string().c_str()};
     const char* last_name    {user_obj.at("last_name").is_null() ? nullptr : user_obj.at("last_name").as_string().c_str()};
     const char* email        {user_obj.at("email").is_null() ? nullptr : user_obj.at("email").as_string().c_str()};
@@ -1097,13 +1098,11 @@ db_status dbase_handler::user_info_post(const std::string &user, const std::stri
     const char* ou_id        {user_obj.at("ou_id").is_null() ? nullptr : user_obj.at("ou_id").as_string().c_str()};
 
     //auto-set fields
-    const boost::uuids::uuid& uuid_ {boost::uuids::random_generator()()};
-    const std::string& uuid       {boost::uuids::to_string(uuid_)};
     const std::string& created_at {time_with_timezone()};
     const std::string& updated_at {time_with_timezone()};
     const std::string& is_blocked {std::to_string(false)};
 
-    const char* param_values[] {uuid.c_str(),first_name,last_name,email,created_at.c_str(),updated_at.c_str(),is_blocked.c_str(),
+    const char* param_values[] {id,first_name,last_name,email,created_at.c_str(),updated_at.c_str(),is_blocked.c_str(),
                                 phone_number,position,gender,location_id,ou_id};
     res_ptr=PQexecParams(conn_ptr,"INSERT INTO users (id,first_name,last_name,email,created_at,updated_at,is_blocked,phone_number,position,gender,location_id,ou_id)"
                                             " VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
