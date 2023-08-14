@@ -45,19 +45,14 @@ http::response<http::string_body> http_handler::handle_user(http::request<http::
     switch(request.method()){
     case http::verb::get:
         return handle_user_get(std::move(request),requester_id);
-        break;
     case http::verb::put:
         return handle_user_put(std::move(request),requester_id);
-        break;
     case http::verb::post:
         return handle_user_post(std::move(request),requester_id);
-        break;
     case http::verb::delete_:
         return handle_user_delete(std::move(request),requester_id);
-        break;
     default:
         return fail(std::move(request),http::status::not_found,"not found");
-        break;
     }
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
@@ -80,13 +75,10 @@ http::response<http::string_body> http_handler::handle_authz_manage(http::reques
     switch(request.method()){
     case http::verb::post:
         return handle_authz_manage_post(std::move(request),requester_id);
-        break;
     case http::verb::delete_:
         return handle_authz_manage_delete(std::move(request),requester_id);
-        break;
     default:
         return fail(std::move(request),http::status::not_found,"not found");
-        break;
     }
     return fail(std::move(request),http::status::not_found,"not found");
 }
@@ -101,19 +93,14 @@ http::response<http::string_body> http_handler::handle_rp(http::request<http::st
     switch(request.method()){
     case http::verb::get:
         return handle_rp_get(std::move(request),requester_id);
-        break;
     case http::verb::put:
         return handle_rp_put(std::move(request),requester_id);
-        break;
     case http::verb::post:
         return handle_rp_post(std::move(request),requester_id);
-        break;
     case http::verb::delete_:
         return handle_rp_delete(std::move(request),requester_id);
-        break;
     default:
         return fail(std::move(request),http::status::not_found,"not found");
-        break;
     }
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
@@ -475,7 +462,7 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
             case db_status::success:
-                success(std::move(request),http::status::ok,rp_detail);
+                return success(std::move(request),http::status::ok,rp_detail);
             case db_status::not_found:
                 return fail(std::move(request),http::status::not_found,msg);
             case db_status::unauthorized:
