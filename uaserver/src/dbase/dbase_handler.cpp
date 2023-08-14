@@ -999,7 +999,7 @@ db_status dbase_handler::user_info_put(const std::string &user_uid, const std::s
         const char* param_values[] {first_name,last_name,email,is_blocked.c_str(),updated_at.c_str(),
                                     phone_number,position,gender,location_id,ou_id,user_uid.c_str()};
         res_ptr=PQexecParams(conn_ptr,"UPDATE users SET first_name=$1,last_name=$2,email=$3,is_blocked=$4,updated_at=$5,"
-                                                "phone_numder=$6,position=$7,gender=$8,location_id=8,ou_id=$10 WHERE id=$11",
+                                                "phone_number=$6,position=$7,gender=$8,location_id=8,ou_id=$10 WHERE id=$11",
                                                  11,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
