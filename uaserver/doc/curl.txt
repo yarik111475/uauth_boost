@@ -1,5 +1,7 @@
 ### USERS PART ###
+curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET  dev3.u-system.tech:55555/api/v1/u-auth/users
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET  http://127.0.0.1:8030/api/v1/u-auth/users
+
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://127.0.0.1:8030/api/v1/u-auth/users?limit=2&offset=2
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://127.0.0.1:8030/api/v1/u-auth/users/3fa85f64-5717-4562-b3fc-2c963f66afa6
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://127.0.0.1:8030/api/v1/u-auth/users/dc77b7f3-71d9-4ce9-95a2-100b88d0306c/roles-permissions
