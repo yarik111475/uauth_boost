@@ -43,6 +43,10 @@ private:
     std::string uath_admin_rp_uid_get(PGconn* conn_ptr);
     //Get all rp_uids recirsive
     bool rp_uid_recursive_get(PGconn* conn_ptr, std::vector<std::string> &rp_uids,std::string& msg);
+
+    bool rp_uids_child_get(PGconn* conn_ptr,const std::string& rp_uid,std::vector<std::string>& child_uids,std::string& msg);
+    bool rp_uids_parent_get(PGconn* conn_ptr,const std::string& rp_uid,std::vector<std::string>& parent_uids,std::string& msg);
+
     //Get all child rp for parent rp by rp_uid
     void rp_children_get(PGconn* conn_ptr,const std::string& rp_uid,boost::json::array& rp_objs);
     //Get rp_uids by rp_names

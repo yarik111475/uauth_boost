@@ -506,6 +506,60 @@ bool dbase_handler::rp_uid_recursive_get(PGconn *conn_ptr, std::vector<std::stri
     return true;
 }
 
+bool dbase_handler::rp_uids_child_get(PGconn *conn_ptr, const std::string &rp_uid, std::vector<std::string> &child_uids, std::string &msg)
+{
+    PGresult* res_ptr {NULL};
+    const char* param_values[] {rp_uid.c_str()};
+    res_ptr=PQexecParams(conn_ptr,"SELECT child_id FROM roles_permissions_relationship WHERE parent_id=$1",
+                                   1,NULL,param_values,NULL,NULL,0);
+
+    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        msg=std::string {PQresultErrorMessage(res_ptr)};
+        PQclear(res_ptr);
+        return false;
+    }
+
+    const int& rows {PQntuples(res_ptr)};
+    if(!rows){
+        PQclear(res_ptr);
+        return true;
+    }
+
+    for(int r=0;r < rows;++r){
+        const char* rp_uid {PQgetvalue(res_ptr,r,0)};
+        child_uids.push_back(rp_uid);
+    }
+    PQclear(res_ptr);
+    return true;
+}
+
+bool dbase_handler::rp_uids_parent_get(PGconn *conn_ptr, const std::string &rp_uid, std::vector<std::string> &parent_uids, std::string &msg)
+{
+    PGresult* res_ptr {NULL};
+    const char* param_values[] {rp_uid.c_str()};
+    res_ptr=PQexecParams(conn_ptr,"SELECT parent_id FROM roles_permissions_relationship WHERE child_id=$1",
+                                   1,NULL,param_values,NULL,NULL,0);
+
+    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        msg=std::string {PQresultErrorMessage(res_ptr)};
+        PQclear(res_ptr);
+        return false;
+    }
+
+    const int& rows {PQntuples(res_ptr)};
+    if(!rows){
+        PQclear(res_ptr);
+        return true;
+    }
+
+    for(int r=0;r < rows;++r){
+        const char* rp_uid {PQgetvalue(res_ptr,r,0)};
+        parent_uids.push_back(rp_uid);
+    }
+    PQclear(res_ptr);
+    return true;
+}
+
 //Get all first_low_level rp_objects by top_level rp_uid
 void dbase_handler::rp_children_get(PGconn *conn_ptr, const std::string &rp_uid, boost::json::array &rp_objs)
 {
@@ -588,13 +642,11 @@ bool dbase_handler::user_uids_by_rp_uid_get(PGconn *conn_ptr, const std::string 
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
-        PQfinish(conn_ptr);
         return false;
     }
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
-        PQfinish(conn_ptr);
         return true;
     }
     for(int r=0;r<rows;++r){
@@ -602,7 +654,6 @@ bool dbase_handler::user_uids_by_rp_uid_get(PGconn *conn_ptr, const std::string 
         user_uids.push_back(user_uid);
     }
     PQclear(res_ptr);
-    PQfinish(conn_ptr);
     return true;
 }
 
@@ -1781,14 +1832,35 @@ db_status dbase_handler::rp_info_delete(const std::string &rp_uid, const std::st
         std::vector<std::string> user_uids {};
         const bool& ok {user_uids_by_rp_uid_get(conn_ptr,rp_uid,user_uids,msg)};
         if(!ok){
-            PQclear(res_ptr);
             PQfinish(conn_ptr);
             return db_status::fail;
         }
         if(!user_uids.empty()){
+            PQfinish(conn_ptr);
+            const std::string& joined {boost::algorithm::join(user_uids,", ")};
+            msg=(boost::format("%s assigned to users %s")
+                                % rp_uid
+                                % joined).str();
+            return db_status::unprocessable_entity;
         }
     }
     {//check for 'roles_permissions_relationship' contans references
+        std::vector<std::string> parent_child_uids {};
+        if(rp_uids_child_get(conn_ptr,rp_uid,parent_child_uids,msg) &&
+           rp_uids_parent_get(conn_ptr,rp_uid,parent_child_uids,msg)){
+            if(!parent_child_uids.empty()){
+                const std::string& joined {boost::algorithm::join(parent_child_uids,", ")};
+                msg=(boost::format("%s parent/child for %s")
+                                    % rp_uid
+                                    % joined).str();
+                return db_status::unprocessable_entity;
+            }
+        }
+        else{
+            PQclear(res_ptr);
+            PQfinish(conn_ptr);
+            return db_status::fail;
+        }
     }
     const char* param_values[] {rp_uid.c_str()};
     res_ptr=PQexecParams(conn_ptr,"DELETE FROM roles_permissions WHERE id=$1",
