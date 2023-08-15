@@ -32,7 +32,7 @@ private:
     //Check if user exists
     bool is_user_exists(PGconn* conn_ptr,const std::string& user_uid,std::string& msg);
     //Check if user authorized
-    bool is_authorized(PGconn* conn_ptr, const std::string& user_uid, const std::string& rp_ident);
+    bool is_authorized(PGconn* conn_ptr, const std::string& user_uid, const std::string& rp_ident,std::string& msg);
     //Get total urp
     int urp_total_get(PGconn* conn_ptr);
     //Get total rps
@@ -41,10 +41,14 @@ private:
     int user_total_get(PGconn* conn_ptr);
     //Get UAuthAmin rp_uid
     std::string uath_admin_rp_uid_get(PGconn* conn_ptr);
-
-    void rp_uid_recursive_get(PGconn* conn_ptr, std::vector<std::string> &rp_uids);
+    //Get all rp_uids recirsive
+    bool rp_uid_recursive_get(PGconn* conn_ptr, std::vector<std::string> &rp_uids,std::string& msg);
+    //Get all child rp for parent rp by rp_uid
     void rp_children_get(PGconn* conn_ptr,const std::string& rp_uid,boost::json::array& rp_objs);
+    //Get rp_uids by rp_names
     void rp_uids_by_rp_names_get(PGconn* conn_ptr,const std::vector<std::string>& rp_names,std::vector<std::string>& rp_uids);
+    //Get all user_uids from 'users_roles_permissions' by rp_uid
+    bool user_uids_by_rp_uid_get(PGconn* conn_ptr,const std::string& rp_uid,std::vector<std::string>& user_uids,std::string& msg);
 
 public:
     explicit dbase_handler(const boost::json::object& params,std::shared_ptr<spdlog::logger> logger_ptr);

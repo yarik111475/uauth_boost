@@ -316,7 +316,7 @@ bool dbase_handler::is_user_exists(PGconn *conn_ptr, const std::string &user_uid
 }
 
 //Check if user authorized
-bool dbase_handler::is_authorized(PGconn *conn_ptr, const std::string &user_uid, const std::string &rp_ident)
+bool dbase_handler::is_authorized(PGconn *conn_ptr, const std::string &user_uid, const std::string &rp_ident, std::string &msg)
 {
     PGresult* res_ptr {NULL};
     std::vector<std::string> rp_uids {};
@@ -348,7 +348,10 @@ bool dbase_handler::is_authorized(PGconn *conn_ptr, const std::string &user_uid,
         }
     }
     {//get all rp_uids recursive
-        rp_uid_recursive_get(conn_ptr,rp_uids);
+        const bool& ok {rp_uid_recursive_get(conn_ptr,rp_uids,msg)};
+        if(!ok){
+            return false;
+        }
     }
     {//check if authorized
         boost::regex re {"^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"};
@@ -467,7 +470,7 @@ std::string dbase_handler::uath_admin_rp_uid_get(PGconn *conn_ptr)
 }
 
 //Recursive get all low_level rp_uids by top_level rp_uid
-void dbase_handler::rp_uid_recursive_get(PGconn *conn_ptr,std::vector<std::string>& rp_uids)
+bool dbase_handler::rp_uid_recursive_get(PGconn *conn_ptr, std::vector<std::string>& rp_uids, std::string &msg)
 {
     PGresult* res_ptr {NULL};
     const std::string& command {"WITH RECURSIVE rp_list AS ("
@@ -488,8 +491,9 @@ void dbase_handler::rp_uid_recursive_get(PGconn *conn_ptr,std::vector<std::strin
     res_ptr=PQexecParams(conn_ptr,command.c_str(),
                          1,NULL,param_values.data(),NULL,NULL,0);
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
-        return;
+        return false;
     }
     const int& rows {PQntuples(res_ptr)};
     if(rows){
@@ -499,6 +503,7 @@ void dbase_handler::rp_uid_recursive_get(PGconn *conn_ptr,std::vector<std::strin
         }
     }
     PQclear(res_ptr);
+    return true;
 }
 
 //Get all first_low_level rp_objects by top_level rp_uid
@@ -572,6 +577,35 @@ void dbase_handler::rp_uids_by_rp_names_get(PGconn *conn_ptr, const std::vector<
     }
 }
 
+//Get all user_uids from 'users_roles_permissions' by rp_uid
+bool dbase_handler::user_uids_by_rp_uid_get(PGconn *conn_ptr, const std::string &rp_uid, std::vector<std::string> &user_uids, std::string &msg)
+{
+    PGresult* res_ptr {NULL};
+    const std::string& command {"SELECT user_id FROM users_roles_permissions WHERE role_permission_id=$1"};
+    const char* param_values[] {rp_uid.c_str()};
+    res_ptr=PQexecParams(conn_ptr,command.c_str(),1,NULL,param_values,NULL,NULL,0);
+
+    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        msg=std::string {PQresultErrorMessage(res_ptr)};
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return false;
+    }
+    const int& rows {PQntuples(res_ptr)};
+    if(!rows){
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return true;
+    }
+    for(int r=0;r<rows;++r){
+        const std::string& user_uid {PQgetvalue(res_ptr,r,0)};
+        user_uids.push_back(user_uid);
+    }
+    PQclear(res_ptr);
+    PQfinish(conn_ptr);
+    return true;
+}
+
 dbase_handler::dbase_handler(const boost::json::object &params, std::shared_ptr<spdlog::logger> logger_ptr)
     :io_{},params_{params},logger_ptr_{logger_ptr}
 {
@@ -607,7 +641,7 @@ db_status dbase_handler::user_list_get(std::string &users, const std::string &re
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"user:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -669,7 +703,7 @@ db_status dbase_handler::user_list_get(std::string& users, const std::string& li
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"user:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -736,7 +770,7 @@ db_status dbase_handler::user_info_get(const std::string &user_uid, std::string 
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"user:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -787,7 +821,7 @@ db_status dbase_handler::user_rp_get(const std::string &user_uid, std::string &r
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"role_permission:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -865,7 +899,7 @@ db_status dbase_handler::user_rp_get(const std::string &user_uid, std::string &r
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"role_permission:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -949,7 +983,7 @@ db_status dbase_handler::user_info_put(const std::string &user_uid, const std::s
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"user:update"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -985,7 +1019,7 @@ db_status dbase_handler::user_info_put(const std::string &user_uid, const std::s
     const char* first_name           {user_obj.at("first_name").is_null() ? nullptr : user_obj.at("first_name").as_string().c_str()};
     const char* last_name            {user_obj.at("last_name").is_null() ? nullptr : user_obj.at("last_name").as_string().c_str()};
     const char* email                {user_obj.at("email").is_null() ? nullptr : user_obj.at("email").as_string().c_str()};
-    const std::string& is_blocked    {user_obj.at("is_blocked").is_null() ? nullptr : std::to_string(user_obj.at("is_blocked").as_bool()).c_str()};
+    const char* is_blocked           {user_obj.at("is_blocked").is_null() ? nullptr : user_obj.at("is_blocked").as_string().c_str()};
     const char* phone_number         {user_obj.at("phone_number").is_null() ? nullptr : user_obj.at("phone_number").as_string().c_str()};
     const char* position             {user_obj.at("position").is_null() ? nullptr : user_obj.at("position").as_string().c_str()};
     const char* gender               {user_obj.at("gender").is_null() ? nullptr : user_obj.at("gender").as_string().c_str()};
@@ -996,10 +1030,10 @@ db_status dbase_handler::user_info_put(const std::string &user_uid, const std::s
     const std::string& updated_at    {time_with_timezone()};
 
     {//update user
-        const char* param_values[] {first_name,last_name,email,is_blocked.c_str(),updated_at.c_str(),
+        const char* param_values[] {first_name,last_name,email,is_blocked,updated_at.c_str(),
                                     phone_number,position,gender,location_id,ou_id,user_uid.c_str()};
         res_ptr=PQexecParams(conn_ptr,"UPDATE users SET first_name=$1,last_name=$2,email=$3,is_blocked=$4,updated_at=$5,"
-                                                "phone_number=$6,position=$7,gender=$8,location_id=8,ou_id=$10 WHERE id=$11",
+                                                "phone_number=$6,position=$7,gender=$8,location_id=$9,ou_id=$10 WHERE id=$11",
                                                  11,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -1053,7 +1087,7 @@ db_status dbase_handler::user_info_post(const std::string &user, const std::stri
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"user:create"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -1128,7 +1162,7 @@ db_status dbase_handler::user_info_delete(const std::string &user_uid, const std
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"user:delete"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -1158,7 +1192,7 @@ db_status dbase_handler::rp_list_get(std::string &rps, const std::string &reques
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"role_permission:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -1218,7 +1252,7 @@ db_status dbase_handler::rp_list_get(std::string &rps, const std::string &limit,
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"role_permission:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -1284,7 +1318,7 @@ db_status dbase_handler::rp_info_get(const std::string &rp_uid, std::string &rp,
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"role_permission:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -1333,7 +1367,7 @@ db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &use
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"user:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -1421,7 +1455,7 @@ db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &use
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"user:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -1516,7 +1550,7 @@ db_status dbase_handler::rp_rp_detail_get(const std::string &rp_uid, std::string
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"role_permission:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -1570,7 +1604,7 @@ db_status dbase_handler::rp_info_post(const std::string &rp, const std::string &
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"role_permission:create"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -1636,7 +1670,7 @@ db_status dbase_handler::rp_info_put(const std::string &rp_uid, const std::strin
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"role_permission:update"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -1737,11 +1771,24 @@ db_status dbase_handler::rp_info_delete(const std::string &rp_uid, const std::st
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"role_permission:delete"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
         }
+    }
+    {//check for 'users_roles_permissions' contans references
+        std::vector<std::string> user_uids {};
+        const bool& ok {user_uids_by_rp_uid_get(conn_ptr,rp_uid,user_uids,msg)};
+        if(!ok){
+            PQclear(res_ptr);
+            PQfinish(conn_ptr);
+            return db_status::fail;
+        }
+        if(!user_uids.empty()){
+        }
+    }
+    {//check for 'roles_permissions_relationship' contans references
     }
     const char* param_values[] {rp_uid.c_str()};
     res_ptr=PQexecParams(conn_ptr,"DELETE FROM roles_permissions WHERE id=$1",
@@ -1768,7 +1815,7 @@ db_status dbase_handler::rp_child_put(const std::string &parent_uid, const std::
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"role_permission:update"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -1844,7 +1891,7 @@ db_status dbase_handler::rp_child_delete(const std::string &parent_uid, const st
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"role_permission:update"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -1915,7 +1962,7 @@ db_status dbase_handler::authz_check_get(const std::string &user_uid, const std:
     if(!conn_ptr){
         return db_status::fail;
     }
-    authorized=is_authorized(conn_ptr,user_uid,rp_ident);
+    authorized=is_authorized(conn_ptr,user_uid,rp_ident,msg);
     PQfinish(conn_ptr);
     return db_status::success;
 }
@@ -1931,7 +1978,7 @@ db_status dbase_handler::authz_manage_post(const std::string &requested_user_uid
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"authorization_manage"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
@@ -2003,7 +2050,7 @@ db_status dbase_handler::authz_manage_delete(const std::string &requested_user_u
     {//check if authorized
         std::string msg {};
         const std::string& rp_ident {"authorization_manage"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident)};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
             return db_status::unauthorized;
