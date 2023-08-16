@@ -1,6 +1,7 @@
 #include "dbase_handler.h"
 
 #include <vector>
+#include <iostream>
 #include <algorithm>
 #include <boost/json.hpp>
 #include <boost/regex.hpp>
@@ -726,7 +727,7 @@ db_status dbase_handler::user_list_get(std::string &users, const std::string &re
             if(std::string {key}=="is_blocked"){
                 const std::string& value_ {value};
                 const bool& is_blocked {(value_.empty() || value_=="f") ? false : true};
-                user_.emplace(key,value_);
+                user_.emplace(key,is_blocked);
             }
             else{
                 user_.emplace(key,value==NULL ? nullptr : value);
