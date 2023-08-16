@@ -27,7 +27,7 @@ class http_handler
 {
 private:
     uc_status status_ {uc_status::fail};
-    const std::string regex_any_ {"([\\s\\S]+)"};
+    const std::string regex_any_ {"([\\s\\S]*)"};
     const std::string regex_uid_ {"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"};
     boost::json::object params_ {};
 

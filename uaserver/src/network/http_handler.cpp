@@ -145,6 +145,7 @@ http::response<http::string_body> http_handler::handle_user_get(http::request<ht
             const std::string& user_uid {match[1]};
             std::string msg {};
             std::string user {};
+
             const db_status& status_ {dbase_handler_ptr_->user_info_get(user_uid,user,requester_id,msg)};
             switch(status_){
             case db_status::fail:
@@ -161,14 +162,33 @@ http::response<http::string_body> http_handler::handle_user_get(http::request<ht
         }
     }
     {//user's roles_permissions
-
-        boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "/roles-permissions$"};
+        boost::regex re {"^/api/v1/u-auth/users/" + regex_uid_ + "/roles-permissions" + regex_any_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             const std::string& user_uid {match[1]};
             std::string msg {};
             std::string rps {};
-            const db_status& status_ {dbase_handler_ptr_->user_rp_get(user_uid,rps,requester_id,msg)};
+
+            std::string limit {};
+            std::string offset {};
+            boost::url url_ {target};
+            auto query=url_.query();
+            if(!query.empty()){
+                boost::urls::result<boost::urls::params_encoded_view> result=boost::urls::parse_query(query);
+                if(!result.has_error()){
+                    const boost::urls::params_encoded_view& view {result.value()};
+                    if(view.contains("limit")){
+                        auto it {view.find("limit")};
+                        limit=std::string {it->value};
+                    }
+                    if(view.contains("offset")){
+                        auto it {view.find("offset")};
+                        offset=std::string {it->value};
+                    }
+                }
+            }
+            //not need to check limit and offset
+            const db_status& status_ {dbase_handler_ptr_->user_rp_get(user_uid,limit,offset,rps,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -183,59 +203,48 @@ http::response<http::string_body> http_handler::handle_user_get(http::request<ht
             }
         }
     }
-    {//list with limit and/or offset and filter
-        std::string limit {};
-        std::string offset {};
-        std::string first_name {};
-        std::string last_name {};
-        std::string email {};
-        std::string is_blocked {};
-        boost::url url_ {target};
-        auto query=url_.query();
-        if(!query.empty()){
-            boost::urls::result<boost::urls::params_encoded_view> result=boost::urls::parse_query(query);
-            if(!result.has_error()){
-                const boost::urls::params_encoded_view& view {result.value()};
-                if(view.contains("limit")){
-                    auto it {view.find("limit")};
-                    limit=std::string {it->value};
+    {//users list with limit and/or offset and filter
+        boost::regex re {"^/api/v1/u-auth/users" + regex_any_ + "$"};
+        boost::smatch match;
+        if(boost::regex_match(target,match,re)){
+            std::string limit {};
+            std::string offset {};
+            boost::url url_ {target};
+            auto query=url_.query();
+            if(!query.empty()){
+                boost::urls::result<boost::urls::params_encoded_view> result=boost::urls::parse_query(query);
+                if(!result.has_error()){
+                    const boost::urls::params_encoded_view& view {result.value()};
+                    if(view.contains("limit")){
+                        auto it {view.find("limit")};
+                        limit=std::string {it->value};
+                    }
+                    if(view.contains("offset")){
+                        auto it {view.find("offset")};
+                        offset=std::string {it->value};
+                    }
                 }
-                if(view.contains("offset")){
-                    auto it {view.find("offset")};
-                    offset=std::string {it->value};
-                }
-                if(view.contains("first_name")){
-                    auto it {view.find("first_name")};
-                    first_name=std::string {it->value};
-                }
-                if(view.contains("last_name")){
-                    auto it {view.find("last_name")};
-                    last_name=std::string {it->value};
-                }
-                if(view.contains("email")){
-                    auto it {view.find("email")};
-                    email=std::string {it->value};
-                }
-                if(view.contains("is_blocked")){
-                    auto it {view.find("is_blocked")};
-                    is_blocked=std::string {it->value};
-                }
+            }
+            //check limit and offset
+            if(limit.empty() & offset.empty()){
+                 return fail(std::move(request),http::status::not_found,"not found");
+            }
 
-                std::string msg {};
-                std::string users {};
-                const db_status& status_ {dbase_handler_ptr_->user_list_get(users,limit,offset,first_name,last_name,email,is_blocked,requester_id,msg)};
-                switch(status_){
-                case db_status::fail:
-                    return fail(std::move(request),http::status::bad_request,msg);
-                case db_status::success:
-                    return success(std::move(request),http::status::ok,users);
-                case db_status::not_found:
-                    return fail(std::move(request),http::status::not_found,msg);
-                case db_status::unauthorized:
-                    return fail(std::move(request),http::status::unauthorized,msg);
-                default:
-                    return fail(std::move(request),http::status::bad_request,msg);
-                }
+            std::string msg {};
+            std::string users {};
+
+            const db_status& status_ {dbase_handler_ptr_->user_list_get(users,limit,offset,requester_id,msg)};
+            switch(status_){
+            case db_status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case db_status::success:
+                return success(std::move(request),http::status::ok,users);
+            case db_status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case db_status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
             }
         }
     }
@@ -425,6 +434,7 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
             }
         }
     }
+
     {//rps by rp_uid
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "$"};
         boost::smatch match;
@@ -448,8 +458,8 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
             }
         }
     }
-    {//rps details
 
+    {//rps details
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "/detail$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
@@ -472,7 +482,8 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
             }
         }
     }
-    {//all users for rps by rps_uid
+
+    {//all users for rps by rp_uid
         boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "/associated-users$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
@@ -495,9 +506,9 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
             }
         }
     }
-    {//all users for rps by rps_uid with limit and/or offset
 
-        boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "/associated-users?" + regex_any_ + "$"};
+    {//all users for rps by rp_uid with limit and/or offset
+        boost::regex re {"^/api/v1/u-auth/roles-permissions/" + regex_uid_ + "/associated-users" + regex_any_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
             const std::string& rp_uid {match[1]};
@@ -517,80 +528,76 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
                         auto it {view.find("offset")};
                         offset=std::string {it->value};
                     }
+                }
+            }
+            //check limit and offset
+            if(limit.empty() & offset.empty()){
+                 return fail(std::move(request),http::status::not_found,"not found");
+            }
 
-                    std::string msg {};
-                    std::string users {};
+            std::string msg {};
+            std::string users {};
 
-                    const db_status& status_ {dbase_handler_ptr_->rp_user_get(rp_uid,users,limit,offset,requester_id,msg)};
-                    switch(status_){
-                    case db_status::fail:
-                        return fail(std::move(request),http::status::bad_request,msg);
-                    case db_status::success:
-                        return success(std::move(request),http::status::ok,users);
-                    case db_status::not_found:
-                        return fail(std::move(request),http::status::not_found,msg);
-                    case db_status::unauthorized:
-                        return fail(std::move(request),http::status::unauthorized,msg);
-                    default:
-                        return fail(std::move(request),http::status::bad_request,msg);
+            const db_status& status_ {dbase_handler_ptr_->rp_user_get(rp_uid,users,limit,offset,requester_id,msg)};
+            switch(status_){
+            case db_status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case db_status::success:
+                return success(std::move(request),http::status::ok,users);
+            case db_status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case db_status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
+            }
+        }
+    }
+
+    {//rp list with limit and/or offset
+        boost::regex re {"^/api/v1/u-auth/roles-permissions" + regex_any_ + "$"};
+        boost::smatch match;
+        if(boost::regex_match(target,match,re)){
+            std::string limit {};
+            std::string offset {};
+            boost::url url_ {target};
+            auto query=url_.query();
+            if(!query.empty()){
+                boost::urls::result<boost::urls::params_encoded_view> result=boost::urls::parse_query(query);
+                if(!result.has_error()){
+                    const boost::urls::params_encoded_view& view {result.value()};
+                    if(view.contains("limit")){
+                        auto it {view.find("limit")};
+                        limit=std::string {it->value};
+                    }
+                    if(view.contains("offset")){
+                        auto it {view.find("offset")};
+                        offset=std::string {it->value};
                     }
                 }
             }
-        }
-    }
-    {//list with limit and/or offset and filter
-        std::string limit {};
-        std::string offset {};
-        std::string name {};
-        std::string type {};
-        std::string description {};
-        boost::url url_ {target};
-        auto query=url_.query();
-        if(!query.empty()){
-            boost::urls::result<boost::urls::params_encoded_view> result=boost::urls::parse_query(query);
-            if(!result.has_error()){
-                const boost::urls::params_encoded_view& view {result.value()};
-                if(view.contains("limit")){
-                    auto it {view.find("limit")};
-                    limit=std::string {it->value};
-                }
-                if(view.contains("offset")){
-                    auto it {view.find("offset")};
-                    offset=std::string {it->value};
-                }
-                if(view.contains("name")){
-                    auto it {view.find("name")};
-                    name=std::string {it->value};
-                }
-                if(view.contains("type")){
-                    auto it {view.find("type")};
-                    type=std::string {it->value};
-                }
-                if(view.contains("description")){
-                    auto it {view.find("description")};
-                    description=std::string {it->value};
-                }
+            //check limit and offset
+            if(limit.empty() & offset.empty()){
+                 return fail(std::move(request),http::status::not_found,"not found");
+            }
 
-                std::string msg {};
-                std::string rps {};
-
-                const db_status& status_ {dbase_handler_ptr_->rp_list_get(rps,limit,offset,name,type,description,requester_id,msg)};
-                switch(status_){
-                case db_status::fail:
-                    return fail(std::move(request),http::status::bad_request,msg);
-                case db_status::success:
-                    return success(std::move(request),http::status::ok,rps);
-                case db_status::not_found:
-                    return fail(std::move(request),http::status::not_found,msg);
-                case db_status::unauthorized:
-                    return fail(std::move(request),http::status::unauthorized,msg);
-                default:
-                    return fail(std::move(request),http::status::bad_request,msg);
-                }
+            std::string msg {};
+            std::string rps {};
+            const db_status& status_ {dbase_handler_ptr_->rp_list_get(rps,limit,offset,requester_id,msg)};
+            switch(status_){
+            case db_status::fail:
+                return fail(std::move(request),http::status::bad_request,msg);
+            case db_status::success:
+                return success(std::move(request),http::status::ok,rps);
+            case db_status::not_found:
+                return fail(std::move(request),http::status::not_found,msg);
+            case db_status::unauthorized:
+                return fail(std::move(request),http::status::unauthorized,msg);
+            default:
+                return fail(std::move(request),http::status::bad_request,msg);
             }
         }
     }
-
     return fail(std::move(request),http::status::bad_request,"bad request");
 }
 

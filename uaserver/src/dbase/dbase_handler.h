@@ -42,7 +42,7 @@ private:
     //Get UAuthAmin rp_uid
     std::string uath_admin_rp_uid_get(PGconn* conn_ptr);
     //Get all rp_uids recirsive
-    bool rp_uid_recursive_get(PGconn* conn_ptr, std::vector<std::string> &rp_uids,std::string& msg);
+    void rp_uid_recursive_get(PGconn* conn_ptr, std::vector<std::string> &rp_uids);
 
     bool rp_uids_child_get(PGconn* conn_ptr,const std::string& rp_uid,std::vector<std::string>& child_uids,std::string& msg);
     bool rp_uids_parent_get(PGconn* conn_ptr,const std::string& rp_uid,std::vector<std::string>& parent_uids,std::string& msg);
@@ -63,16 +63,15 @@ public:
     //List Of Users
     db_status user_list_get(std::string& users,const std::string& requester_id,std::string& msg);
     //List Of Users with limit and/or offset and filter
-    db_status user_list_get(std::string& users,const std::string& limit,const std::string& offset,
-                        const std::string& first_name,const std::string& last_name,
-                        const std::string& email,const std::string& is_blocked,const std::string& requester_id,std::string& msg);
+    db_status user_list_get(std::string& users, const std::string& limit, const std::string& offset, const std::string& requester_id, std::string& msg);
     //Get User Info
     db_status user_info_get(const std::string& user_uid, std::string &user,const std::string& requester_id,std::string& msg);
     //Get User Assigned Roles And Permissions
-    db_status user_rp_get(const std::string& user_uid,std::string& rps,const std::string& requester_id,std::string& msg);
+    db_status user_rp_get(const std::string& user_uid,const std::string& limit,const std::string& offset,std::string& rps,const std::string& requester_id,std::string& msg);
+
     //Get User Assigned Roles And Permissions with limit and/or offset
-    db_status user_rp_get(const std::string& user_uid,std::string& rps,
-                       const std::string& limit,const std::string& offset,const std::string& requester_id,std::string& msg);
+    //db_status user_rp_get(const std::string& user_uid,std::string& rps,const std::string& limit,const std::string& offset,const std::string& requester_id,std::string& msg);
+
     //Update User
     db_status user_info_put(const std::string& user_uid,const std::string& user,const std::string& requester_id,std::string& msg);
     //Create User
@@ -83,16 +82,13 @@ public:
     //List Of Roles And Permissions
     db_status rp_list_get(std::string& rps,const std::string& requester_id,std::string& msg);
     //List Of Roles And Permissions with limit and/or offset and filter
-    db_status rp_list_get(std::string& rps,const std::string& limit,
-                      const std::string offset,const std::string& name,
-                      const std::string& type,const std::string& description,const std::string& requester_id,std::string& msg);
+    db_status rp_list_get(std::string& rps,const std::string& limit,const std::string offset,const std::string& requester_id,std::string& msg);
     //Get Permission Or Role
     db_status rp_info_get(const std::string& rp_uid,std::string& rp,const std::string& requester_id,std::string& msg);
     //Get Associated Users
     db_status rp_user_get(const std::string& rp_uid,std::string& users,const std::string& requester_id,std::string& msg);
     //Get Associated Users with limit and/or offset
-    db_status rp_user_get(const std::string& rp_uid,std::string& users,const
-                       std::string& limit,const std::string& offset,const std::string& requester_id,std::string& msg);
+    db_status rp_user_get(const std::string& rp_uid,std::string& users,const std::string& limit,const std::string& offset,const std::string& requester_id,std::string& msg);
     //Get Permission Or Role Detail
     db_status rp_rp_detail_get(const std::string& rp_uid,std::string& rp,const std::string& requester_id,std::string& msg);
     //Create Permission Or Role
