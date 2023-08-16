@@ -694,8 +694,8 @@ db_status dbase_handler::user_list_get(std::string &users, const std::string &re
             return db_status::unauthorized;
         }
     }
-
-    res_ptr=PQexec(conn_ptr,"SELECT * FROM users LIMIT 100 OFFSET 0");
+    const std::string& query {"SELECT * FROM users LIMIT 100 OFFSET 0"};
+    res_ptr=PQexec(conn_ptr,query.c_str());
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
@@ -717,7 +717,14 @@ db_status dbase_handler::user_list_get(std::string &users, const std::string &re
         for(int c=0;c < columns;++c){
             const char* key {PQfname(res_ptr,c)};
             const char* value {PQgetvalue(res_ptr,r,c)};
-            user_.emplace(key,value==NULL ? nullptr : value);
+            if(std::string {key}=="is_blocked"){
+                const std::string& value_ {value};
+                const bool& is_blocked {(value_.empty() || value_=="f") ? false : true};
+                user_.emplace(key,value_);
+            }
+            else{
+                user_.emplace(key,value==NULL ? nullptr : value);
+            }
         }
         users_.push_back(user_);
     }
@@ -754,15 +761,15 @@ db_status dbase_handler::user_list_get(std::string& users, const std::string& li
         }
     }
     //add limit/offset
-    std::string command {"SELECT * FROM users"};
+    std::string query {"SELECT * FROM users"};
     if(!limit.empty()){
-        command += " LIMIT " + limit;
+        query += " LIMIT " + limit;
     }
     if(!offset.empty()){
-        command +=" OFFSET " + offset;
+        query +=" OFFSET " + offset;
     }
 
-    res_ptr=PQexec(conn_ptr,command.c_str());
+    res_ptr=PQexec(conn_ptr,query.c_str());
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
@@ -784,7 +791,14 @@ db_status dbase_handler::user_list_get(std::string& users, const std::string& li
         for(int c=0;c < columns;++c){
             const char* key {PQfname(res_ptr,c)};
             const char* value {PQgetvalue(res_ptr,r,c)};
-            user_.emplace(key,value==NULL ? nullptr : value);
+            if(std::string {key}=="is_blocked"){
+                const std::string& value_ {value};
+                const bool& is_blocked {(value_.empty() || value_=="f") ? false : true};
+                user_.emplace(key,is_blocked);
+            }
+            else{
+                user_.emplace(key,value==NULL ? nullptr : value);
+            }
         }
         users_.push_back(user_);
     }
@@ -820,10 +834,9 @@ db_status dbase_handler::user_info_get(const std::string &user_uid, std::string 
             return db_status::unauthorized;
         }
     }
+    const std::string& query {"SELECT * FROM users WHERE id=$1"};
     const char* param_values[] {user_uid.c_str()};
-    res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1",
-        1,NULL,param_values,NULL,NULL,0);
-
+    res_ptr=PQexecParams(conn_ptr,query.c_str(),1,NULL,param_values,NULL,NULL,0);
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
@@ -845,7 +858,14 @@ db_status dbase_handler::user_info_get(const std::string &user_uid, std::string 
     for(int c=0;c < columns;++c){
         const char* key {PQfname(res_ptr,c)};
         const char* value {PQgetvalue(res_ptr,0,c)};
-        user_.emplace(key,value==NULL ? nullptr : value);
+        if(std::string {key}=="is_blocked"){
+            const std::string& value_ {value};
+            const bool& is_blocked {(value_.empty() || value_=="f") ? false : true};
+            user_.emplace(key,is_blocked);
+        }
+        else{
+            user_.emplace(key,value==NULL ? nullptr : value);
+        }
     }
     PQclear(res_ptr);
     PQfinish(conn_ptr);
@@ -956,7 +976,6 @@ db_status dbase_handler::user_rp_get(const std::string &user_uid, const std::str
             return db_status::unauthorized;
         }
     }
-
     const char* param_values[] {user_uid.c_str()};
     std::string query {"SELECT role_permission_id FROM users_roles_permissions WHERE user_id=$1"};
     if(!limit.empty()){
@@ -1068,25 +1087,25 @@ db_status dbase_handler::user_info_put(const std::string &user_uid, const std::s
     }
 
     //get user fields
-    const char* first_name           {user_obj.at("first_name").is_null() ? nullptr : user_obj.at("first_name").as_string().c_str()};
+    const char* first_name            {user_obj.at("first_name").is_null() ? nullptr : user_obj.at("first_name").as_string().c_str()};
     const char* last_name            {user_obj.at("last_name").is_null() ? nullptr : user_obj.at("last_name").as_string().c_str()};
-    const char* email                {user_obj.at("email").is_null() ? nullptr : user_obj.at("email").as_string().c_str()};
-    const std::string& is_blocked    {user_obj.at("is_blocked").is_null() ? nullptr : std::to_string(user_obj.at("is_blocked").as_bool())};
-    const char* phone_number         {user_obj.at("phone_number").is_null() ? nullptr : user_obj.at("phone_number").as_string().c_str()};
-    const char* position             {user_obj.at("position").is_null() ? nullptr : user_obj.at("position").as_string().c_str()};
-    const char* gender               {user_obj.at("gender").is_null() ? nullptr : user_obj.at("gender").as_string().c_str()};
-    const char* location_id          {user_obj.at("location_id").is_null() ? nullptr : user_obj.at("location_id").as_string().c_str()};
-    const char* ou_id                {user_obj.at("ou_id").is_null() ? nullptr : user_obj.at("ou_id").as_string().c_str()};
+    const char* email                    {user_obj.at("email").is_null() ? nullptr : user_obj.at("email").as_string().c_str()};
+    const std::string& is_blocked  {user_obj.at("is_blocked").is_null() ? nullptr : std::to_string(user_obj.at("is_blocked").as_bool())};
+    const char* phone_number     {user_obj.at("phone_number").is_null() ? nullptr : user_obj.at("phone_number").as_string().c_str()};
+    const char* position                {user_obj.at("position").is_null() ? nullptr : user_obj.at("position").as_string().c_str()};
+    const char* gender                 {user_obj.at("gender").is_null() ? nullptr : user_obj.at("gender").as_string().c_str()};
+    const char* location_id           {user_obj.at("location_id").is_null() ? nullptr : user_obj.at("location_id").as_string().c_str()};
+    const char* ou_id                    {user_obj.at("ou_id").is_null() ? nullptr : user_obj.at("ou_id").as_string().c_str()};
 
     //auto-set fields
     const std::string& updated_at    {time_with_timezone()};
 
     {//update user
+        const std::string& query {"UPDATE users SET first_name=$1,last_name=$2,email=$3,is_blocked=$4,updated_at=$5,"
+                                                "phone_number=$6,position=$7,gender=$8,location_id=$9,ou_id=$10 WHERE id=$11"};
         const char* param_values[] {first_name,last_name,email,is_blocked.c_str(),updated_at.c_str(),
-                                    phone_number,position,gender,location_id,ou_id,user_uid.c_str()};
-        res_ptr=PQexecParams(conn_ptr,"UPDATE users SET first_name=$1,last_name=$2,email=$3,is_blocked=$4,updated_at=$5,"
-                                                "phone_number=$6,position=$7,gender=$8,location_id=$9,ou_id=$10 WHERE id=$11",
-                                                 11,NULL,param_values,NULL,NULL,0);
+                                                      phone_number,position,gender,location_id,ou_id,user_uid.c_str()};
+        res_ptr=PQexecParams(conn_ptr,query.c_str(),11,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
@@ -1097,10 +1116,9 @@ db_status dbase_handler::user_info_put(const std::string &user_uid, const std::s
     }
 
     {//get updated user back
+        const std::string& query {"SELECT * FROM users WHERE id=$1"};
         const char* param_values[] {user_uid.c_str()};
-        res_ptr=PQexecParams(conn_ptr,"SELECT * FROM users WHERE id=$1",
-                                       1,NULL,param_values,NULL,NULL,0);
-
+        res_ptr=PQexecParams(conn_ptr,query.c_str(),1,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
@@ -1188,11 +1206,11 @@ db_status dbase_handler::user_info_post(const std::string &user, const std::stri
     const std::string& updated_at {time_with_timezone()};
     const std::string& is_blocked {std::to_string(false)};
 
+    const std::string& query {"INSERT INTO users (id,first_name,last_name,email,created_at,updated_at,is_blocked,phone_number,position,gender,location_id,ou_id)"
+                                             " VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)"};
     const char* param_values[] {id,first_name,last_name,email,created_at.c_str(),updated_at.c_str(),is_blocked.c_str(),
                                 phone_number,position,gender,location_id,ou_id};
-    res_ptr=PQexecParams(conn_ptr,"INSERT INTO users (id,first_name,last_name,email,created_at,updated_at,is_blocked,phone_number,position,gender,location_id,ou_id)"
-                                            " VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
-                                            12,NULL,param_values,NULL,NULL,0);
+    res_ptr=PQexecParams(conn_ptr,query.c_str(),12,NULL,param_values,NULL,NULL,0);
     if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
@@ -1220,9 +1238,9 @@ db_status dbase_handler::user_info_delete(const std::string &user_uid, const std
             return db_status::unauthorized;
         }
     }
+    const std::string& query {"DELETE FROM users WHERE id=$1"};
     const char* param_values[] {user_uid.c_str()};
-    res_ptr=PQexecParams(conn_ptr,"DELETE FROM users WHERE id=$1",
-                                   1,NULL,param_values,NULL,NULL,0);
+    res_ptr=PQexecParams(conn_ptr,query.c_str(),1,NULL,param_values,NULL,NULL,0);
     if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
@@ -1250,7 +1268,8 @@ db_status dbase_handler::rp_list_get(std::string &rps, const std::string &reques
             return db_status::unauthorized;
         }
     }
-    res_ptr=PQexec(conn_ptr,"SELECT * FROM roles_permissions");
+    const std::string& query {"SELECT * FROM roles_permissions LIMIT 100 OFFSET 0"};
+    res_ptr=PQexec(conn_ptr,query.c_str());
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
@@ -1473,7 +1492,14 @@ db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &use
                 for(int c=0;c < columns;++c){
                     const char* key {PQfname(res_ptr,c)};
                     const char* value {PQgetvalue(res_ptr,r,c)};
-                    user_.emplace(key,value==NULL ? nullptr : value);
+                    if(std::string {key}=="is_blocked"){
+                        const std::string& value_ {value};
+                        const bool& is_blocked {(value_.empty() || value_=="f") ? false : true};
+                        user_.emplace(key,is_blocked);
+                    }
+                    else{
+                        user_.emplace(key,value==NULL ? nullptr : value);
+                    }
                 }
             }
             users_.push_back(user_);
@@ -1569,7 +1595,14 @@ db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &use
                for(int c=0;c < columns;++c){
                    const char* key {PQfname(res_ptr,c)};
                    const char* value {PQgetvalue(res_ptr,r,c)};
-                   user_.emplace(key,value==NULL ? nullptr : value);
+                   if(std::string {key}=="is_blocked"){
+                       const std::string& value_ {value};
+                       const bool& is_blocked {(value_.empty() || value_=="f") ? false : true};
+                       user_.emplace(key,is_blocked);
+                   }
+                   else{
+                       user_.emplace(key,value==NULL ? nullptr : value);
+                   }
                }
            }
             users_.push_back(user_);
@@ -1901,9 +1934,9 @@ db_status dbase_handler::rp_child_put(const std::string &parent_uid, const std::
     }
     {//create relationship
         const std::string& created_at {time_with_timezone()};
+        const std::string& query {"INSERT INTO roles_permissions_relationship (created_at,parent_id,child_id) VALUES($1,$2,$3)"};
         const char* param_values[] {created_at.c_str(),parent_uid.c_str(),child_uid.c_str()};
-        res_ptr=PQexecParams(conn_ptr,"INSERT INTO roles_permissions_relationship (created_at,parent_id,child_id) VALUES($1,$2,$3)",
-                                       3,NULL,param_values,NULL,NULL,0);
+        res_ptr=PQexecParams(conn_ptr,query.c_str(),3,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
@@ -1913,10 +1946,9 @@ db_status dbase_handler::rp_child_put(const std::string &parent_uid, const std::
         PQclear(res_ptr);
     }
     {//send rp with all children back
+        const std::string& query {"SELECT * FROM roles_permissions WHERE id=$1"};
         const char* param_values[] {parent_uid.c_str()};
-        res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
-                                       1,NULL,param_values,NULL,NULL,0);
-
+        res_ptr=PQexecParams(conn_ptr,query.c_str(),1,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
@@ -1976,9 +2008,9 @@ db_status dbase_handler::rp_child_delete(const std::string &parent_uid, const st
         }
     }
     {//delete relationship
+        const std::string& query {"DELETE FROM roles_permissions_relationship WHERE parent_id=$1 AND child_id=$2"};
         const char* param_values[] {parent_uid.c_str(),child_uid.c_str()};
-        res_ptr=PQexecParams(conn_ptr,"DELETE FROM roles_permissions_relationship WHERE parent_id=$1 AND child_id=$2",
-                                       2,NULL,param_values,NULL,NULL,0);
+        res_ptr=PQexecParams(conn_ptr,query.c_str(),2,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
@@ -1988,10 +2020,9 @@ db_status dbase_handler::rp_child_delete(const std::string &parent_uid, const st
         PQclear(res_ptr);
     }
     {//send rp with all children back
+        const std::string& query {"SELECT * FROM roles_permissions WHERE id=$1"};
         const char* param_values[] {parent_uid.c_str()};
-        res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
-                                       1,NULL,param_values,NULL,NULL,0);
-
+        res_ptr=PQexecParams(conn_ptr,query.c_str(),1,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
@@ -2064,10 +2095,9 @@ db_status dbase_handler::authz_manage_post(const std::string &requested_user_uid
     }
     {//assign
         const std::string& created_at {time_with_timezone()};
-
+        const std::string& query {"INSERT INTO users_roles_permissions (created_at,user_id,role_permission_id) VALUES($1,$2,$3)"};
         const char* param_values[] {created_at.c_str(),requested_user_uid.c_str(),requested_rp_uid.c_str()};
-        res_ptr=PQexecParams(conn_ptr,"INSERT INTO users_roles_permissions (created_at,user_id,role_permission_id) VALUES($1,$2,$3)",
-                             3,NULL,param_values,NULL,NULL,0);
+        res_ptr=PQexecParams(conn_ptr,query.c_str(),3,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
@@ -2135,9 +2165,9 @@ db_status dbase_handler::authz_manage_delete(const std::string &requested_user_u
         }
     }
     {//remove
+        const std::string& query {"DELETE FROM users_roles_permissions WHERE user_id=$1 AND role_permission_id=$2"};
         const char* param_values[] {requested_user_uid.c_str(),requested_rp_uid.c_str()};
-        res_ptr=PQexecParams(conn_ptr,"DELETE FROM users_roles_permissions WHERE user_id=$1 AND role_permission_id=$2",
-                             2,NULL,param_values,NULL,NULL,0);
+        res_ptr=PQexecParams(conn_ptr,query.c_str(),2,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
