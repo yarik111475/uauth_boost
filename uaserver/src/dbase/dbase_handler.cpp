@@ -119,7 +119,7 @@ bool dbase_handler::init_tables(PGconn *conn_ptr,std::string& msg)
     }
     {//create table 'roles_permissions'
         const std::string& command {"CREATE TABLE IF NOT EXISTS roles_permissions "
-                                    "(id uuid PRIMARY KEY NOT NULL, name varchar(50) NULL, "
+                                    "(id uuid PRIMARY KEY NOT NULL, name varchar(50) UNIQUE NOT NULL, "
                                     "description varchar NULL, type rolepermissiontype NULL)"};
         res_ptr=PQexec(conn_ptr,command.c_str());
         if(PQresultStatus(res_ptr) != PGRES_COMMAND_OK){
