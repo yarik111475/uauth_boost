@@ -106,7 +106,7 @@ bool dbase_handler::init_tables(PGconn *conn_ptr,std::string& msg)
         const std::string& command {"CREATE TABLE IF NOT EXISTS users "
                                     "(id uuid PRIMARY KEY NOT NULL, created_at timestamptz NOT NULL, "
                                     "updated_at timestamptz NOT NULL, first_name varchar(20) NULL, "
-                                    "last_name varchar(20) NULL, email varchar(60) NULL, is_blocked boolean NOT NULL, "
+                                    "last_name varchar(20) NULL, email varchar(60) NULL UNIQUE, is_blocked boolean NOT NULL, "
                                     "phone_number varchar NULL, position varchar NULL, "
                                     "gender gender NULL, location_id uuid NOT NULL, "
                                     "ou_id uuid NOT NULL)"};
@@ -137,7 +137,10 @@ bool dbase_handler::init_tables(PGconn *conn_ptr,std::string& msg)
     }
     {//create table 'users_roles_permissions'
         const std::string& command {"CREATE TABLE IF NOT EXISTS users_roles_permissions "
-                                    "(created_at timestamptz NOT NULL, user_id uuid NOT NULL, role_permission_id uuid NOT NULL)"};
+                                    "(created_at timestamptz NOT NULL, "
+                                    "user_id uuid NOT NULL references users, "
+                                    "role_permission_id uuid NOT NULL references roles_permissions, "
+                                    "primary key (user_id, role_permission_id))"};
         res_ptr=PQexec(conn_ptr,command.c_str());
         if(PQresultStatus(res_ptr) != PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
@@ -147,7 +150,10 @@ bool dbase_handler::init_tables(PGconn *conn_ptr,std::string& msg)
     }
     {//create table 'roles_permissions_relationship'
         const std::string& command {"CREATE TABLE IF NOT EXISTS roles_permissions_relationship "
-                                    "(created_at timestamptz NOT NULL, parent_id uuid NOT NULL, child_id uuid NOT NULL)"};
+                                    "(created_at timestamptz NOT NULL, "
+                                     "parent_id uuid NOT NULL references public.roles_permissions, "
+                                     "child_id uuid NOT NULL references public.roles_permissions, "
+                                     "primary key (parent_id, child_id))"};
         res_ptr=PQexec(conn_ptr,command.c_str());
         if(PQresultStatus(res_ptr) != PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
