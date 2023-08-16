@@ -800,8 +800,8 @@ db_status dbase_handler::user_list_get(std::string& users, const std::string& li
     PQfinish(conn_ptr);
 
     const boost::json::object out {
-        {"limit",limit},
-        {"offset",offset},
+        {"limit",std::stoi(limit)},
+        {"offset",std::stoi(offset)},
         {"count",users_.size()},
         {"total",total},
         {"items",users_},
@@ -1348,8 +1348,8 @@ db_status dbase_handler::rp_list_get(std::string &rps, const std::string &limit,
     PQfinish(conn_ptr);
 
     const boost::json::object& out {
-        {"limit",limit},
-        {"offset",offset},
+        {"limit",std::stoi(limit)},
+        {"offset",std::stoi(offset)},
         {"count",rps_.size()},
         {"total",total},
         {"items",rps_}
