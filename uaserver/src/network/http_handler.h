@@ -149,8 +149,10 @@ public:
         log:
         {//log response
             if(logger_ptr_){
+                const unsigned int& code {response.result_int()};
                 const std::string& body {response.body()};
-                const std::string& msg {(boost::format("body: %s")
+                const std::string& msg {(boost::format("status: %d, body: %s")
+                                        % code
                                         % body).str()};
                 logger_ptr_->debug("response log, {}",msg);
             }
