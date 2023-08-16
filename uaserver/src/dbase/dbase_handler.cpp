@@ -1070,7 +1070,7 @@ db_status dbase_handler::user_info_put(const std::string &user_uid, const std::s
     const char* first_name           {user_obj.at("first_name").is_null() ? nullptr : user_obj.at("first_name").as_string().c_str()};
     const char* last_name            {user_obj.at("last_name").is_null() ? nullptr : user_obj.at("last_name").as_string().c_str()};
     const char* email                {user_obj.at("email").is_null() ? nullptr : user_obj.at("email").as_string().c_str()};
-    const char* is_blocked           {user_obj.at("is_blocked").is_null() ? nullptr : user_obj.at("is_blocked").as_string().c_str()};
+    const std::string& is_blocked    {user_obj.at("is_blocked").is_null() ? nullptr : std::to_string(user_obj.at("is_blocked").as_bool())};
     const char* phone_number         {user_obj.at("phone_number").is_null() ? nullptr : user_obj.at("phone_number").as_string().c_str()};
     const char* position             {user_obj.at("position").is_null() ? nullptr : user_obj.at("position").as_string().c_str()};
     const char* gender               {user_obj.at("gender").is_null() ? nullptr : user_obj.at("gender").as_string().c_str()};
@@ -1081,7 +1081,7 @@ db_status dbase_handler::user_info_put(const std::string &user_uid, const std::s
     const std::string& updated_at    {time_with_timezone()};
 
     {//update user
-        const char* param_values[] {first_name,last_name,email,is_blocked,updated_at.c_str(),
+        const char* param_values[] {first_name,last_name,email,is_blocked.c_str(),updated_at.c_str(),
                                     phone_number,position,gender,location_id,ou_id,user_uid.c_str()};
         res_ptr=PQexecParams(conn_ptr,"UPDATE users SET first_name=$1,last_name=$2,email=$3,is_blocked=$4,updated_at=$5,"
                                                 "phone_number=$6,position=$7,gender=$8,location_id=$9,ou_id=$10 WHERE id=$11",
