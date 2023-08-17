@@ -288,7 +288,7 @@ http::response<http::string_body> http_handler::handle_user_post(http::request<h
     case db_status::fail:
         return fail(std::move(request),http::status::bad_request,msg);
     case db_status::success:
-        return success(std::move(request),http::status::ok,"user created");
+        return success(std::move(request),http::status::ok,msg);
     case db_status::not_found:
         return fail(std::move(request),http::status::not_found,msg);
     case db_status::unauthorized:

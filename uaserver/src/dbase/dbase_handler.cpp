@@ -1214,36 +1214,73 @@ db_status dbase_handler::user_info_post(const std::string &user, const std::stri
             }
         }
     }
+    {//create user
+        //get user fields
+        const char* id           {user_obj.at("id").is_null() ? nullptr : user_obj.at("id").as_string().c_str()};
+        const char* first_name   {user_obj.at("first_name").is_null() ? nullptr : user_obj.at("first_name").as_string().c_str()};
+        const char* last_name    {user_obj.at("last_name").is_null() ? nullptr : user_obj.at("last_name").as_string().c_str()};
+        const char* email        {user_obj.at("email").is_null() ? nullptr : user_obj.at("email").as_string().c_str()};
+        const char* phone_number {user_obj.at("phone_number").is_null() ? nullptr : user_obj.at("phone_number").as_string().c_str()};
+        const char* position     {user_obj.at("position").is_null() ? nullptr : user_obj.at("position").as_string().c_str()};
+        const char* gender       {user_obj.at("gender").is_null() ? nullptr : user_obj.at("gender").as_string().c_str()};
+        const char* location_id  {user_obj.at("location_id").is_null() ? nullptr : user_obj.at("location_id").as_string().c_str()};
+        const char* ou_id        {user_obj.at("ou_id").is_null() ? nullptr : user_obj.at("ou_id").as_string().c_str()};
 
-    //get user fields
-    const char* id           {user_obj.at("id").is_null() ? nullptr : user_obj.at("id").as_string().c_str()};
-    const char* first_name   {user_obj.at("first_name").is_null() ? nullptr : user_obj.at("first_name").as_string().c_str()};
-    const char* last_name    {user_obj.at("last_name").is_null() ? nullptr : user_obj.at("last_name").as_string().c_str()};
-    const char* email        {user_obj.at("email").is_null() ? nullptr : user_obj.at("email").as_string().c_str()};
-    const char* phone_number {user_obj.at("phone_number").is_null() ? nullptr : user_obj.at("phone_number").as_string().c_str()};
-    const char* position     {user_obj.at("position").is_null() ? nullptr : user_obj.at("position").as_string().c_str()};
-    const char* gender       {user_obj.at("gender").is_null() ? nullptr : user_obj.at("gender").as_string().c_str()};
-    const char* location_id  {user_obj.at("location_id").is_null() ? nullptr : user_obj.at("location_id").as_string().c_str()};
-    const char* ou_id        {user_obj.at("ou_id").is_null() ? nullptr : user_obj.at("ou_id").as_string().c_str()};
+        //auto-set fields
+        const std::string& created_at {time_with_timezone()};
+        const std::string& updated_at {time_with_timezone()};
+        const std::string& is_blocked {std::to_string(false)};
 
-    //auto-set fields
-    const std::string& created_at {time_with_timezone()};
-    const std::string& updated_at {time_with_timezone()};
-    const std::string& is_blocked {std::to_string(false)};
+        const std::string& query {"INSERT INTO users (id,first_name,last_name,email,created_at,updated_at,is_blocked,phone_number,position,gender,location_id,ou_id)"
+                                                 " VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)"};
+        const char* param_values[] {id,first_name,last_name,email,created_at.c_str(),updated_at.c_str(),is_blocked.c_str(),
+                                    phone_number,position,gender,location_id,ou_id};
+        res_ptr=PQexecParams(conn_ptr,query.c_str(),12,NULL,param_values,NULL,NULL,0);
+        if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
+            msg=std::string {PQresultErrorMessage(res_ptr)};
+            PQclear(res_ptr);
+            PQfinish(conn_ptr);
+            return db_status::fail;
+        }
+    }
+    {//send created user back
+        const char* id {user_obj.at("id").as_string().c_str()};;
+        const  std::string&  query  {"SELECT * FROM users WHERE id=$1"};
+        const char* param_values[] {id};
+        res_ptr=PQexecParams(conn_ptr,query.c_str(),1,NULL,param_values,NULL,NULL,0);
+        if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+            msg=std::string {PQresultErrorMessage(res_ptr)};
+            PQclear(res_ptr);
+            PQfinish(conn_ptr);
+            return db_status::fail;
+        }
+        const int& rows {PQntuples(res_ptr)};
+        if(!rows){
+            PQclear(res_ptr);
+            PQfinish(conn_ptr);
+            return db_status::not_found;
+        }
+        const int& columns {PQnfields(res_ptr)};
 
-    const std::string& query {"INSERT INTO users (id,first_name,last_name,email,created_at,updated_at,is_blocked,phone_number,position,gender,location_id,ou_id)"
-                                             " VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)"};
-    const char* param_values[] {id,first_name,last_name,email,created_at.c_str(),updated_at.c_str(),is_blocked.c_str(),
-                                phone_number,position,gender,location_id,ou_id};
-    res_ptr=PQexecParams(conn_ptr,query.c_str(),12,NULL,param_values,NULL,NULL,0);
-    if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
-        msg=std::string {PQresultErrorMessage(res_ptr)};
+        boost::json::object user_ {};
+
+        for(int c=0;c < columns;++c){
+            const char* key {PQfname(res_ptr,c)};
+            const char* value {PQgetvalue(res_ptr,0,c)};
+            const int& is_null {PQgetisnull(res_ptr,0,c)};
+            if(std::string {key}=="is_blocked"){
+                const std::string& value_ {value};
+                const bool& is_blocked {(value_.empty() || value_=="f") ? false : true};
+                user_.emplace(key,is_blocked);
+            }
+            else{
+                user_.emplace(key,is_null ? boost::json::value(nullptr) : value);
+            }
+        }
+        msg=boost::json::serialize(user_);
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return db_status::fail;
     }
-    PQclear(res_ptr);
-    PQfinish(conn_ptr);
     return db_status::success;
 }
 
