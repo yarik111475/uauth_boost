@@ -23,8 +23,11 @@ private:
     static bool is_initiated_;
 
     std::string time_with_timezone();
+    //Open connection
     PGconn* open_connection(std::string& msg);
+    //Init tables if empty or not exists
     bool init_tables(PGconn* conn_ptr, std::string &msg);
+    //Init default roles-permissions
     bool init_default_rps(PGconn* conn_ptr, std::string &msg);
 
     //Check if rp duplicate by name
