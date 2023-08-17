@@ -4,6 +4,7 @@
 enum class db_status{
     fail,
     success,
+    conflict,
     not_found,
     unauthorized,
     unprocessable_entity
