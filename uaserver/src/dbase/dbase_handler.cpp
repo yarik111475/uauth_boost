@@ -1745,7 +1745,7 @@ db_status dbase_handler::rp_info_post(const std::string &rp, const std::string &
             const auto& found {keys_set.find(field)};
             if(found==keys_set.end()){
                 msg="role-permission not valid, key '" + field + "' not exists";
-                return db_status::conflict;
+                return db_status::fail;
             }
         }
     }
@@ -1760,7 +1760,7 @@ db_status dbase_handler::rp_info_post(const std::string &rp, const std::string &
         if(is_duplicate){
             msg="role/permission with name: '" + std::string{name} + "' already exists!";
             PQfinish(conn_ptr);
-            return db_status::unprocessable_entity;
+            return db_status::conflict;
         }
     }
 
