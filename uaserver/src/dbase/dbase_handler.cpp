@@ -286,7 +286,6 @@ bool dbase_handler::is_rp_duplicate(PGconn *conn_ptr, const std::string &name, s
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
-        msg="role-permission not found";
         return false;
     }
 
@@ -1757,8 +1756,8 @@ db_status dbase_handler::rp_info_post(const std::string &rp, const std::string &
     const char* description {rp_obj.at("description").is_null() ? nullptr : rp_obj.at("description").as_string().c_str()};
 
     {//check if rp duplicate 'name'
-        const bool& duplicate {is_rp_duplicate(conn_ptr,std::string{name},msg)};
-        if(duplicate){
+        const bool& is_duplicate {is_rp_duplicate(conn_ptr,std::string{name},msg)};
+        if(is_duplicate){
             msg="role/permission with name: '" + std::string{name} + "' already exists!";
             PQfinish(conn_ptr);
             return db_status::unprocessable_entity;

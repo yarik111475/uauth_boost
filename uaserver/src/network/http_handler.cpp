@@ -668,6 +668,8 @@ http::response<http::string_body> http_handler::handle_rp_post(http::request<htt
         return fail(std::move(request),http::status::not_found,msg);
     case db_status::unauthorized:
         return fail(std::move(request),http::status::unauthorized,msg);
+    case db_status::unprocessable_entity:
+        return fail(std::move(request),http::status::unprocessable_entity,msg);
     default:
         return fail(std::move(request),http::status::bad_request,msg);
     }
