@@ -1110,15 +1110,15 @@ db_status dbase_handler::user_info_put(const std::string &user_uid, const std::s
     }
 
     //get user fields
-    const char* first_name            {user_obj.at("first_name").is_null() ? nullptr : user_obj.at("first_name").as_string().c_str()};
-    const char* last_name            {user_obj.at("last_name").is_null() ? nullptr : user_obj.at("last_name").as_string().c_str()};
-    const char* email                    {user_obj.at("email").is_null() ? nullptr : user_obj.at("email").as_string().c_str()};
+    const char* first_name         {user_obj.at("first_name").is_null() ? nullptr : user_obj.at("first_name").as_string().c_str()};
+    const char* last_name          {user_obj.at("last_name").is_null() ? nullptr : user_obj.at("last_name").as_string().c_str()};
+    const char* email              {user_obj.at("email").is_null() ? nullptr : user_obj.at("email").as_string().c_str()};
     const std::string& is_blocked  {user_obj.at("is_blocked").is_null() ? nullptr : std::to_string(user_obj.at("is_blocked").as_bool())};
-    const char* phone_number     {user_obj.at("phone_number").is_null() ? nullptr : user_obj.at("phone_number").as_string().c_str()};
-    const char* position                {user_obj.at("position").is_null() ? nullptr : user_obj.at("position").as_string().c_str()};
-    const char* gender                 {user_obj.at("gender").is_null() ? nullptr : user_obj.at("gender").as_string().c_str()};
-    const char* location_id           {user_obj.at("location_id").is_null() ? nullptr : user_obj.at("location_id").as_string().c_str()};
-    const char* ou_id                    {user_obj.at("ou_id").is_null() ? nullptr : user_obj.at("ou_id").as_string().c_str()};
+    const char* phone_number       {user_obj.at("phone_number").is_null() ? nullptr : user_obj.at("phone_number").as_string().c_str()};
+    const char* position           {user_obj.at("position").is_null() ? nullptr : user_obj.at("position").as_string().c_str()};
+    const char* gender             {user_obj.at("gender").is_null() ? nullptr : user_obj.at("gender").as_string().c_str()};
+    const char* location_id        {user_obj.at("location_id").is_null() ? nullptr : user_obj.at("location_id").as_string().c_str()};
+    const char* ou_id              {user_obj.at("ou_id").is_null() ? nullptr : user_obj.at("ou_id").as_string().c_str()};
 
     //auto-set fields
     const std::string& updated_at    {time_with_timezone()};
@@ -1164,10 +1164,10 @@ db_status dbase_handler::user_info_put(const std::string &user_uid, const std::s
             const int& is_null {PQgetisnull(res_ptr,0,c)};
             user_.emplace(key,is_null ? boost::json::value(nullptr) : value);
         }
-        msg=boost::json::serialize(user_);
         PQclear(res_ptr);
-        PQfinish(conn_ptr);
+        msg=boost::json::serialize(user_);
     }
+    PQfinish(conn_ptr);
     return db_status::success;
 }
 
@@ -1277,10 +1277,10 @@ db_status dbase_handler::user_info_post(const std::string &user, const std::stri
                 user_.emplace(key,is_null ? boost::json::value(nullptr) : value);
             }
         }
-        msg=boost::json::serialize(user_);
         PQclear(res_ptr);
-        PQfinish(conn_ptr);
+        msg=boost::json::serialize(user_);
     }
+    PQfinish(conn_ptr);
     return db_status::success;
 }
 
@@ -1805,16 +1805,46 @@ db_status dbase_handler::rp_info_post(const std::string &rp, const std::string &
     const boost::uuids::uuid& uuid_ {boost::uuids::random_generator()()};
     const std::string& uuid {boost::uuids::to_string(uuid_)};
 
-    const std::string& query {"INSERT INTO roles_permissions (id,name,type,description) VALUES($1,$2,$3,$4)"};
-    const char* param_values[] {uuid.c_str(),name,type,description};
-    res_ptr=PQexecParams(conn_ptr,query.c_str(),4,NULL,param_values,NULL,NULL,0);
-    if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
-        msg=std::string {PQresultErrorMessage(res_ptr)};
-        PQclear(res_ptr);
-        PQfinish(conn_ptr);
-        return db_status::fail;
+    {//create role-permission
+        const std::string& query {"INSERT INTO roles_permissions (id,name,type,description) VALUES($1,$2,$3,$4)"};
+        const char* param_values[] {uuid.c_str(),name,type,description};
+        res_ptr=PQexecParams(conn_ptr,query.c_str(),4,NULL,param_values,NULL,NULL,0);
+        if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
+            msg=std::string {PQresultErrorMessage(res_ptr)};
+            PQclear(res_ptr);
+            PQfinish(conn_ptr);
+            return db_status::fail;
+        }
     }
-    PQclear(res_ptr);
+    {//send created role-permission back
+        const std::string& query {"SELECT * FROM roles_permissions WHERE id=$1"};
+        const char* param_values[] {uuid.c_str()};
+        res_ptr=PQexecParams(conn_ptr,query.c_str(),1,NULL,param_values,NULL,NULL,0);
+        if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+            msg=std::string {PQresultErrorMessage(res_ptr)};
+            PQclear(res_ptr);
+            PQfinish(conn_ptr);
+            return db_status::fail;
+        }
+
+        const int& rows {PQntuples(res_ptr)};
+        if(!rows){
+            PQclear(res_ptr);
+            PQfinish(conn_ptr);
+            return db_status::not_found;
+        }
+        const int& columns {PQnfields(res_ptr)};
+        boost::json::object rp_ {};
+
+        for(int c=0;c < columns;++c){
+            const char* key {PQfname(res_ptr,c)};
+            const char* value {PQgetvalue(res_ptr,0,c)};
+            const int& is_null {PQgetisnull(res_ptr,0,c)};
+            rp_.emplace(key,is_null ? boost::json::value(nullptr) : value);
+        }
+        PQclear(res_ptr);
+        msg=boost::json::serialize(rp_);
+    }
     PQfinish(conn_ptr);
     return db_status::success;
 }
@@ -1868,7 +1898,7 @@ db_status dbase_handler::rp_info_put(const std::string &rp_uid, const std::strin
     const char* type        {rp_obj.at("type").is_null () ? nullptr : rp_obj.at("type").as_string().c_str()};
     const char* description {rp_obj.at("description").is_null() ? nullptr : rp_obj.at("description").as_string().c_str()};
 
-    {//update rp
+    {//update role-permmission
         const std::string& query {"UPDATE roles_permissions SET name=$1,type=$2,description=$3 WHERE id=$4"};
         const char* param_values[] {name,type,description,rp_uid.c_str()};
         res_ptr=PQexecParams(conn_ptr,query.c_str(),4,NULL,param_values,NULL,NULL,0);
@@ -1881,7 +1911,7 @@ db_status dbase_handler::rp_info_put(const std::string &rp_uid, const std::strin
         PQclear(res_ptr);
     }
 
-    {//get updated rp back
+    {//get updated role-permission back
         const std::string& query {"SELECT * FROM roles_permissions WHERE id=$1"};
         const char* param_values[] {rp_uid.c_str()};
         res_ptr=PQexecParams(conn_ptr,query.c_str(),1,NULL,param_values,NULL,NULL,0);
@@ -1907,9 +1937,9 @@ db_status dbase_handler::rp_info_put(const std::string &rp_uid, const std::strin
             rp_.emplace(key,is_null ? boost::json::value(nullptr) : value);
         }
         PQclear(res_ptr);
-        PQfinish(conn_ptr);
         msg=boost::json::serialize(rp_);   
     }
+    PQfinish(conn_ptr);
     return db_status::success;
 }
 
