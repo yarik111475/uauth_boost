@@ -1199,7 +1199,7 @@ db_status dbase_handler::user_info_post(const std::string &user, const std::stri
         }
         user_obj=user_.as_object();
 
-        std::set<std::string> fields_set {"id,first_name","last_name","email","phone_number","position","gender","location_id","ou_id"};
+        std::set<std::string> fields_set {"id","first_name","last_name","email","phone_number","position","gender","location_id","ou_id"};
         std::set<std::string> keys_set  {};
         std::for_each(user_obj.begin(),user_obj.end(),[&](const boost::json::key_value_pair& pair){
             const std::string& key {pair.key()};
