@@ -270,6 +270,30 @@ bool dbase_handler::init_default_rps(PGconn *conn_ptr, std::string &msg)
     return true;
 }
 
+//Check if rp duplicate by name
+bool dbase_handler::is_rp_duplicate(PGconn *conn_ptr, const std::string &name, std::string &msg)
+{
+    PGresult* res_ptr {NULL};
+    const std::string& query {"SELECT * FROM roles_permissions WHERE name=$1"};
+    const char* param_values[] {name.c_str()};
+    res_ptr=PQexecParams(conn_ptr,query.c_str(),1,NULL,param_values,NULL,NULL,0);
+    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        msg=std::string {PQresultErrorMessage(res_ptr)};
+        PQclear(res_ptr);
+        return false;
+    }
+
+    const int& rows {PQntuples(res_ptr)};
+    if(!rows){
+        PQclear(res_ptr);
+        msg="role-permission not found";
+        return false;
+    }
+
+    PQclear(res_ptr);
+    return true;
+}
+
 //Check if rp exists
 bool dbase_handler::is_rp_exists(PGconn *conn_ptr, const std::string &rp_uid, std::string &msg)
 {
@@ -1731,6 +1755,15 @@ db_status dbase_handler::rp_info_post(const std::string &rp, const std::string &
     const char* name        {rp_obj.at("name").is_null() ? nullptr : rp_obj.at("name").as_string().c_str()};
     const char* type        {rp_obj.at("type").is_null () ? nullptr : rp_obj.at("type").as_string().c_str()};
     const char* description {rp_obj.at("description").is_null() ? nullptr : rp_obj.at("description").as_string().c_str()};
+
+    {//check if rp duplicate 'name'
+        const bool& duplicate {is_rp_duplicate(conn_ptr,std::string{name},msg)};
+        if(duplicate){
+            msg="role/permission with name: '" + std::string{name} + "' already exists!";
+            PQfinish(conn_ptr);
+            return db_status::unprocessable_entity;
+        }
+    }
 
     //auto-set fields
     const boost::uuids::uuid& uuid_ {boost::uuids::random_generator()()};

@@ -27,9 +27,11 @@ private:
     bool init_tables(PGconn* conn_ptr, std::string &msg);
     bool init_default_rps(PGconn* conn_ptr, std::string &msg);
 
-    //Check if rp exists
+    //Check if rp duplicate by name
+    bool is_rp_duplicate(PGconn* conn_ptr,const std::string& name,std::string& msg);
+    //Check if rp exists by rp_uid
     bool is_rp_exists(PGconn* conn_ptr,const std::string& rp_uid,std::string& msg);
-    //Check if user exists
+    //Check if user exists by user_uid
     bool is_user_exists(PGconn* conn_ptr,const std::string& user_uid,std::string& msg);
     //Check if user authorized
     bool is_authorized(PGconn* conn_ptr, const std::string& user_uid, const std::string& rp_ident,std::string& msg);
