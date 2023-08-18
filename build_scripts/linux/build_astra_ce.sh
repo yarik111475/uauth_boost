@@ -14,9 +14,9 @@ OPENSSL_LIB_DIR="/usr/lib32/i386-linux-gnu"
 POSTGRE_LIB_DIR="/usr/lib/x86_64-linux-gnu"
 
 HOME_DIR="/home/${USER_NAME}"
-INSTALL_DIR="${HOME_DIR}"/uauth
+INSTALL_DIR="${CURRENT_DIR}"/uauth
 rm -rf ${INSTALL_DIR}
-mkdir -p "${HOME_DIR}"/uauth
+mkdir -p "${CURRENT_DIR}"/uauth
 
 #cmake options
 CMAKE_PATH="/usr/bin/cmake"

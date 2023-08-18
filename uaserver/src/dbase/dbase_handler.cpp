@@ -455,7 +455,7 @@ int dbase_handler::rp_total_get(PGconn *conn_ptr)
 int dbase_handler::user_total_get(PGconn *conn_ptr)
 {
     PGresult* res_ptr {NULL};
-    const std::string& query {"SELECT id FROM users"};
+    const std::string& query {"SELECT * FROM users"};
     res_ptr=PQexec(conn_ptr,query.c_str());
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
         PQclear(res_ptr);
@@ -1018,6 +1018,14 @@ db_status dbase_handler::user_rp_get(const std::string &user_uid, const std::str
     boost::json::array rps_ {};
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
+        const int& total {urp_total_get(conn_ptr)};
+        const boost::json::object& out {
+            {"limit",limit.empty() ? 100 : std::stoi(limit)},
+            {"offset",offset.empty() ? 0 : std::stoi(offset)},
+            {"count",rps_.size()},
+            {"total",total},
+            {"items",rps_}
+        };
         PQclear(res_ptr);
         PQfinish(conn_ptr);
         return db_status::not_found;
@@ -1052,7 +1060,7 @@ db_status dbase_handler::user_rp_get(const std::string &user_uid, const std::str
             PQclear(res_ptr);
         }
     }
-    const int& total {rp_total_get(conn_ptr)};
+    const int& total {urp_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
     const boost::json::object& out {

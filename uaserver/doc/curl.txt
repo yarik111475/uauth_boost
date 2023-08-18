@@ -2,8 +2,8 @@
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET  http://127.0.0.1:8030/api/v1/u-auth/users
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET 'http://127.0.0.1:8030/api/v1/u-auth/users?limit=2'
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET 'http://127.0.0.1:8030/api/v1/u-auth/users?limit=2&offset=2'
-curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://127.0.0.1:8030/api/v1/u-auth/users/258508fb-3857-4d01-92d5-298fd9169712
-curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://127.0.0.1:8030/api/v1/u-auth/users/dc77b7f3-71d9-4ce9-95a2-100b88d0306c/roles-permissions
+curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://127.0.0.1:8030/api/v1/u-auth/users/ebde24b5-9769-4e7b-ba2e-3ddc99cb8311
+curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://127.0.0.1:8030/api/v1/u-auth/users/ebde24b5-9769-4e7b-ba2e-3ddc99cb8311/roles-permissions
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET 'http://127.0.0.1:8030/api/v1/u-auth/users/dc77b7f3-71d9-4ce9-95a2-100b88d0306c/roles-permissions?limit=2'
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET 'http://127.0.0.1:8030/api/v1/u-auth/users/dc77b7f3-71d9-4ce9-95a2-100b88d0306c/roles-permissions?limit=2&offset=0'
 
