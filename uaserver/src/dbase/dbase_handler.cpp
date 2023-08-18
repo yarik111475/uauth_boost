@@ -1162,7 +1162,14 @@ db_status dbase_handler::user_info_put(const std::string &user_uid, const std::s
             const char* key {PQfname(res_ptr,c)};
             const char* value {PQgetvalue(res_ptr,0,c)};
             const int& is_null {PQgetisnull(res_ptr,0,c)};
-            user_.emplace(key,is_null ? boost::json::value(nullptr) : value);
+            if(std::string {key}=="is_blocked"){
+                const std::string& value_ {value};
+                const bool& is_blocked {(value_.empty() || value_=="f") ? false : true};
+                user_.emplace(key,is_blocked);
+            }
+            else{
+                user_.emplace(key,is_null ? boost::json::value(nullptr) : value);
+            }
         }
         PQclear(res_ptr);
         msg=boost::json::serialize(user_);
