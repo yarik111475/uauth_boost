@@ -1028,7 +1028,8 @@ db_status dbase_handler::user_rp_get(const std::string &user_uid, const std::str
         };
         PQclear(res_ptr);
         PQfinish(conn_ptr);
-        return db_status::not_found;
+        rps=boost::json::serialize(out);
+        return db_status::success;
     }
     else{
         std::vector<std::string> rp_ids {};
