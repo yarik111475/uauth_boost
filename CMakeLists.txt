@@ -72,11 +72,18 @@ find_package(Boost 1.82.0 EXACT COMPONENTS REQUIRED
 set(SPDLOG_MASTER_PROJECT OFF)
 set(SPDLOG_INSTALL OFF)
 set(SPDLOG_BUILD_SHARED OFF)
+set(SPDLOG_WCHAR_FILENAMES ON)
 
 #postgresql
 if(WIN32)
-    set(PostgreSQL_INCLUDE_DIRS "C:\\pgsql\\include")
-    set(PostgreSQL_LIBRARY_DIRS "C:\\pgsql\\lib")
+    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+        set(PostgreSQL_INCLUDE_DIRS "C:/pgsql/x32/include")
+        set(PostgreSQL_LIBRARY_DIRS "C:/pgsql/x32lib")
+    endif()
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(PostgreSQL_INCLUDE_DIRS "C:/pgsql/x64/include")
+        set(PostgreSQL_LIBRARY_DIRS "C:/pgsql/x64/lib")
+    endif()
     set(PostgreSQL_LIB libpq.lib)
 endif()
 if(UNIX AND NOT APPLE)
@@ -84,6 +91,18 @@ if(UNIX AND NOT APPLE)
     set(PostgreSQL_LIBRARY_DIRS "/usr/lib/x86_64-linux-gnu")
     set(PostgreSQL_LIB libpq.so.5)
 endif()
+
+#openssl win32
+if(WIN32)
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+       set(OPENSSL_ROOT_DIR "C:/Program Files/OpenSSL-Win64")
+    elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+        set(OPENSSL_ROOT_DIR "C:/Program Files (x86)/OpenSSL-Win32")
+    endif()
+endif()
+
+#openssl package
+find_package(OpenSSL REQUIRED)
 
 #rpath
 # use, i.e. don't skip the full RPATH for the build tree
@@ -99,8 +118,6 @@ message(${CMAKE_INSTALL_RPATH})
 # add the automatically determined parts of the RPATH
 # which point to directories outside the build tree to the install RPATH
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-find_package(OpenSSL REQUIRED)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/uashell)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/uaserver)
