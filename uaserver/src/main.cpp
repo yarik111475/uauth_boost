@@ -78,7 +78,7 @@ void set_env()
     setenv("UA_CA_CRT_PATH","/home/yaroslav/x509/root-ca.pem",0);
     setenv("UA_SIGNING_CA_CRT_PATH","/home/yaroslav/x509/signing-ca.pem",0);
     setenv("UA_SIGNING_CA_KEY_PATH","/home/yaroslav/x509/signing-ca-key.pem",0);
-    setenv("UA_SIGNING_CA_KEY_PASS","U$vN#@D,v)*$N9\\N",0);
+    setenv("UA_SIGNING_CA_KEY_PASS","U$vN#@D,v)*$N9\\N",0);// U$vN#@D,v)*$N9\N
 
     //ucontrol certificates part
     setenv("UA_CLIENT_CRT_PATH","/home/yaroslav/x509/clientCert.pem",0);

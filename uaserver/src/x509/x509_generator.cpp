@@ -86,6 +86,18 @@ bool x509_generator::create_PKCS12(const std::string &user_id, const std::string
         X509_gmtime_adj(X509_get_notAfter(x509.get()), 31536000L * 3);
         ret=X509_set_pubkey(x509.get(),pub_key.get());
         ret=X509_set_issuer_name(x509.get(),pub_name);
+
+        int last_pos {-1};
+        last_pos=X509_NAME_get_index_by_NID(pub_name,NID_commonName,-1);
+        if(last_pos!=-1){
+            auto ptr {X509_NAME_delete_entry(pub_name,last_pos)};
+            if(!ptr){
+                msg="COMMON_NAME entry not found!";
+                return false;
+            }
+            X509_NAME_ENTRY_free(ptr);
+        }
+
         ret=X509_NAME_add_entry_by_txt(pub_name,"OU",MBSTRING_ASC,
                                        (const unsigned char*)"User",-1,-1,0);
         ret=X509_NAME_add_entry_by_txt(pub_name,"CN",MBSTRING_ASC,
@@ -94,20 +106,6 @@ bool x509_generator::create_PKCS12(const std::string &user_id, const std::string
 
         //sign X509 object
         ret=X509_sign(x509.get(),pr_key.get(),EVP_sha256());
-
-        /*
-        {//for .pem testing
-            BIO* test_bio {BIO_new(BIO_s_mem())};
-            ret=PEM_write_bio_X509(test_bio,x509.get());
-            std::vector<char> test {};
-            int l {BIO_pending(test_bio)};
-            test.resize(l);
-            BIO_read(test_bio,test.data(),l);
-            std::ofstream out {"C:/cert/test.pem"};
-            out.write(test.data(),test.size());
-            out.close();
-        }
-        */
 
         //create and fill X509_stack
         std::shared_ptr<STACK_OF(X509)> sk_X509 {sk_X509_new_null(),&sk_X509_free};
@@ -151,17 +149,6 @@ bool x509_generator::create_X509(const std::string &pub_path, const std::string 
         std::shared_ptr<X509_REQ> req {PEM_read_bio_X509_REQ(req_bio.get(),NULL,NULL,NULL),&X509_REQ_free};
         EVP_PKEY* req_key {X509_REQ_get0_pubkey(req.get())};
         X509_NAME* req_name {X509_REQ_get_subject_name(req.get())};
-
-//        const int& name_count {X509_NAME_entry_count(req_name)};
-//        for(int i=0;i<name_count;++i){
-//            X509_NAME_ENTRY* entry {X509_NAME_get_entry(req_name,i)};
-//            ASN1_OBJECT* obj {X509_NAME_ENTRY_get_object(entry)};
-//            ASN1_STRING* str {X509_NAME_ENTRY_get_data(entry)};
-
-//            const int& nid {OBJ_obj2nid(obj)};
-//            const std::string& key {OBJ_nid2sn(nid)};
-//            const int& len {str->length};
-//        }
 
         //create EVP_PKEY pub_key
         std::shared_ptr<BIO> pub_bio {BIO_new_file(pub_path.c_str(),"r+"),&BIO_free};

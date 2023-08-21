@@ -33,8 +33,9 @@ curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X POST http://1
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X DELETE http://127.0.0.1:8030/api/v1/u-auth/authz/manage/3fa85f64-5717-4562-b3fc-2c963f66afa6/revoke/983202e9-59ca-58be-a3d6-6f1f746e80f8
 
 ### CERTIFICATE PART ###
-curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X POST http://127.0.0.1:8030/api/v1/u-auth/certificates/user/c2dcd82f-56df-4959-981f-4d538a5a7697?certificate_password=password -o "C:/cert/http_pkcs.pfx"
-curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X POST --data-binary "@C:/cert/agent_csr.bin" http://127.0.0.1:8030/api/v1/u-auth/certificates/agent/sign-csr -o "C:/cert/agent_cert.pem"
+openssl pkcs12 -in pkcs.pfx -info  -password 'password'
+curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X POST http://127.0.0.1:8030/api/v1/u-auth/certificates/user/dc77b7f3-71d9-4ce9-95a2-100b88d0306c?certificate_password=password -o "/home/yaroslav/x509/pkcs.pfx"
+curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X POST --data-binary "@/home/yaroslav/x509/agent_csr.bin" http://127.0.0.1:8030/api/v1/u-auth/certificates/agent/sign-csr -o "/home/yaroslav/x509/agent_cert.pem"
 
 ### AUTHZ PART ###
 curl -H "X-Client-Cert-Dn:6f8db871-d9db-4adc-bfc8-bd51a303d56d" -X GET http://127.0.0.1:8030/api/v1/u-auth/authz/dc77b7f3-71d9-4ce9-95a2-100b88d0306c/authorized-to/b961eb97-ce93-4715-9d22-9ed886478c37
