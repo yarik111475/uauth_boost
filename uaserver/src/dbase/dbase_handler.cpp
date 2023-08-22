@@ -896,91 +896,6 @@ db_status dbase_handler::user_info_get(const std::string &user_uid, std::string 
     return db_status::success;
 }
 
-/*
-//Get User Assigned Roles And Permissions
-db_status dbase_handler::user_rp_get(const std::string &user_uid, const std::string &limit, const std::string &offset, std::string &rps, const std::string &requester_id, std::string &msg)
-{
-    PGconn* conn_ptr {open_connection(msg)};
-    PGresult* res_ptr {NULL};
-    if(!conn_ptr){
-        return db_status::fail;
-    }
-    {//check if authorized
-        std::string msg {};
-        const std::string& rp_ident {"role_permission:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
-        if(!authorized){
-            PQfinish(conn_ptr);
-            return db_status::unauthorized;
-        }
-    }
-
-    const char* param_values[] {user_uid.c_str()};
-    std::string command {"SELECT role_permission_id FROM users_roles_permissions WHERE user_id=$1"};
-    if(!limit.empty()){
-        command += " LIMIT " + limit;
-    }
-    if(!offset.empty()){
-        command +=" OFFSET " + offset;
-    }
-
-    res_ptr=PQexecParams(conn_ptr,command.c_str(),1,NULL,param_values,NULL,NULL,0);
-    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
-        msg=std::string {PQresultErrorMessage(res_ptr)};
-        PQclear(res_ptr);
-        PQfinish(conn_ptr);
-        return db_status::fail;
-    }
-
-    boost::json::array rps_ {};
-    const int& rows {PQntuples(res_ptr)};
-    if(!rows){
-        PQclear(res_ptr);
-        PQfinish(conn_ptr);
-        return db_status::not_found;
-    }
-    else{
-        std::vector<std::string> rp_ids {};
-        for(int r=0;r<rows;++r){
-            const std::string& rp_id {PQgetvalue(res_ptr,r,0)};
-            rp_ids.push_back(rp_id);
-        }
-        for(const std::string& rp_id: rp_ids){
-            const char* param_values[] {rp_id.c_str()};
-            res_ptr=PQexecParams(conn_ptr,"SELECT * FROM roles_permissions WHERE id=$1",
-                                           1,NULL,param_values,NULL,NULL,0);
-
-            if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
-                PQclear(res_ptr);
-                continue;
-            }
-            const int& columns {PQnfields(res_ptr)};
-            boost::json::object rp_ {};
-
-            for(int c=0;c < columns;++c){
-                const char* key {PQfname(res_ptr,c)};
-                const char* value {PQgetvalue(res_ptr,0,c)};
-                rp_.emplace(key,value==NULL ? nullptr : value);
-            }
-            rps_.push_back(rp_);
-            PQclear(res_ptr);
-        }
-    }
-    const int& total {rp_total_get(conn_ptr)};
-    PQfinish(conn_ptr);
-
-    const boost::json::object& out {
-        {"limit",limit.empty() ? 100 : std::stoi(limit)},
-        {"offset",offset.empty() ? 0 : std::stoi(offset)},
-        {"count",rps_.size()},
-        {"total",total},
-        {"items",rps_}
-    };
-    rps=boost::json::serialize(out);
-    return db_status::success;
-}
-*/
-
 //Get User Assigned Roles And Permissions with limit and/or offset
 db_status dbase_handler::user_rp_get(const std::string &user_uid, const std::string &limit, const std::string &offset, std::string &rps,const std::string &requester_id, std::string &msg)
 {
@@ -998,6 +913,18 @@ db_status dbase_handler::user_rp_get(const std::string &user_uid, const std::str
             return db_status::unauthorized;
         }
     }
+    int total {0};
+    {//get 'total' users-roles-permissions by user_uid without LIMIT and OFFSET
+        const char* param_values[] {user_uid.c_str()};
+        const std::string& query {"SELECT * FROM users_roles_permissions WHERE user_id=$1"};
+        res_ptr=PQexecParams(conn_ptr,query.c_str(), 1,NULL,param_values,NULL,NULL,0);
+        if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+            PQclear(res_ptr);
+        }
+        total=PQntuples(res_ptr);
+        PQclear(res_ptr);
+    }
+
     const char* param_values[] {user_uid.c_str()};
     std::string query {"SELECT role_permission_id FROM users_roles_permissions WHERE user_id=$1"};
     if(!limit.empty()){
@@ -1018,7 +945,6 @@ db_status dbase_handler::user_rp_get(const std::string &user_uid, const std::str
     boost::json::array rps_ {};
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
-        const int& total {urp_total_get(conn_ptr)};
         const boost::json::object& out {
             {"limit",limit.empty() ? 100 : std::stoi(limit)},
             {"offset",offset.empty() ? 0 : std::stoi(offset)},
@@ -1061,7 +987,6 @@ db_status dbase_handler::user_rp_get(const std::string &user_uid, const std::str
             PQclear(res_ptr);
         }
     }
-    const int& total {urp_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
     const boost::json::object& out {
@@ -1523,6 +1448,18 @@ db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &use
             return db_status::unauthorized;
         }
     }
+    int total {0};
+    {//get 'total' users-roles-permissions by rp_uid without LIMIT and OFFSET
+        const char* param_values[] {rp_uid.c_str()};
+        const std::string& query {"SELECT * FROM users_roles_permissions WHERE role_permission_id=$1"};
+        res_ptr=PQexecParams(conn_ptr,query.c_str(), 1,NULL,param_values,NULL,NULL,0);
+        if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+            PQclear(res_ptr);
+        }
+        total=PQntuples(res_ptr);
+        PQclear(res_ptr);
+    }
+
     const char* param_values[] {rp_uid.c_str()};
     const std::string& query {"SELECT user_id FROM users_roles_permissions WHERE role_permission_id=$1"};
     res_ptr=PQexecParams(conn_ptr,query.c_str(),1,NULL, param_values,NULL,NULL,0);
@@ -1537,7 +1474,6 @@ db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &use
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
-        const int& total {urp_total_get(conn_ptr)};
         PQfinish(conn_ptr);
 
         const boost::json::object& out {
@@ -1588,7 +1524,6 @@ db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &use
             PQclear(res_ptr);
         }
     }
-    const int& total {urp_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
     const boost::json::object& out {
@@ -1619,6 +1554,18 @@ db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &use
             return db_status::unauthorized;
         }
     }
+    int total {0};
+    {//get 'total' users-roles-permissions by rp_uid without LIMIT and OFFSET
+        const char* param_values[] {rp_uid.c_str()};
+        const std::string& query {"SELECT * FROM users_roles_permissions WHERE role_permission_id=$1"};
+        res_ptr=PQexecParams(conn_ptr,query.c_str(), 1,NULL,param_values,NULL,NULL,0);
+        if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+            PQclear(res_ptr);
+        }
+        total=PQntuples(res_ptr);
+        PQclear(res_ptr);
+    }
+
     std::string query {"SELECT user_id FROM users_roles_permissions WHERE role_permission_id=$1"};
     if(!limit.empty()){
         query +=" LIMIT " + limit;
@@ -1640,7 +1587,6 @@ db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &use
     const int& rows {PQntuples(res_ptr)};
     if(!rows){
         PQclear(res_ptr);
-        const int& total {urp_total_get(conn_ptr)};
         PQfinish(conn_ptr);
 
         const boost::json::object& out {
@@ -1692,7 +1638,6 @@ db_status dbase_handler::rp_user_get(const std::string &rp_uid, std::string &use
             PQclear(res_ptr);
         }
     }
-    const int& total {urp_total_get(conn_ptr)};
     PQfinish(conn_ptr);
 
      const boost::json::object& out {
