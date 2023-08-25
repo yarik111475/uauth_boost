@@ -230,11 +230,11 @@ int main(int argc,char* argv[])
     }
     catch(const std::exception& ex){
         std::cerr<<"exception: "<<ex.what()<<std::endl;
-        return EXIT_FAILURE;
+        return EXIT_SUCCESS;
     }
     catch(...){
         std::cerr<<"unknown exception"<<std::endl;
-        return EXIT_FAILURE;
+        return EXIT_SUCCESS;
     }
 
     if(vm.count("help")){
@@ -244,7 +244,7 @@ int main(int argc,char* argv[])
 
     if(!vm.count("user_id") || !vm.count("email") || !vm.count("location_id") || !vm.count("ou_id")){
         std::cerr<<"reqired args 'user_id', 'email', 'location_id', 'ou_id' not found!"<<std::endl;
-        return EXIT_FAILURE;
+        return EXIT_SUCCESS;
     }
     user_id=vm.at("user_id").as<std::string>();
     email=vm.at("email").as<std::string>();
@@ -262,8 +262,8 @@ int main(int argc,char* argv[])
     {//init and check db_params
         const bool& db_ok {init_db_params(params)};
         if(!db_ok){
-            std::cerr<<"Database params initialization failed!\n";
-            exit(EXIT_FAILURE);
+            std::cerr<<"Database params initialization failed!";
+            return EXIT_SUCCESS;
         }
     }
 
@@ -273,20 +273,18 @@ int main(int argc,char* argv[])
     {//open connection
         conn_ptr=open_connection(io,params,msg);
         if(!conn_ptr){
-            std::cerr<<"Fail to open connection to database, error: "<<msg<<"\n";
-            exit(EXIT_FAILURE);
+            std::cerr<<"Fail to open connection to database, error:\n"<<msg;
+            return EXIT_SUCCESS;
         }
     }
     const bool& ok {user_put(conn_ptr,user,msg)};
     PQfinish(conn_ptr);
     if(!ok){
-        std::cerr<<"Operation finished with failure, msg:\n"<<msg<<"\nPress any key to exit.";
-        std::getchar();
-        return EXIT_FAILURE;
+        std::cerr<<"Operation finished with failure, msg:\n"<<msg;
+        return EXIT_SUCCESS;
     }
     else{
-        std::cout<<"Operation completed success, created user:\n"<<msg<<"\nPress any key to exit";
-        std::getchar();
+        std::cout<<"Operation completed success, created user:\n"<<msg;
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
