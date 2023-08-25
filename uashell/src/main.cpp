@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 
 #include <iomanip>
 #include <array>
@@ -92,7 +92,7 @@ PGconn* open_connection(boost::asio::io_context& io,const boost::json::object& p
     return conn_ptr;
 }
 
-bool user_put(PGconn* conn_ptr,const boost::json::object& user,std::string& msg){
+bool user_put(PGconn* conn_ptr,const boost::json::object& user,std::string& user_out,std::string& msg){
     PGresult* res_ptr {NULL};
     {//put user
         const std::string& id          {user.at("id").as_string().c_str()};
@@ -106,9 +106,9 @@ bool user_put(PGconn* conn_ptr,const boost::json::object& user,std::string& msg)
 
         const char* param_values[] {id.c_str(),created_at.c_str(),updated_at.c_str(),email.c_str(),
                                     is_blocked.c_str(),location_id.c_str(),ou_id.c_str()};
-        const std::string& command {"INSERT INTO users (id,created_at,updated_at,email,is_blocked,location_id,ou_id) "
+        const std::string& query {"INSERT INTO users (id,created_at,updated_at,email,is_blocked,location_id,ou_id) "
                                     "VALUES($1,$2,$3,$4,$5,$6,$7)"};
-        res_ptr=PQexecParams(conn_ptr,command.c_str(),7,NULL,param_values,NULL,NULL,0);
+        res_ptr=PQexecParams(conn_ptr,query.c_str(),7,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
@@ -148,7 +148,7 @@ bool user_put(PGconn* conn_ptr,const boost::json::object& user,std::string& msg)
             }
             user_.emplace(key,value);
         }
-        msg=boost::json::serialize(user_);
+        user_out=boost::json::serialize(user_);
         PQclear(res_ptr);
         return true;
     }
@@ -156,62 +156,62 @@ bool user_put(PGconn* conn_ptr,const boost::json::object& user,std::string& msg)
     return false;
 }
 
-bool user_get(boost::json::object& user,bool& need_continue){
-    start_lbl:
-    std::cout<<"Enter command to execute and press 'Enter'\n"
-             <<"Q or q (quit shell)\n"
-             <<"CU or cu (create user)\n";
-    std::string command {};
-    std::getline(std::cin,command);
-    boost::to_upper(command);
-
-    if(command=="Q"){
-        need_continue=false;
+bool rp_get(PGconn* conn_ptr,const std::string& rp_name, std::string& rp,std::string& msg)
+{
+    PGresult* res_ptr {NULL};
+    const std::string& query {"SELECT * FROM roles_permissions WHERE name=$1"};
+    const char* param_values[] {rp_name.c_str()};
+    res_ptr=PQexecParams(conn_ptr,query.c_str(),1,NULL,param_values,NULL,NULL,0);
+    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        msg=std::string {PQresultErrorMessage(res_ptr)};
+        PQclear(res_ptr);
         return false;
     }
-    if(command=="CU"){
-        boost::uuids::uuid uuid_ {boost::uuids::random_generator()()};
-        const std::string& id {boost::uuids::to_string(uuid_)};
-        const std::string& created_at {time_with_timezone()};
-        const std::string& updated_at {time_with_timezone()};
-        const bool& is_blocked {false};
-
-        user.emplace("id",id);
-        user.emplace("created_at",created_at);
-        user.emplace("updated_at",updated_at);
-        user.emplace("is_blocked",is_blocked);
-
-        std::array<std::pair<std::string,bool>,8> field_list {std::make_pair<std::string,bool>("first_name",true),
-                                                              std::make_pair<std::string,bool>("last_name",true),
-                                                              std::make_pair<std::string,bool>("email",true),
-                                                              std::make_pair<std::string,bool>("phone_number",true),
-                                                              std::make_pair<std::string,bool>("position",true),
-                                                              std::make_pair<std::string,bool>("gender",true),
-                                                              std::make_pair<std::string,bool>("location_id",false),
-                                                              std::make_pair<std::string,bool>("ou_id",false)};
-        for(const auto& pair: field_list){
-            std::cout<<"Enter value for field: '"<<pair.first<<"', empty string for null,can be null: '"<<std::boolalpha<<pair.second<<"'\n";
-            std::string field {};
-            std::getline(std::cin,field);
-            if(field.empty() && !pair.second){
-                need_continue=true;
-                std::cerr<<"Field '"<<pair.first<<"' can not be null, return  to start point!\n";
-                std::cout<<"\n";
-                return false;
-            }
-            user.emplace(pair.first,field);
-        }
+    const int& rows {PQntuples(res_ptr)};
+    if(!rows){
+        msg="role-permission with name: '" + rp_name + "' not found!";
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return false;
     }
-    else{
-        std::cerr<<"Unknown command,return to start point.\n";
-        goto start_lbl;
+    const int& columns {PQnfields(res_ptr)};
+    boost::json::object rp_ {};
+
+    for(int c=0;c < columns;++c){
+        const char* key {PQfname(res_ptr,c)};
+        const char* value {PQgetvalue(res_ptr,0,c)};
+        const int& is_null {PQgetisnull(res_ptr,0,c)};
+        rp_.emplace(key,is_null ? boost::json::value(nullptr) : value);
     }
-    need_continue=false;
+    PQclear(res_ptr);
+    rp=boost::json::serialize(rp_);
+    return true;
+}
+
+bool urp_put(PGconn* conn_ptr, const std::string& user_id,const std::string& rp_id,std::string& msg)
+{
+    PGresult* res_ptr {NULL};
+    const std::string& created_at {time_with_timezone()};
+    const std::string& query {"INSERT INTO users_roles_permissions (created_at,user_id,role_permission_id) VALUES($1,$2,$3)"};
+    const char* param_values[] {created_at.c_str(),user_id.c_str(),rp_id.c_str()};
+    res_ptr=PQexecParams(conn_ptr,query.c_str(),3,NULL,param_values,NULL,NULL,0);
+    if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
+        msg=std::string {PQresultErrorMessage(res_ptr)};
+        PQclear(res_ptr);
+        return false;
+    }
+    PQclear(res_ptr);
     return true;
 }
 
 int main(int argc,char* argv[])
 {
+    const std::string& argv_start {argv[1]};
+    if(argv_start!="create-super-user"){
+        std::cerr<<"Ыtart parameter failed, mus be 'create-super-user'"<<std::endl;
+        return EXIT_SUCCESS;
+    }
+
     std::string user_id {};
     std::string email {};
     std::string location_id {};
@@ -227,13 +227,22 @@ int main(int argc,char* argv[])
     try{
         boost::program_options::store(boost::program_options::parse_command_line(argc,argv,desc),vm);
         boost::program_options::notify(vm);
+
+        if(!vm.count("user_id") || !vm.count("email") || !vm.count("location_id") || !vm.count("ou_id")){
+            std::cerr<<"reqired args 'user_id', 'email', 'location_id', 'ou_id' not found!"<<std::endl;
+            return EXIT_SUCCESS;
+        }
+        user_id=vm.at("user_id").as<std::string>();
+        email=vm.at("email").as<std::string>();
+        location_id=vm.at("location_id").as<std::string>();
+        ou_id=vm.at("ou_id").as<std::string>();
     }
     catch(const std::exception& ex){
-        std::cerr<<"exception: "<<ex.what()<<std::endl;
+        std::cerr<<"Уxception: "<<ex.what()<<std::endl;
         return EXIT_SUCCESS;
     }
     catch(...){
-        std::cerr<<"unknown exception"<<std::endl;
+        std::cerr<<"Гnknown exception"<<std::endl;
         return EXIT_SUCCESS;
     }
 
@@ -241,15 +250,6 @@ int main(int argc,char* argv[])
         std::cout<<desc<<std::endl;
         return EXIT_SUCCESS;
     }
-
-    if(!vm.count("user_id") || !vm.count("email") || !vm.count("location_id") || !vm.count("ou_id")){
-        std::cerr<<"reqired args 'user_id', 'email', 'location_id', 'ou_id' not found!"<<std::endl;
-        return EXIT_SUCCESS;
-    }
-    user_id=vm.at("user_id").as<std::string>();
-    email=vm.at("email").as<std::string>();
-    location_id=vm.at("location_id").as<std::string>();
-    ou_id=vm.at("ou_id").as<std::string>();
 
     const boost::json::object& user {
         {"id",user_id},
@@ -262,7 +262,7 @@ int main(int argc,char* argv[])
     {//init and check db_params
         const bool& db_ok {init_db_params(params)};
         if(!db_ok){
-            std::cerr<<"Database params initialization failed!";
+            std::cerr<<"Database params initialization failed!"<<std::endl;
             return EXIT_SUCCESS;
         }
     }
@@ -273,18 +273,42 @@ int main(int argc,char* argv[])
     {//open connection
         conn_ptr=open_connection(io,params,msg);
         if(!conn_ptr){
-            std::cerr<<"Fail to open connection to database, error:\n"<<msg;
+            std::cerr<<"Fail to open connection to database, error:\n"<<msg<<std::endl;
             return EXIT_SUCCESS;
         }
     }
-    const bool& ok {user_put(conn_ptr,user,msg)};
-    PQfinish(conn_ptr);
-    if(!ok){
-        std::cerr<<"Operation finished with failure, msg:\n"<<msg;
+    std::string rp {};
+    const bool& rp_ok {rp_get(conn_ptr,"UAuthAdmin",rp,msg)};
+    if(!rp_ok){
+        PQfinish(conn_ptr);
+        std::cerr<<"Operation finished with failure, msg:\n"<<msg<<std::endl;
         return EXIT_SUCCESS;
     }
-    else{
-        std::cout<<"Operation completed success, created user:\n"<<msg;
+    boost::system::error_code ec;
+    const boost::json::value& value_ {boost::json::parse(rp,ec)};
+    if(ec){
+        PQfinish(conn_ptr);
+        std::cerr<<"Operation finished with failure, msg:\n"<<ec.message()<<std::endl;
+        return EXIT_SUCCESS;
     }
+    const boost::json::object& rp_obj {value_.as_object()};
+    const std::string& role_permission_id {rp_obj.at("id").as_string().c_str()};
+
+    std::string user_out {};
+    const bool& user_ok {user_put(conn_ptr,user,user_out,msg)};
+
+    if(!user_ok){
+        PQfinish(conn_ptr);
+        std::cerr<<"Operation finished with failure, msg:\n"<<msg<<std::endl;
+        return EXIT_SUCCESS;
+    }
+    const bool& urp_ok {urp_put(conn_ptr,user_id,role_permission_id,msg)};
+    if(!urp_ok){
+        PQfinish(conn_ptr);
+        std::cerr<<"Operation finished with failure, msg:\n"<<msg<<std::endl;
+        return EXIT_SUCCESS;
+    }
+    PQfinish(conn_ptr);
+    std::cout<<"Created user:\n"<<user_out<<"\n with role-permission:\n"<<rp<<std::endl;
     return EXIT_SUCCESS;
 }
