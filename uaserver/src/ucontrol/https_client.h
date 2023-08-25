@@ -8,6 +8,7 @@
 #include <boost/asio/ssl.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/optional.hpp>
+#include <boost/signals2.hpp>
 #include "defines.h"
 
 namespace spdlog{
