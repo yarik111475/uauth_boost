@@ -38,6 +38,8 @@ ARG DEP_LIBS_PATH
 
 # gather libpq deps
 RUN apt-get update && apt-get install -y --download-only libgssapi-krb5-2 libldap-2.4-2
+# OpenSSL required to extract CN from admin certs and ccreate admin account in UAuth
+RUN apt-get install -y --download-only openssl
 RUN mkdir -p $DEP_LIBS_PATH && cp -r /var/cache/apt/archives/. $DEP_LIBS_PATH
 
 
@@ -60,5 +62,6 @@ RUN mkdir -p $DEP_LIBS_PATH
 COPY --from=dependencies $DEP_LIBS_PATH/. $DEP_LIBS_PATH/
 RUN dpkg -R --install $DEP_LIBS_PATH/
 
+COPY start.sh $U_AUTH_WORK_DIR/bin/start.sh
 WORKDIR $U_AUTH_WORK_DIR/bin
-ENTRYPOINT ["./uaserver"]
+ENTRYPOINT ["./start.sh"]
