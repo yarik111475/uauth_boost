@@ -170,12 +170,6 @@ bool dbase_handler::init_default_rps(PGconn *conn_ptr, std::string &msg)
 {
     const boost::json::array& default_rps {
         {
-            {"id","49c0b1c9-58f7-557d-9a73-ed4850431c01"},//1
-            {"name","authorization_manage:read"},
-            {"type","permission"},
-            {"description","List roles or permissions assigned to user"}
-        },
-        {
             {"id","699bf280-70eb-552d-aae6-01341e2b8f33"},//2
             {"name","authorization_manage:update"},
             {"type","permission"},
@@ -2149,7 +2143,7 @@ db_status dbase_handler::authz_manage_post(const std::string &requested_user_uid
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"authorization_manage"};
+        const std::string& rp_ident {"authorization_manage:update"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
@@ -2220,7 +2214,7 @@ db_status dbase_handler::authz_manage_delete(const std::string &requested_user_u
     }
     {//check if authorized
         std::string msg {};
-        const std::string& rp_ident {"authorization_manage"};
+        const std::string& rp_ident {"authorization_manage:update"};
         const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
         if(!authorized){
             PQfinish(conn_ptr);
