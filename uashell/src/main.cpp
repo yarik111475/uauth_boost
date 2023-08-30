@@ -253,12 +253,12 @@ int main(int argc,char* argv[])
         ou_id=vm.at("ou_id").as<std::string>();
     }
     catch(const std::exception& ex){
-        std::cerr<<"Уxception: "<<ex.what()<<std::endl;
-        return EXIT_SUCCESS;
+        std::cerr<<"Exception: "<<ex.what()<<std::endl;
+        return EXIT_FAILURE;
     }
     catch(...){
-        std::cerr<<"Гnknown exception"<<std::endl;
-        return EXIT_SUCCESS;
+        std::cerr<<"Unknown exception"<<std::endl;
+        return EXIT_FAILURE;
     }
 
     if(vm.count("help")){
@@ -278,7 +278,7 @@ int main(int argc,char* argv[])
         const bool& db_ok {init_db_params(params)};
         if(!db_ok){
             std::cerr<<"Database params initialization failed!"<<std::endl;
-            return EXIT_SUCCESS;
+            return EXIT_FAILURE;
         }
     }
 
@@ -297,14 +297,14 @@ int main(int argc,char* argv[])
     if(!rp_ok){
         PQfinish(conn_ptr);
         std::cerr<<"Operation finished with failure, msg:\n"<<msg<<std::endl;
-        return EXIT_SUCCESS;
+        return EXIT_FAILURE;
     }
     boost::system::error_code ec;
     const boost::json::value& value_ {boost::json::parse(rp,ec)};
     if(ec){
         PQfinish(conn_ptr);
         std::cerr<<"Operation finished with failure, msg:\n"<<ec.message()<<std::endl;
-        return EXIT_SUCCESS;
+        return EXIT_FAILURE;
     }
     const boost::json::object& rp_obj {value_.as_object()};
     const std::string& role_permission_id {rp_obj.at("id").as_string().c_str()};
@@ -315,13 +315,13 @@ int main(int argc,char* argv[])
     if(!user_ok){
         PQfinish(conn_ptr);
         std::cerr<<"Operation finished with failure, msg:\n"<<msg<<std::endl;
-        return EXIT_SUCCESS;
+        return EXIT_FAILURE;
     }
     const bool& urp_ok {urp_put(conn_ptr,user_id,role_permission_id,msg)};
     if(!urp_ok){
         PQfinish(conn_ptr);
         std::cerr<<"Operation finished with failure, msg:\n"<<msg<<std::endl;
-        return EXIT_SUCCESS;
+        return EXIT_FAILURE;
     }
     PQfinish(conn_ptr);
     std::cout<<"Created user:\n"<<user_out<<"\n with role-permission:\n"<<rp<<std::endl;
