@@ -223,8 +223,8 @@ int main(int argc,char* argv[])
 {
     const std::string& argv_start {argv[1]};
     if(argv_start!="create-super-user"){
-        std::cerr<<"Ыtart parameter failed, mus be 'create-super-user'"<<std::endl;
-        return EXIT_SUCCESS;
+        std::cerr<<"Start parameter failed, must be 'create-super-user'"<<std::endl;
+        return EXIT_FAILURE;
     }
 
     std::string user_id {};
@@ -245,7 +245,7 @@ int main(int argc,char* argv[])
 
         if(!vm.count("user_id") || !vm.count("email") || !vm.count("location_id") || !vm.count("ou_id")){
             std::cerr<<"reqired args 'user_id', 'email', 'location_id', 'ou_id' not found!"<<std::endl;
-            return EXIT_SUCCESS;
+            return EXIT_FAILURE;
         }
         user_id=vm.at("user_id").as<std::string>();
         email=vm.at("email").as<std::string>();
