@@ -110,18 +110,25 @@ bool user_put(PGconn* conn_ptr,const boost::json::object& user,std::string& user
                                     "VALUES($1,$2,$3,$4,$5,$6,$7)"};
         res_ptr=PQexecParams(conn_ptr,query.c_str(),7,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
+            const std::string& code {PQresultErrorField(res_ptr,PG_DIAG_SQLSTATE)};
+            if(code=="23505"){
+                PQclear(res_ptr);
+                goto get_user;
+            }
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             return false;
         }
         PQclear(res_ptr);
     }
+    get_user:
     {//get user back
         const std::string& id {user.at("id").as_string().c_str()};
         const char* param_values[] {id.c_str()};
         const std::string& command {"SELECT * FROM users WHERE id=$1"};
         res_ptr=PQexecParams(conn_ptr,command.c_str(),1,NULL,param_values,NULL,NULL,0);
         if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+            char* code {PQresultErrorField(res_ptr,PG_DIAG_SQLSTATE)};
             msg=std::string {PQresultErrorMessage(res_ptr)};
             PQclear(res_ptr);
             return false;
@@ -163,6 +170,7 @@ bool rp_get(PGconn* conn_ptr,const std::string& rp_name, std::string& rp,std::st
     const char* param_values[] {rp_name.c_str()};
     res_ptr=PQexecParams(conn_ptr,query.c_str(),1,NULL,param_values,NULL,NULL,0);
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        char* code {PQresultErrorField(res_ptr,PG_DIAG_SQLSTATE)};
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         return false;
@@ -195,7 +203,14 @@ bool urp_put(PGconn* conn_ptr, const std::string& user_id,const std::string& rp_
     const std::string& query {"INSERT INTO users_roles_permissions (created_at,user_id,role_permission_id) VALUES($1,$2,$3)"};
     const char* param_values[] {created_at.c_str(),user_id.c_str(),rp_id.c_str()};
     res_ptr=PQexecParams(conn_ptr,query.c_str(),3,NULL,param_values,NULL,NULL,0);
+    auto status=PQresultStatus(res_ptr);
+    auto err=PQresStatus(status);
     if(PQresultStatus(res_ptr)!=PGRES_COMMAND_OK){
+        const std::string& code {PQresultErrorField(res_ptr,PG_DIAG_SQLSTATE)};
+        if(code=="23505"){
+            PQclear(res_ptr);
+            return true;
+        }
         msg=std::string {PQresultErrorMessage(res_ptr)};
         PQclear(res_ptr);
         return false;
@@ -274,7 +289,7 @@ int main(int argc,char* argv[])
         conn_ptr=open_connection(io,params,msg);
         if(!conn_ptr){
             std::cerr<<"Fail to open connection to database, error:\n"<<msg<<std::endl;
-            return EXIT_SUCCESS;
+            return EXIT_FAILURE;
         }
     }
     std::string rp {};

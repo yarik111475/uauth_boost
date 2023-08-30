@@ -25,6 +25,7 @@ curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X POST -H 'Cont
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X PUT -H 'Content-Type: application/json' -d '{"name":"new_admin_updated","type":"role","description":"new_test_role_test3"}' http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/f71c98e3-9fd4-411f-8b50-af160664edbd
 
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X DELETE http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/22f908a3-9cbf-4d79-994b-dc65453fb423
+curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X PUT http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/6be2a227-f85e-4558-9808-ce8399dd0081/add-child/c87f3d4d-b66e-48e2-aa4a-fbb0f9c75c98
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X PUT  http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/b961eb97-ce93-4715-9d22-9ed886478c37/add-child/bdf0ac17-6e54-4b1a-a233-0099b504267e
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X DELETE  http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/b961eb97-ce93-4715-9d22-9ed886478c37/remove-child/bdf0ac17-6e54-4b1a-a233-0099b504267e
 
