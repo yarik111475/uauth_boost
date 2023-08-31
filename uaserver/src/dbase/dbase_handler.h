@@ -20,7 +20,7 @@ private:
     boost::asio::io_context io_;
     boost::json::object params_ {};
     std::shared_ptr<spdlog::logger> logger_ptr_ {nullptr};
-    static bool is_initiated_;
+    static bool is_initiated_ ;
 
     std::string time_with_timezone();
     //Open connection

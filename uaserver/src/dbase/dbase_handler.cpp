@@ -13,7 +13,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/algorithm.hpp>
 
-bool dbase_handler::is_initiated_ {false};
+bool dbase_handler::is_initiated_ {true};
 
 //Get date_time with timezone as std::string
 std::string dbase_handler::time_with_timezone()
