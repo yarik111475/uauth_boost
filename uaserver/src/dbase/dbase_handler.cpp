@@ -1376,6 +1376,94 @@ db_status dbase_handler::rp_list_get(std::string &rps, const std::string &limit,
     return db_status::success;
 }
 
+db_status dbase_handler::rp_list_get(std::string &rps, std::map<std::string, std::string> filter_map, const std::string &requester_id, std::string &msg)
+{
+    PGconn* conn_ptr {open_connection(msg)};
+    PGresult* res_ptr {NULL};
+    if(!conn_ptr){
+        return db_status::fail;
+    }
+    {//check if authorized
+        std::string msg {};
+        const std::string& rp_ident {"role_permission:read"};
+        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
+        if(!authorized){
+            PQfinish(conn_ptr);
+            return db_status::unauthorized;
+        }
+    }
+    int limit {100};
+    int offset {0};
+    std::string query {"SELECT * FROM roles_permissions"};
+    const auto& limit_it {filter_map.find("limit")};
+    if(limit_it!=filter_map.end()){
+        query+=" LIMIT " + limit_it->second;
+        limit=std::stoi(limit_it->second);
+        filter_map.erase(limit_it);
+    }
+    const auto& offset_it {filter_map.find("offset")};
+    if(offset_it!=filter_map.end()){
+        offset=std::stoi(offset_it->second);
+        query+=" OFFSET " + offset_it->second;
+        filter_map.erase(offset_it);
+    }
+
+    if(!filter_map.empty()){
+        query +=" WHERE ";
+        auto it {filter_map.begin()};
+        while(it!=filter_map.end()){
+            if(it->first=="type"){
+                query+=it->first + "=" + it->second;
+            }
+            if(it->first=="name"){
+                query +="name ILIKE %" + it->second + "%";
+            }
+            ++it;
+        }
+    }
+
+    res_ptr=PQexec(conn_ptr,query.c_str());
+    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
+        msg=std::string {PQresultErrorMessage(res_ptr)};
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return db_status::fail;
+    }
+
+    const int& rows {PQntuples(res_ptr)};
+    if(!rows){
+        PQclear(res_ptr);
+        PQfinish(conn_ptr);
+        return db_status::not_found;
+    }
+    const int& columns {PQnfields(res_ptr)};
+    boost::json::array rps_ {};
+
+    for(int r=0;r < rows;++r){
+        boost::json::object rp_ {};
+        for(int c=0;c < columns;++c){
+            const char* key {PQfname(res_ptr,c)};
+            const char* value {PQgetvalue(res_ptr,r,c)};
+            const int& is_null {PQgetisnull(res_ptr,r,c)};
+            rp_.emplace(key,is_null ? boost::json::value(nullptr) : value);
+        }
+        rps_.push_back(rp_);
+    }
+    PQclear(res_ptr);
+    const int& total {rp_total_get(conn_ptr)};
+    PQfinish(conn_ptr);
+
+    const boost::json::object& out {
+        {"limit",limit},
+        {"offset",offset},
+        {"count",rps_.size()},
+        {"total",total},
+        {"items",rps_}
+    };
+    rps=boost::json::serialize(out);
+    return db_status::success;
+}
+
 //Get Permission Or Role
 db_status dbase_handler::rp_info_get(const std::string &rp_uid, std::string &rp, const std::string &requester_id, std::string &msg)
 {

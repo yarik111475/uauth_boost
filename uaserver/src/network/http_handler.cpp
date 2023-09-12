@@ -558,32 +558,27 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
         boost::regex re {"^/api/v1/u-auth/roles-permissions" + regex_any_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
-            std::string limit {};
-            std::string offset {};
             boost::url url_ {target};
             auto query=url_.query();
+            std::map<std::string,std::string> filter_map {};
             if(!query.empty()){
                 boost::urls::result<boost::urls::params_encoded_view> result=boost::urls::parse_query(query);
                 if(!result.has_error()){
                     const boost::urls::params_encoded_view& view {result.value()};
-                    if(view.contains("limit")){
-                        auto it {view.find("limit")};
-                        limit=std::string {it->value};
-                    }
-                    if(view.contains("offset")){
-                        auto it {view.find("offset")};
-                        offset=std::string {it->value};
+                    auto view_it {view.begin()};
+                    while(view_it!=view.end()){
+                        std::string key {view_it->key};
+                        boost::to_lower(key);
+                        std::string value {view_it->value};
+                        filter_map.emplace(key,value);
+                        ++view_it;
                     }
                 }
-            }
-            //check limit and offset
-            if(limit.empty() & offset.empty()){
-                 return fail(std::move(request),http::status::not_found,"not found");
             }
 
             std::string msg {};
             std::string rps {};
-            const db_status& status_ {dbase_handler_ptr_->rp_list_get(rps,limit,offset,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rp_list_get(rps,filter_map,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
