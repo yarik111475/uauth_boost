@@ -1397,30 +1397,41 @@ db_status dbase_handler::rp_list_get(std::string &rps, std::map<std::string, std
     std::string query {"SELECT * FROM roles_permissions"};
     const auto& limit_it {filter_map.find("limit")};
     if(limit_it!=filter_map.end()){
-        query+=" LIMIT " + limit_it->second;
         limit=std::stoi(limit_it->second);
         filter_map.erase(limit_it);
     }
     const auto& offset_it {filter_map.find("offset")};
     if(offset_it!=filter_map.end()){
         offset=std::stoi(offset_it->second);
-        query+=" OFFSET " + offset_it->second;
         filter_map.erase(offset_it);
     }
 
     if(!filter_map.empty()){
-        query +=" WHERE ";
-        auto it {filter_map.begin()};
-        while(it!=filter_map.end()){
-            if(it->first=="type"){
-                query+=it->first + "=" + it->second;
-            }
-            if(it->first=="name"){
-                query +="name ILIKE %" + it->second + "%";
-            }
-            ++it;
+        query +=" WHERE";
+        const auto& it {filter_map.begin()};
+        if(it->first==" type"){
+            query+="type='" + it->second + "'";
         }
+        if(it->first=="name"){
+            query +=" name ILIKE '%" + it->second + "%'";
+        }
+        filter_map.erase(it);
     }
+
+    if(!filter_map.empty()){
+        query +=" AND";
+        const auto& it {filter_map.begin()};
+        if(it->first=="type"){
+            query+=" type='" + it->second + "'";
+        }
+        if(it->first=="name"){
+            query +=" name ILIKE '%" + it->second + "%'";
+        }
+        filter_map.erase(it);
+    }
+
+    query+=" LIMIT " + std::to_string(limit);
+    query+=" OFFSET " + std::to_string(offset);
 
     res_ptr=PQexec(conn_ptr,query.c_str());
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){

@@ -12,9 +12,9 @@ curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X PUT  -H 'Cont
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X DELETE http://127.0.0.1:8030/api/v1/u-auth/users/a4e771bd-7fdb-479a-973d-57cf59492147
 
 ### ROLES-PERMISSIONS PART ###
-curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions
+curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET 'http://127.0.0.1:8030/api/v1/u-auth/roles-permissions?name=пров&type=permission&limit=100&offset=0'
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET 'http://127.0.0.1:8030/api/v1/u-auth/roles-permissions?limit=10'
-curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET 'http://127.0.0.1:8030/api/v1/u-auth/roles-permissions?limit=1&offset=5'
+curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET 'http://127.0.0.1:8030/api/v1/u-auth/roles-permissions?limit=1&offset=5&type=role'
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/e88c79a9-ba2f-5850-9f8c-b6482888bbe0
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/bdf0ac17-6e54-4b1a-a233-0099b504267e/detail
 curl -H "X-Client-Cert-Dn:dc77b7f3-71d9-4ce9-95a2-100b88d0306c" -X GET http://127.0.0.1:8030/api/v1/u-auth/roles-permissions/c87f3d4d-b66e-48e2-aa4a-fbb0f9c75c98/associated-users

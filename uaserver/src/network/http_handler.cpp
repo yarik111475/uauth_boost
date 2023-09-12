@@ -558,20 +558,18 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
         boost::regex re {"^/api/v1/u-auth/roles-permissions" + regex_any_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
-            boost::url url_ {target};
-            auto query=url_.query();
             std::map<std::string,std::string> filter_map {};
-            if(!query.empty()){
-                boost::urls::result<boost::urls::params_encoded_view> result=boost::urls::parse_query(query);
-                if(!result.has_error()){
-                    const boost::urls::params_encoded_view& view {result.value()};
-                    auto view_it {view.begin()};
-                    while(view_it!=view.end()){
-                        std::string key {view_it->key};
-                        boost::to_lower(key);
-                        std::string value {view_it->value};
-                        filter_map.emplace(key,value);
-                        ++view_it;
+            std::size_t pos {target.find('?')};
+            if(pos!=std::string::npos){
+                ++pos;
+                const std::string& query {target.substr(pos,target.size()-pos)};
+                std::vector<std::string> query_items {};
+                boost::split(query_items,query,boost::is_any_of("&"));
+                for(const std::string& query_item: query_items){
+                    std::vector<std::string> query_item_split {};
+                    boost::split(query_item_split,query_item,boost::is_any_of("="));
+                    if(query_item_split.size()==2){
+                        filter_map.emplace(query_item_split.at(0),query_item_split.at(1));
                     }
                 }
             }
