@@ -5,6 +5,9 @@ REALM_ID=$(openssl x509 -noout -subject -in /opt/certs/users/Realm-manager.pem |
 SERVICE_ADMIN_ID=$(openssl x509 -noout -subject -in /opt/certs/users/u_auth_service_admin.pem |
   grep -o "\w\{8\}-\w\{4\}-\w\{4\}-\w\{4\}-\w\{12\}")
 
+echo "Init tables"
+./uatables
+
 echo "Creating SuperUsers"
 ./uashell create-super-user \
   --user_id $REALM_ID \
