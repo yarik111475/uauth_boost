@@ -418,8 +418,12 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
         if(boost::regex_match(target,match,re)){
             std::string msg {};
             std::string rps {};
+            const std::map<std::string,std::string> query_map {
+                {"limit","100"},
+                {"offset","0"}
+            };
 
-            const db_status& status_ {dbase_handler_ptr_->rp_list_get(rps,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rp_list_get(rps,query_map,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -558,7 +562,7 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
         boost::regex re {"^/api/v1/u-auth/roles-permissions" + regex_any_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
-            std::map<std::string,std::string> filter_map {};
+            std::map<std::string,std::string> query_map {};
             std::size_t pos {target.find('?')};
             if(pos!=std::string::npos){
                 ++pos;
@@ -569,14 +573,14 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
                     std::vector<std::string> query_item_split {};
                     boost::split(query_item_split,query_item,boost::is_any_of("="));
                     if(query_item_split.size()==2){
-                        filter_map.emplace(query_item_split.at(0),query_item_split.at(1));
+                        query_map.emplace(query_item_split.at(0),query_item_split.at(1));
                     }
                 }
             }
 
             std::string msg {};
             std::string rps {};
-            const db_status& status_ {dbase_handler_ptr_->rp_list_get(rps,filter_map,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->rp_list_get(rps,query_map,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);

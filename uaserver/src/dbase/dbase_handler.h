@@ -90,7 +90,7 @@ public:
     //List Of Roles And Permissions with limit and/or offset
     db_status rp_list_get(std::string& rps,const std::string& limit,const std::string offset,const std::string& requester_id,std::string& msg);
     //List Of Roles And Permissions with limit and/or offset and filter
-    db_status rp_list_get(std::string& rps, std::map<std::string, std::string> filter_map, const std::string& requester_id, std::string& msg);
+    db_status rp_list_get(std::string& rps, std::map<std::string, std::string> query_map, const std::string& requester_id, std::string& msg);
     //Get Permission Or Role
     db_status rp_info_get(const std::string& rp_uid,std::string& rp,const std::string& requester_id,std::string& msg);
     //Get Associated Users

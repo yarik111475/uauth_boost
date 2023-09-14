@@ -1376,7 +1376,7 @@ db_status dbase_handler::rp_list_get(std::string &rps, const std::string &limit,
     return db_status::success;
 }
 
-db_status dbase_handler::rp_list_get(std::string &rps, std::map<std::string, std::string> filter_map, const std::string &requester_id, std::string &msg)
+db_status dbase_handler::rp_list_get(std::string &rps, std::map<std::string, std::string> query_map, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -1395,39 +1395,39 @@ db_status dbase_handler::rp_list_get(std::string &rps, std::map<std::string, std
     int limit {100};
     int offset {0};
     std::string query {"SELECT * FROM roles_permissions"};
-    const auto& limit_it {filter_map.find("limit")};
-    if(limit_it!=filter_map.end()){
+    const auto& limit_it {query_map.find("limit")};
+    if(limit_it!=query_map.end()){
         limit=std::stoi(limit_it->second);
-        filter_map.erase(limit_it);
+        query_map.erase(limit_it);
     }
-    const auto& offset_it {filter_map.find("offset")};
-    if(offset_it!=filter_map.end()){
+    const auto& offset_it {query_map.find("offset")};
+    if(offset_it!=query_map.end()){
         offset=std::stoi(offset_it->second);
-        filter_map.erase(offset_it);
+        query_map.erase(offset_it);
     }
 
-    if(!filter_map.empty()){
+    if(!query_map.empty()){
         query +=" WHERE";
-        const auto& it {filter_map.begin()};
-        if(it->first==" type"){
-            query+="type='" + it->second + "'";
-        }
-        if(it->first=="name"){
-            query +=" name ILIKE '%" + it->second + "%'";
-        }
-        filter_map.erase(it);
-    }
-
-    if(!filter_map.empty()){
-        query +=" AND";
-        const auto& it {filter_map.begin()};
+        const auto& it {query_map.begin()};
         if(it->first=="type"){
             query+=" type='" + it->second + "'";
         }
         if(it->first=="name"){
             query +=" name ILIKE '%" + it->second + "%'";
         }
-        filter_map.erase(it);
+        query_map.erase(it);
+    }
+
+    if(!query_map.empty()){
+        query +=" AND";
+        const auto& it {query_map.begin()};
+        if(it->first=="type"){
+            query+=" type='" + it->second + "'";
+        }
+        if(it->first=="name"){
+            query +=" name ILIKE '%" + it->second + "%'";
+        }
+        query_map.erase(it);
     }
 
     query+=" LIMIT " + std::to_string(limit);
