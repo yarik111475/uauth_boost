@@ -122,8 +122,12 @@ http::response<http::string_body> http_handler::handle_user_get(http::request<ht
         if(boost::regex_match(target,match,re)){
             std::string msg {};
             std::string users {};
+            std::map<std::string,std::string> query_map {
+                {"limit","100"},
+                {"offset","0"}
+            };
 
-            const db_status& status_ {dbase_handler_ptr_->user_list_get(users,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->user_list_get(users,query_map,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -207,33 +211,25 @@ http::response<http::string_body> http_handler::handle_user_get(http::request<ht
         boost::regex re {"^/api/v1/u-auth/users" + regex_any_ + "$"};
         boost::smatch match;
         if(boost::regex_match(target,match,re)){
-            std::string limit {};
-            std::string offset {};
-            boost::url url_ {target};
-            auto query=url_.query();
-            if(!query.empty()){
-                boost::urls::result<boost::urls::params_encoded_view> result=boost::urls::parse_query(query);
-                if(!result.has_error()){
-                    const boost::urls::params_encoded_view& view {result.value()};
-                    if(view.contains("limit")){
-                        auto it {view.find("limit")};
-                        limit=std::string {it->value};
-                    }
-                    if(view.contains("offset")){
-                        auto it {view.find("offset")};
-                        offset=std::string {it->value};
+            std::map<std::string,std::string> query_map {};
+            std::size_t pos {target.find('?')};
+            if(pos!=std::string::npos){
+                ++pos;
+                const std::string& query {target.substr(pos,target.size()-pos)};
+                std::vector<std::string> query_items {};
+                boost::split(query_items,query,boost::is_any_of("&"));
+                for(const std::string& query_item: query_items){
+                    std::vector<std::string> query_item_split {};
+                    boost::split(query_item_split,query_item,boost::is_any_of("="));
+                    if(query_item_split.size()==2){
+                        query_map.emplace(query_item_split.at(0),query_item_split.at(1));
                     }
                 }
-            }
-            //check limit and offset
-            if(limit.empty() & offset.empty()){
-                 return fail(std::move(request),http::status::not_found,"not found");
             }
 
             std::string msg {};
             std::string users {};
-
-            const db_status& status_ {dbase_handler_ptr_->user_list_get(users,limit,offset,requester_id,msg)};
+            const db_status& status_ {dbase_handler_ptr_->user_list_get(users,query_map,requester_id,msg)};
             switch(status_){
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
@@ -418,7 +414,7 @@ http::response<http::string_body> http_handler::handle_rp_get(http::request<http
         if(boost::regex_match(target,match,re)){
             std::string msg {};
             std::string rps {};
-            const std::map<std::string,std::string> query_map {
+            std::map<std::string,std::string> query_map {
                 {"limit","100"},
                 {"offset","0"}
             };

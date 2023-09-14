@@ -55,7 +55,7 @@ private:
     http::response<http::string_body> handle_authz_manage_post(http::request<http::string_body>&& request,const std::string& requester_id);
     http::response<http::string_body> handle_authz_manage_delete(http::request<http::string_body>&& request,const std::string& requester_id);
 
-    //rp varb handlers
+    //rp verb handlers
     http::response<http::string_body> handle_rp_get(http::request<http::string_body>&& request,const std::string& requester_id);
     http::response<http::string_body> handle_rp_put(http::request<http::string_body>&& request,const std::string& requester_id);
     http::response<http::string_body> handle_rp_post(http::request<http::string_body>&& request,const std::string& requester_id);

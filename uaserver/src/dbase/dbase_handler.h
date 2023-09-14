@@ -66,10 +66,8 @@ public:
 
     //Init database
     bool init_database(std::string& msg);
-    //List Of Users
-    db_status user_list_get(std::string& users,const std::string& requester_id,std::string& msg);
     //List Of Users with limit and/or offset and filter
-    db_status user_list_get(std::string& users, const std::string& limit, const std::string& offset, const std::string& requester_id, std::string& msg);
+    db_status user_list_get(std::string& users, std::map<std::string, std::string> query_map, const std::string& requester_id, std::string& msg);
     //Get User Info
     db_status user_info_get(const std::string& user_uid, std::string &user,const std::string& requester_id,std::string& msg);
     //Get User Assigned Roles And Permissions
@@ -85,10 +83,6 @@ public:
     //Delete User
     db_status user_info_delete(const std::string& user_uid,const std::string& requester_id,std::string& msg);
 
-    //List Of Roles And Permissions
-    db_status rp_list_get(std::string& rps,const std::string& requester_id,std::string& msg);
-    //List Of Roles And Permissions with limit and/or offset
-    db_status rp_list_get(std::string& rps,const std::string& limit,const std::string offset,const std::string& requester_id,std::string& msg);
     //List Of Roles And Permissions with limit and/or offset and filter
     db_status rp_list_get(std::string& rps, std::map<std::string, std::string> query_map, const std::string& requester_id, std::string& msg);
     //Get Permission Or Role

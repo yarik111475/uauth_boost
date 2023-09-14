@@ -690,75 +690,8 @@ bool dbase_handler::init_database(std::string &msg)
     return true;
 }
 
-//List Of Users
-db_status dbase_handler::user_list_get(std::string &users, const std::string &requester_id, std::string &msg)
-{
-    PGconn* conn_ptr {open_connection(msg)};
-    PGresult* res_ptr {NULL};
-    if(!conn_ptr){
-        return db_status::fail;
-    }
-    {//check if authorized
-        std::string msg {};
-        const std::string& rp_ident {"user:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
-        if(!authorized){
-            PQfinish(conn_ptr);
-            return db_status::unauthorized;
-        }
-    }
-    const std::string& query {"SELECT * FROM users LIMIT 100 OFFSET 0"};
-    res_ptr=PQexec(conn_ptr,query.c_str());
-    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
-        msg=std::string {PQresultErrorMessage(res_ptr)};
-        PQclear(res_ptr);
-        PQfinish(conn_ptr);
-        return db_status::fail;
-    }
-
-    const int& rows {PQntuples(res_ptr)};
-    if(!rows){
-        PQclear(res_ptr);
-        PQfinish(conn_ptr);
-        return db_status::not_found;
-    }
-    const int& columns {PQnfields(res_ptr)};
-
-    boost::json::array users_ {};
-    for(int r=0;r < rows;++r){
-        boost::json::object user_ {};
-        for(int c=0;c < columns;++c){
-            const char* key {PQfname(res_ptr,c)};
-            const char* value {PQgetvalue(res_ptr,r,c)};
-            const int& is_null {PQgetisnull(res_ptr,r,c)};
-            if(std::string {key}=="is_blocked"){
-                const std::string& value_ {value};
-                const bool& is_blocked {(value_.empty() || value_=="f") ? false : true};
-                user_.emplace(key,is_blocked);
-            }
-            else{
-                user_.emplace(key,is_null ? boost::json::value(nullptr) : value);
-            }
-        }
-        users_.push_back(user_);
-    }
-    PQclear(res_ptr);
-    const int& total {user_total_get(conn_ptr)};
-    PQfinish(conn_ptr);
-
-    const boost::json::object out {
-        {"limit",100},
-        {"offset",0},
-        {"count",users_.size()},
-        {"total",total},
-        {"items",users_},
-    };
-    users=boost::json::serialize(out);
-    return db_status::success;
-}
-
 //List Of Users with limit and/or offset and filter
-db_status dbase_handler::user_list_get(std::string& users, const std::string& limit,const std::string& offset,const std::string& requester_id,std::string& msg)
+db_status dbase_handler::user_list_get(std::string& users, std::map<std::string, std::string> query_map,const std::string& requester_id,std::string& msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
     PGresult* res_ptr {NULL};
@@ -774,14 +707,24 @@ db_status dbase_handler::user_list_get(std::string& users, const std::string& li
             return db_status::unauthorized;
         }
     }
-    //add limit/offset
+
+    //add limit/offset/filter
+    int limit {100};
+    int offset {0};
     std::string query {"SELECT * FROM users"};
-    if(!limit.empty()){
-        query += " LIMIT " + limit;
+    const auto& limit_it {query_map.find("limit")};
+    if(limit_it!=query_map.end()){
+        limit=std::stoi(limit_it->second);
+        query_map.erase(limit_it);
     }
-    if(!offset.empty()){
-        query +=" OFFSET " + offset;
+    const auto& offset_it {query_map.find("offset")};
+    if(offset_it!=query_map.end()){
+        offset=std::stoi(offset_it->second);
+        query_map.erase(offset_it);
     }
+
+    query+=" LIMIT " + std::to_string(limit);
+    query+=" OFFSET " + std::to_string(offset);
 
     res_ptr=PQexec(conn_ptr,query.c_str());
     if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
@@ -822,8 +765,8 @@ db_status dbase_handler::user_list_get(std::string& users, const std::string& li
     PQfinish(conn_ptr);
 
     const boost::json::object out {
-        {"limit",limit.empty() ? 100 : std::stoi(limit)},
-        {"offset",offset.empty() ? 0 : std::stoi(offset)},
+        {"limit",limit},
+        {"offset",offset},
         {"count",users_.size()},
         {"total",total},
         {"items",users_},
@@ -1250,132 +1193,7 @@ db_status dbase_handler::user_info_delete(const std::string &user_uid, const std
     return db_status::success;
 }
 
-//List Of Roles And Permissions
-db_status dbase_handler::rp_list_get(std::string &rps, const std::string &requester_id, std::string &msg)
-{
-    PGconn* conn_ptr {open_connection(msg)};
-    PGresult* res_ptr {NULL};
-    if(!conn_ptr){
-        return db_status::fail;
-    }
-    {//check if authorized
-        std::string msg {};
-        const std::string& rp_ident {"role_permission:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
-        if(!authorized){
-            PQfinish(conn_ptr);
-            return db_status::unauthorized;
-        }
-    }
-    const std::string& query {"SELECT * FROM roles_permissions LIMIT 100 OFFSET 0"};
-    res_ptr=PQexec(conn_ptr,query.c_str());
-    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
-        msg=std::string {PQresultErrorMessage(res_ptr)};
-        PQclear(res_ptr);
-        PQfinish(conn_ptr);
-        return db_status::fail;
-    }
-
-    const int& rows {PQntuples(res_ptr)};
-    if(!rows){
-        PQclear(res_ptr);
-        PQfinish(conn_ptr);
-        return db_status::not_found;
-    }
-    const int& columns {PQnfields(res_ptr)};
-    boost::json::array rps_ {};
-
-    for(int r=0;r < rows;++r){
-        boost::json::object rp_ {};
-        for(int c=0;c < columns;++c){
-            const char* key {PQfname(res_ptr,c)};
-            const char* value {PQgetvalue(res_ptr,r,c)};
-            const int& is_null {PQgetisnull(res_ptr,r,c)};
-            rp_.emplace(key,is_null ? boost::json::value(nullptr) : value);
-        }
-        rps_.push_back(rp_);
-    }
-    PQclear(res_ptr);
-    const int& total {rp_total_get(conn_ptr)};
-    PQfinish(conn_ptr);
-
-    const boost::json::object& out {
-        {"limit",100},
-        {"offset",0},
-        {"count",rps_.size()},
-        {"total",total},
-        {"items",rps_}
-    };
-    rps=boost::json::serialize(out);
-    return db_status::success;
-}
-
 //List Of Roles And Permissions with limit and/or offset
-db_status dbase_handler::rp_list_get(std::string &rps, const std::string &limit, const std::string offset, const std::string &requester_id, std::string &msg)
-{
-    PGconn* conn_ptr {open_connection(msg)};
-    PGresult* res_ptr {NULL};
-    if(!conn_ptr){
-        return db_status::fail;
-    }
-    {//check if authorized
-        std::string msg {};
-        const std::string& rp_ident {"role_permission:read"};
-        const bool& authorized {is_authorized(conn_ptr,requester_id,rp_ident,msg)};
-        if(!authorized){
-            PQfinish(conn_ptr);
-            return db_status::unauthorized;
-        }
-    }
-    std::string query {"SELECT * FROM roles_permissions"};
-    if(!limit.empty()){
-        query +=" LIMIT " + limit;
-    }
-    if(!offset.empty()){
-        query +=" OFFSET " + offset;
-    }
-    res_ptr=PQexec(conn_ptr,query.c_str());
-    if(PQresultStatus(res_ptr)!=PGRES_TUPLES_OK){
-        msg=std::string {PQresultErrorMessage(res_ptr)};
-        PQclear(res_ptr);
-        PQfinish(conn_ptr);
-        return db_status::fail;
-    }
-
-    const int& rows {PQntuples(res_ptr)};
-    if(!rows){
-        PQclear(res_ptr);
-        PQfinish(conn_ptr);
-        return db_status::not_found;
-    }
-    const int& columns {PQnfields(res_ptr)};
-    boost::json::array rps_ {};
-
-    for(int r=0;r < rows;++r){
-        boost::json::object rp_ {};
-        for(int c=0;c < columns;++c){
-            const char* key {PQfname(res_ptr,c)};
-            const char* value {PQgetvalue(res_ptr,r,c)};
-            const int& is_null {PQgetisnull(res_ptr,r,c)};
-            rp_.emplace(key,is_null ? boost::json::value(nullptr) : value);
-        }
-        rps_.push_back(rp_);
-    }
-    PQclear(res_ptr);
-    const int& total {rp_total_get(conn_ptr)};
-    PQfinish(conn_ptr);
-
-    const boost::json::object& out {
-        {"limit",limit.empty() ? 100 : std::stoi(limit)},
-        {"offset",offset.empty() ? 0 : std::stoi(offset)},
-        {"count",rps_.size()},
-        {"total",total},
-        {"items",rps_}
-    };
-    rps=boost::json::serialize(out);
-    return db_status::success;
-}
-
 db_status dbase_handler::rp_list_get(std::string &rps, std::map<std::string, std::string> query_map, const std::string &requester_id, std::string &msg)
 {
     PGconn* conn_ptr {open_connection(msg)};
