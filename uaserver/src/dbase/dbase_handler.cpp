@@ -723,6 +723,38 @@ db_status dbase_handler::user_list_get(std::string& users, std::map<std::string,
         query_map.erase(offset_it);
     }
 
+    if(!query_map.empty()){
+        query+=" WHERE";
+        auto it {query_map.begin()};
+        while(it!=query_map.end()){
+            if(it->first=="first_name"){
+                query+=" first_name ILIKE '%" + it->second + "%'";
+            }
+            else if(it->first=="last_name"){
+                query+=" last_name ILIKE '%" + it->second + "%'";
+            }
+            else if(it->first=="email"){
+                query+=" email = '" + it->second + "'";
+            }
+            else if(it->first=="is_blocked"){
+                query+=" is_blocked = '" + it->second + "'";
+            }
+            else if(it->first=="phone_number"){
+                query+=" phone_number ILIKE '%" + it->second + "%'";
+            }
+            else if(it->first=="position"){
+                query+=" position ILIKE '%" + it->second + "%'";
+            }
+            else if(it->first=="gender"){
+                query+=" gender = '" + it->second + "'";
+            }
+            query_map.erase(it++);
+            if(!query_map.empty()){
+                query+=" AND";
+            }
+        }
+    }
+
     query+=" LIMIT " + std::to_string(limit);
     query+=" OFFSET " + std::to_string(offset);
 
@@ -1228,7 +1260,7 @@ db_status dbase_handler::rp_list_get(std::string &rps, std::map<std::string, std
         query +=" WHERE";
         const auto& it {query_map.begin()};
         if(it->first=="type"){
-            query+=" type='" + it->second + "'";
+            query+=" type = '" + it->second + "'";
         }
         if(it->first=="name"){
             query +=" name ILIKE '%" + it->second + "%'";
@@ -1240,7 +1272,7 @@ db_status dbase_handler::rp_list_get(std::string &rps, std::map<std::string, std
         query +=" AND";
         const auto& it {query_map.begin()};
         if(it->first=="type"){
-            query+=" type='" + it->second + "'";
+            query+=" type = '" + it->second + "'";
         }
         if(it->first=="name"){
             query +=" name ILIKE '%" + it->second + "%'";
