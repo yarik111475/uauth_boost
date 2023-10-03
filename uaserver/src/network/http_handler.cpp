@@ -366,7 +366,7 @@ http::response<http::string_body> http_handler::handle_authz_manage_post(http::r
         case db_status::fail:
             return fail(std::move(request),http::status::bad_request,msg);
         case db_status::success:
-            return success(std::move(request),http::status::ok,msg);
+            return success(std::move(request),http::status::created,msg);
         case db_status::not_found:
             return fail(std::move(request),http::status::not_found,msg);
         case db_status::unauthorized:
@@ -393,7 +393,7 @@ http::response<http::string_body> http_handler::handle_authz_manage_delete(http:
         case db_status::fail:
             return fail(std::move(request),http::status::bad_request,msg);
         case db_status::success:
-            return success(std::move(request),http::status::ok,msg);
+            return success(std::move(request),http::status::no_content,msg);
         case db_status::not_found:
             return fail(std::move(request),http::status::not_found,msg);
         case db_status::unauthorized:
@@ -656,7 +656,7 @@ http::response<http::string_body> http_handler::handle_rp_post(http::request<htt
     case db_status::fail:
         return fail(std::move(request),http::status::bad_request,msg);
     case db_status::success:
-        return success(std::move(request),http::status::ok,msg);
+        return success(std::move(request),http::status::created,msg);
     case db_status::not_found:
         return fail(std::move(request),http::status::not_found,msg);
     case db_status::unauthorized:
@@ -708,7 +708,7 @@ http::response<http::string_body> http_handler::handle_rp_delete(http::request<h
             case db_status::fail:
                 return fail(std::move(request),http::status::bad_request,msg);
             case db_status::success:
-                return success(std::move(request),http::status::ok,msg);
+                return success(std::move(request),http::status::no_content,msg);
             case db_status::not_found:
                 return fail(std::move(request),http::status::not_found,msg);
             case db_status::unauthorized:
@@ -830,7 +830,7 @@ http::response<http::string_body> http_handler::handle_certificate_post(http::re
             if(ok){
                 std::string body {x509_content.begin(),x509_content.end()};
                 body_ptr_.reset(new std::string {body});
-                http::response<http::string_body> response {http::status::ok,request.version()};
+                http::response<http::string_body> response {http::status::created,request.version()};
                 response.keep_alive(request.keep_alive());
                 response.set(http::field::server, BOOST_BEAST_VERSION_STRING);
                 response.set(http::field::content_type,"application/pem-certificate-chain");
