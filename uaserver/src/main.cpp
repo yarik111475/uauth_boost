@@ -75,14 +75,14 @@ void set_env()
     setenv("UA_SSL_WEB_CRT_VALID","365",0);
 
     //uauth certificates part
-    setenv("UA_CA_CRT_PATH","/home/yaroslav/x509/root-ca.pem",0);
-    setenv("UA_SIGNING_CA_CRT_PATH","/home/yaroslav/x509/signing-ca.pem",0);
-    setenv("UA_SIGNING_CA_KEY_PATH","/home/yaroslav/x509/signing-ca-key.pem",0);
+    setenv("UA_CA_CRT_PATH","/home/yaroslav/uauth/root-ca.pem",0);
+    setenv("UA_SIGNING_CA_CRT_PATH","/home/yaroslav/uauth/signing-ca.pem",0);
+    setenv("UA_SIGNING_CA_KEY_PATH","/home/yaroslav/uauth/signing-ca-key.pem",0);
     setenv("UA_SIGNING_CA_KEY_PASS","U$vN#@D,v)*$N9\\N",0);// U$vN#@D,v)*$N9\N
 
     //ucontrol certificates part
-    setenv("UA_CLIENT_CRT_PATH","/home/yaroslav/x509/clientCert.pem",0);
-    setenv("UA_CLIENT_KEY_PATH","/home/yaroslav/x509/clientPrivateKey.pem",0);
+    setenv("UA_CLIENT_CRT_PATH","/home/yaroslav/ucontrol/clientCert.pem",0);
+    setenv("UA_CLIENT_KEY_PATH","/home/yaroslav/ucontrol/clientPrivateKey.pem",0);
     setenv("UA_CLIENT_KEY_PASS","password",0);
 }
 #endif
