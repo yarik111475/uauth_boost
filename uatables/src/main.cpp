@@ -22,11 +22,11 @@
 
 bool init_db_params(boost::json::object& params){
     //database params
-    const std::string& UA_DB_NAME=std::getenv("UA_DB_NAME")==NULL ? "u-auth" :std::getenv("UA_DB_NAME");
-    const std::string& UA_DB_HOST=std::getenv("UA_DB_HOST")==NULL ? "dev3.u-system.tech" :std::getenv("UA_DB_HOST");
-    const std::string& UA_DB_PORT=std::getenv("UA_DB_PORT")==NULL ? "5436" :std::getenv("UA_DB_PORT");
-    const std::string& UA_DB_USER=std::getenv("UA_DB_USER")==NULL ? "u-backend" :std::getenv("UA_DB_USER");
-    const std::string& UA_DB_PASS=std::getenv("UA_DB_PASS")==NULL ? "u-backend" :std::getenv("UA_DB_PASS");
+    const std::string& UA_DB_NAME=std::getenv("UA_DB_NAME")==NULL ? "" :std::getenv("UA_DB_NAME");
+    const std::string& UA_DB_HOST=std::getenv("UA_DB_HOST")==NULL ? "" :std::getenv("UA_DB_HOST");
+    const std::string& UA_DB_PORT=std::getenv("UA_DB_PORT")==NULL ? "" :std::getenv("UA_DB_PORT");
+    const std::string& UA_DB_USER=std::getenv("UA_DB_USER")==NULL ? "" :std::getenv("UA_DB_USER");
+    const std::string& UA_DB_PASS=std::getenv("UA_DB_PASS")==NULL ? "" :std::getenv("UA_DB_PASS");
 
     params.emplace("UA_DB_NAME",UA_DB_NAME);
     params.emplace("UA_DB_HOST",UA_DB_HOST);

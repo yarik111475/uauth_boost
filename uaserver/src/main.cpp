@@ -22,11 +22,11 @@ void set_env()
     _putenv("UA_UC_PORT=5678");
 
     //database params
-    _putenv("UA_DB_NAME=u-auth");
-    _putenv("UA_DB_HOST=dev3.u-system.tech");
-    _putenv("UA_DB_PORT=5436");
-    _putenv("UA_DB_USER=u-backend");
-    _putenv("UA_DB_PASS=u-backend");
+    _putenv("UA_DB_NAME=");
+    _putenv("UA_DB_HOST=");
+    _putenv("UA_DB_PORT=");
+    _putenv("UA_DB_USER=");
+    _putenv("UA_DB_PASS=");
 
     _putenv("UA_DB_POOL_SIZE_MIN=1");
     _putenv("UA_DB_POOL_SIZE_MAX=100");
@@ -40,7 +40,7 @@ void set_env()
     _putenv("UA_CA_CRT_PATH=C:/x509/root-ca.pem");
     _putenv("UA_SIGNING_CA_CRT_PATH=C:/x509/signing-ca.pem");
     _putenv("UA_SIGNING_CA_KEY_PATH=C:/x509/signing-ca-key.pem");
-    _putenv("UA_SIGNING_CA_KEY_PASS=U$vN#@D,v)*$N9\\N");
+    _putenv("UA_SIGNING_CA_KEY_PASS=");
 
     //ucontrol certificates part
     _putenv("UA_CLIENT_CRT_PATH=C:/x509/clientCert.pem");
